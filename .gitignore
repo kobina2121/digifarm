@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local env (example is committed)
+!.env.example
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# prisma generated client
+/src/generated/
+
+# local file storage (development)
+/.storage/
