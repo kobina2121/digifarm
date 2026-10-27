@@ -1,11 +1,11 @@
 # DigiFarm — Architecture & Delivery Roadmap
 
-Status: **Draft v4 — installable PWA on Next.js; business decisions in §7**
+Status: **v5 — Phase 1 (Foundation) implemented; see §10 for status and deviations**
 Date: 2026-10-27
 
 This document is the plan of record for building DigiFarm, a B2B agricultural sourcing marketplace and managed-fulfilment platform for Ghana. It covers the current state of the repository, the proposed architecture, the initial data model, the MVP scope, a phased plan with acceptance criteria, open business decisions, and the main risks.
 
-Nothing in this document is implemented yet. Items marked **[Decision]** need an answer from the business before (or during) the phase that depends on them.
+Phase 1 is implemented (§10). Later phases are plans. Decisions are recorded in §7.
 
 ---
 
@@ -19,7 +19,7 @@ Local tooling available on the development machine:
 | ------ | ------- | ---------------------------------------------------- |
 | Node   | 22.x    | LTS — suitable for Next.js                            |
 | pnpm   | 12.x    | Will be the package manager                           |
-| Docker | 29.x    | Local Postgres, mail catcher, and S3-compatible store |
+| Docker | 29.x    | Not used — development uses Neon branches (§10) |
 | git    | 2.50    | Repo will be initialised in Phase 1, step 1           |
 | psql   | —       | Not installed; not required (use Docker/Prisma Studio) |
 
@@ -56,7 +56,7 @@ One Next.js application, delivered as an installable **Progressive Web App (PWA)
 | Concern            | Choice                                                        | Why / notes |
 | ------------------ | ------------------------------------------------------------- | ----------- |
 | Framework          | Next.js (App Router), React, TypeScript `strict`              | As specified. Pin exact versions at bootstrap. |
-| PWA                | Web app manifest (`app/manifest.ts`) + **Serwist** service worker (`@serwist/next`, the maintained successor to next-pwa) | Installs to the home screen on Android and iPhone and opens full-screen. Caches the app shell and static assets for fast loads on slow networks, with a branded offline page. **All data is network-first** — prices, stock and orders are never served stale from cache, so there is no offline ordering. Verify the Serwist version against the Next.js version at bootstrap. |
+| PWA                | Web app manifest (`app/manifest.ts`) + a small hand-written service worker (`public/sw.js`) — chosen over Serwist so the caching rules stay short and auditable | Installs to the home screen on Android and iPhone and opens full-screen. Caches the app shell and static assets for fast loads on slow networks, with a branded offline page. **All data is network-first** — prices, stock and orders are never served stale from cache, so there is no offline ordering. Verify the Serwist version against the Next.js version at bootstrap. |
 | Styling / UI       | Tailwind CSS + shadcn/ui                                      | Components are copied into the repo, so they are owned and themed with the brand tokens in §2.5. Mobile-first layouts. |
 | Database           | PostgreSQL 16+ on **Neon** (D13); a Neon branch per preview deployment | Row locking, `CHECK` constraints, partial indexes, transactional DDL. |
 | ORM                | Prisma + migrations                                           | Raw SQL (`$queryRaw`/`$executeRaw`) only for atomic inventory updates and reporting, wrapped in the owning module. |
@@ -79,12 +79,12 @@ One Next.js application, delivered as an installable **Progressive Web App (PWA)
 ```
 digifarm/
 ├─ prisma/                 schema.prisma, migrations/, seed.ts
-├─ public/                 PWA icons (incl. maskable), apple-touch-icon, iOS splash images
+├─ public/sw.js            service worker: app shell + static assets only, offline page
 ├─ src/
 │  ├─ app/
 │  │  ├─ manifest.ts       web app manifest (name, icons, theme colours from the brand)
-│  │  ├─ sw.ts             service worker (Serwist): app shell + static assets, offline page
-│  │  ├─ ~offline/         offline fallback page
+│  │  ├─ icons/[variant]/  PWA + Apple touch icons, generated at build time from the brand mark
+│  │  ├─ offline/          offline fallback page
 │  │  ├─ (marketing)/      landing, about
 │  │  ├─ (auth)/           sign-in, sign-up, verify-email, reset-password, onboarding
 │  │  ├─ market/           catalogue, product detail, supplier profiles (public, SEO)
@@ -103,7 +103,6 @@ digifarm/
 │  ├─ lib/                 db, env, money, quantity, logger, errors, storage, authz, audit
 │  └─ components/          ui/ (shadcn), shared composites (DataTable, StatusBadge, MoneyText…)
 ├─ e2e/                    Playwright specs (desktop, mobile Chrome, mobile WebKit)
-├─ docker-compose.yml      postgres, mailpit, minio
 ├─ vercel.json             cron schedules for the /api/cron/* job runners
 └─ docs/                   ROADMAP.md, ADRs, runbooks, brand/
 ```
@@ -557,3 +556,35 @@ Recorded 2026-10-27 with the founder.
 ## 9. Next step
 
 Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation begins with **Phase 1, step 1.1 — repository bootstrap**, followed by each subsequent step with tests, type checks, lint and build run and reported at every increment.
+
+---
+
+## 10. Phase 1 status (2026-10-27)
+
+**Done — all steps 1.1–1.10, verified by automated tests and on the iOS Simulator.**
+
+| Step | What exists | Verified by |
+| --- | --- | --- |
+| 1.1 Bootstrap | Next.js 16.4 (App Router, Turbopack, Cache Components), TS strict, Tailwind 4, shadcn/ui, ESLint boundary rules, Prettier, Vitest, Playwright, GitHub Actions CI | `pnpm typecheck lint test build` |
+| 1.2 Core libs | Zod env (with `APP_ENV` guard), pino with redaction, typed errors, `Money` (pesewas, bigint), `Quantity`, audit helper, `parseInput` | unit tests |
+| 1.3 Schema | Auth tables, User (platform roles), Organization, Membership, Address, OperatingZone (Accra, Kumasi seeded), SupplierVerification, FarmVisit, FarmVisitPhoto, AuditLog; append-only trigger on `audit_log` | integration test: UPDATE/DELETE on audit rows fails |
+| 1.4 Auth | Better Auth 1.7.13: email + password, required email verification, password reset, DB-backed rate limits, secure cookies, 5-minute session cookie cache | E2E + API checks (role escalation at sign-up ignored; unverified sign-in refused) |
+| 1.5 Buyer onboarding | Business, owner membership, delivery address in a serviced zone; one business per user even under simultaneous submits | integration + E2E on desktop, Pixel, iPhone (WebKit) |
+| 1.6 RBAC | `can()` permission matrix, actor-scoped queries, page guards, proxy redirect, staff created only by `pnpm admin:create` | 120+ matrix tests, IDOR test, access E2E |
+| 1.7 Managed suppliers | Staff create suppliers (no login), record farm visits with camera photos + GPS, approve/reject/suspend/reinstate; approver ≠ visitor; photos content-checked and served only to staff | integration tests, manual run in browser |
+| 1.8 Design system | Brand tokens, SVG logo (5 variants), 44px touch targets, app shells (phone tab bar, desktop sidebar), status badges | visual checks at 320/375 px and on the iPhone simulator |
+| 1.9 Pages | Landing, sign-in/up, verify email, forgot/reset password, buyer home and addresses, staff overview and suppliers, install guide | E2E |
+| 1.10 PWA | Manifest, generated icons (incl. maskable + Apple), service worker (app shell only), offline page, "new version — reload" prompt | PWA E2E; installed on the iOS Simulator home screen and opened full-screen |
+
+**Deviations from the plan above, and why**
+- **No Docker.** Local development uses the Neon project `digifarm` (London, `aws-eu-west-2`): branch `dev` for the app and branch `test` for integration tests. `main` is reserved for production.
+- **Email and file storage are development adapters.** Emails print to the dev server log and are saved to `.storage/outbox/`; photos go to `.storage/private/`. Both are refused when `APP_ENV` is `staging` or `production`, so real providers must be chosen before staging (§6).
+- **Hand-written service worker instead of Serwist** (see §2.2).
+- **iOS splash screens not added yet** — iOS shows the Paper background colour while launching. Add once the designer's vector logo arrives (D15).
+- **Supplier self-service pages** (`src/app/supplier/`) not built, as decided in D6.
+
+**Known limitations / follow-ups**
+- Local pages take 1–5 s because each database query travels to London (~120 ms round trip). In production the app runs next to the database. Prisma's `relationJoins` preview feature would cut round trips further; not enabled while it is a preview.
+- Sign-out on other devices can lag up to 5 minutes (session cookie cache); suspensions apply immediately.
+- Android Emulator and a tunnel tool (`cloudflared`) are not installed yet, so Android and real-phone checks (§2.6) are still to do.
+- Nothing is deployed yet: Vercel project, real email provider, S3-compatible storage and Sentry need accounts (§6).

@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DigiFarm
 
-## Getting Started
+B2B agricultural sourcing marketplace for Ghana — an installable PWA built with Next.js.
+Plan, decisions and status: [docs/ROADMAP.md](docs/ROADMAP.md).
 
-First, run the development server:
+## Run it locally
+
+Requirements: Node 20.9+, pnpm, and a `.env` (copy `.env.example`; use a Neon **branch**, never production).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm db:migrate     # apply migrations to the dev database
+pnpm db:seed        # reference data (operating zones)
+pnpm dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a staff account (staff can't sign up through the website):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm admin:create --email you@example.com --name "Your Name" --role ADMIN
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+In development, emails aren't sent: they're printed in the `pnpm dev` output and saved in `.storage/outbox/` (open the link from there to verify an account).
 
-## Learn More
+## Checks
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm typecheck && pnpm lint && pnpm test   # unit + integration (uses TEST_DATABASE_URL)
+pnpm test:e2e                              # Playwright: desktop, Android (Pixel), iPhone (WebKit)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+PWA checks need a production build (the service worker is off in `next dev`):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm build && pnpm start -p 3001
+PWA_BASE_URL=http://localhost:3001 pnpm test:e2e --project=desktop-chrome e2e/pwa.spec.ts
+```
 
-## Deploy on Vercel
+## Test on a phone or simulator
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **iOS Simulator:** open `http://localhost:3000` in Safari. To install, run a production build, then Share → Add to Home Screen.
+- **Same Wi-Fi:** `pnpm dev:lan`, then open your Mac's IP on port 3000 (layout checks only — install needs HTTPS).
+- **Full PWA on a real phone:** `pnpm dev:tunnel` (needs `cloudflared`) for an HTTPS link.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See ROADMAP §2.6 for Android Emulator steps.
