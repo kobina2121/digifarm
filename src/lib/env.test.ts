@@ -39,4 +39,21 @@ describe("parseEnv", () => {
       /not allowed when APP_ENV=production/,
     );
   });
+
+  it("requires both Google credentials or neither", () => {
+    expect(() => parseEnv({ ...valid, GOOGLE_CLIENT_ID: "id-only" })).toThrow(
+      /both GOOGLE_CLIENT_ID/,
+    );
+    expect(() =>
+      parseEnv({
+        ...valid,
+        GOOGLE_CLIENT_ID: "id",
+        GOOGLE_CLIENT_SECRET: "secret",
+      }),
+    ).not.toThrow();
+    expect(
+      parseEnv({ ...valid, GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "" })
+        .GOOGLE_CLIENT_ID,
+    ).toBeUndefined();
+  });
 });

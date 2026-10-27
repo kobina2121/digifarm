@@ -22,7 +22,12 @@ function safeNext(next: string | null): string {
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [formError, setFormError] = useState<string | null>(null);
+  // Google sends people back here with ?error= if sign-in failed or was cancelled.
+  const [formError, setFormError] = useState<string | null>(
+    searchParams.get("error")
+      ? "We couldn’t sign you in with Google. Please try again or use your email."
+      : null,
+  );
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const {
     register,

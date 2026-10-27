@@ -45,6 +45,27 @@ export const auth = betterAuth({
     },
   },
 
+  // "Continue with Google" — only when credentials are configured (see .env.example).
+  socialProviders:
+    config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: config.GOOGLE_CLIENT_ID,
+            clientSecret: config.GOOGLE_CLIENT_SECRET,
+            prompt: "select_account",
+          },
+        }
+      : {},
+
+  account: {
+    accountLinking: {
+      enabled: true,
+      // A Google login joins an existing account only if that account's email is
+      // already verified, so a pre-registered unverified account can't be taken over.
+      requireLocalEmailVerified: true,
+    },
+  },
+
   user: {
     additionalFields: {
       // input: false — users can never set these themselves (no self-promotion to staff).
@@ -71,6 +92,7 @@ export const auth = betterAuth({
     customRules: {
       "/sign-in/email": { window: 60, max: 5 },
       "/sign-up/email": { window: 60, max: 5 },
+      "/sign-in/social": { window: 60, max: 10 },
       "/request-password-reset": { window: 300, max: 3 },
       "/send-verification-email": { window: 300, max: 3 },
     },
