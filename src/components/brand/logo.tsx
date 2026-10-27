@@ -94,7 +94,7 @@ export function Logo({
       <span className="flex flex-col leading-none">
         <span
           className={cn(
-            "font-heading font-bold tracking-tight",
+            "font-brand font-bold tracking-tight",
             tagline ? "text-4xl" : "text-2xl",
           )}
         >
@@ -102,7 +102,12 @@ export function Logo({
           <span className={t.farm}>Farm</span>
         </span>
         {tagline ? (
-          <span className={cn("mt-1.5 eyebrow text-[0.65rem]", t.tagline)}>
+          <span
+            className={cn(
+              "mt-1.5 font-mono text-[0.65rem] tracking-[0.2em] uppercase",
+              t.tagline,
+            )}
+          >
             Farm to buyer · Ghana
           </span>
         ) : null}
