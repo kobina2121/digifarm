@@ -52,6 +52,7 @@ test.describe("installable PWA", () => {
     for (const url of cached) {
       expect(
         url === "/offline" ||
+          url.startsWith("/splash/") ||
           url.startsWith("/_next/static/") ||
           url.startsWith("/icon"),
       ).toBe(true);

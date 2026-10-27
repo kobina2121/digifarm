@@ -5,20 +5,26 @@
  * Pages, prices, stock, orders and API responses always come from the network,
  * so nobody is ever shown stale commercial data from a cache.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `digifarm-static-${VERSION}`;
 const OFFLINE_URL = "/offline";
 const PRECACHE = [OFFLINE_URL, "/icons/192.png", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE)));
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE)),
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((k) => k.startsWith("digifarm-") && k !== STATIC_CACHE).map((k) => caches.delete(k)));
+      await Promise.all(
+        keys
+          .filter((k) => k.startsWith("digifarm-") && k !== STATIC_CACHE)
+          .map((k) => caches.delete(k)),
+      );
       await self.clients.claim();
     })(),
   );
@@ -30,7 +36,12 @@ self.addEventListener("message", (event) => {
 });
 
 function isImmutableAsset(url) {
-  return url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname === "/icon.svg";
+  return (
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/icons/") ||
+    url.pathname.startsWith("/splash/") ||
+    url.pathname === "/icon.svg"
+  );
 }
 
 self.addEventListener("fetch", (event) => {
@@ -48,7 +59,9 @@ self.addEventListener("fetch", (event) => {
           fetch(request).then((response) => {
             if (response.ok) {
               const copy = response.clone();
-              caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
+              caches
+                .open(STATIC_CACHE)
+                .then((cache) => cache.put(request, copy));
             }
             return response;
           }),

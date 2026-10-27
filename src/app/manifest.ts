@@ -11,7 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#f6f6f1",
+    // Android builds its launch screen from this colour, the icon and the name.
+    background_color: "#17663a",
     theme_color: "#17663a",
     lang: "en-GH",
     categories: ["business", "food", "shopping"],
