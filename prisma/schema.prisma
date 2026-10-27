@@ -1,0 +1,335 @@
+// DigiFarm database schema — Phase 1 slice (docs/ROADMAP.md §3, step 1.3).
+// Change it only through migrations: `pnpm db:migrate`.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Identity (tables shaped for Better Auth) ────────────────────────────────
+
+enum PlatformRole {
+  USER // buyers (and later self-service suppliers); access comes from org membership
+  OPS // DigiFarm operations staff
+  ADMIN
+  DELIVERY_PARTNER // reserved, inactive in MVP
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id            String       @id
+  name          String
+  email         String       @unique
+  emailVerified Boolean      @default(false)
+  image         String?
+  phone         String?
+  platformRole  PlatformRole @default(USER)
+  status        UserStatus   @default(ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  sessions    Session[]
+  accounts    Account[]
+  memberships Membership[]
+
+  farmVisits            FarmVisit[]            @relation("FarmVisitor")
+  verificationsDecided  SupplierVerification[] @relation("VerificationDecidedBy")
+  managedSuppliersAdded Organization[]         @relation("OrganizationCreatedBy")
+  auditEntries          AuditLog[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// Rate-limit counters live in Postgres so limits hold across serverless instances.
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rate_limit")
+}
+
+// ─── Organizations ───────────────────────────────────────────────────────────
+
+enum OrganizationType {
+  BUYER
+  SUPPLIER
+}
+
+enum OrganizationStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum BuyerSegment {
+  RESTAURANT
+  HOTEL
+  CATERER
+  RETAILER
+  WHOLESALER
+  FOOD_PROCESSOR
+  OTHER
+}
+
+enum SupplierKind {
+  FARMER
+  COOPERATIVE
+  AGGREGATOR
+  VENDOR
+}
+
+enum MembershipRole {
+  OWNER
+  MANAGER
+  MEMBER
+}
+
+model Organization {
+  id           String             @id @default(uuid(7)) @db.Uuid
+  type         OrganizationType
+  status       OrganizationStatus @default(PENDING)
+  legalName    String
+  tradingName  String?
+  phone        String
+  email        String?
+  region       GhanaRegion
+  district     String?
+  buyerSegment BuyerSegment?
+  supplierKind SupplierKind?
+  // Suppliers are managed by DigiFarm staff (ROADMAP D6) and may have no members.
+  createdById  String?
+  createdBy    User?              @relation("OrganizationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  deletedAt    DateTime?
+
+  memberships  Membership[]
+  addresses    Address[]
+  verification SupplierVerification?
+
+  @@index([type, status])
+  @@map("organization")
+}
+
+model Membership {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String         @db.Uuid
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           MembershipRole
+  createdAt      DateTime       @default(now())
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@map("membership")
+}
+
+// ─── Places ──────────────────────────────────────────────────────────────────
+
+enum GhanaRegion {
+  AHAFO
+  ASHANTI
+  BONO
+  BONO_EAST
+  CENTRAL
+  EASTERN
+  GREATER_ACCRA
+  NORTH_EAST
+  NORTHERN
+  OTI
+  SAVANNAH
+  UPPER_EAST
+  UPPER_WEST
+  VOLTA
+  WESTERN
+  WESTERN_NORTH
+}
+
+// Areas DigiFarm currently delivers to (ROADMAP D4): Accra and Kumasi.
+model OperatingZone {
+  id        String      @id @default(uuid(7)) @db.Uuid
+  code      String      @unique
+  name      String
+  region    GhanaRegion
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+
+  addresses Address[]
+
+  @@map("operating_zone")
+}
+
+enum AddressKind {
+  DELIVERY // buyer delivery point; must be inside a serviced zone
+  PICKUP // farm or collection point; may be anywhere in Ghana
+  BUSINESS
+}
+
+model Address {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @db.Uuid
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  kind           AddressKind
+  label          String
+  region         GhanaRegion
+  district       String?
+  town           String
+  street         String?
+  landmark       String?
+  digitalAddress String? // GhanaPost GPS, e.g. GA-123-4567
+  latitude       Decimal?       @db.Decimal(9, 6)
+  longitude      Decimal?       @db.Decimal(9, 6)
+  zoneId         String?        @db.Uuid
+  zone           OperatingZone? @relation(fields: [zoneId], references: [id])
+  isDefault      Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  @@index([organizationId])
+  @@map("address")
+}
+
+// ─── Supplier verification by farm visit (ROADMAP D7) ────────────────────────
+
+enum VerificationStatus {
+  PROSPECT // recruited, not yet visited
+  VISITED // at least one visit recorded, awaiting a decision
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+model SupplierVerification {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @unique @db.Uuid
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  status         VerificationStatus @default(PROSPECT)
+  decidedById    String?
+  decidedBy      User?              @relation("VerificationDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt      DateTime?
+  decisionNotes  String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  visits FarmVisit[]
+
+  @@index([status])
+  @@map("supplier_verification")
+}
+
+model FarmVisit {
+  id               String               @id @default(uuid(7)) @db.Uuid
+  verificationId   String               @db.Uuid
+  verification     SupplierVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  visitedById      String
+  visitedBy        User                 @relation("FarmVisitor", fields: [visitedById], references: [id])
+  visitedAt        DateTime
+  latitude         Decimal?             @db.Decimal(9, 6)
+  longitude        Decimal?             @db.Decimal(9, 6)
+  produceObserved  String
+  recommendedGrade String? // A, B or C (grade definitions arrive in Phase 2)
+  notes            String?
+  createdAt        DateTime             @default(now())
+
+  photos FarmVisitPhoto[]
+
+  @@index([verificationId])
+  @@map("farm_visit")
+}
+
+// Private files: only reachable through an authorized, short-lived download route.
+model FarmVisitPhoto {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  visitId    String    @db.Uuid
+  visit      FarmVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  storageKey String    @unique
+  mimeType   String
+  sizeBytes  Int
+  sha256     String
+  createdAt  DateTime  @default(now())
+
+  @@index([visitId])
+  @@map("farm_visit_photo")
+}
+
+// ─── Audit (append-only; enforced by a database trigger) ─────────────────────
+
+model AuditLog {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  actorUserId     String?
+  // Restrict: users are anonymised, never deleted, so audit history stays intact.
+  actor           User?    @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  actorRole       String?
+  onBehalfOfOrgId String?  @db.Uuid
+  action          String
+  entityType      String
+  entityId        String
+  before          Json?
+  after           Json?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorUserId, createdAt])
+  @@map("audit_log")
+}
