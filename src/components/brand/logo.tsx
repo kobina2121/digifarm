@@ -94,7 +94,7 @@ export function Logo({
       <span className="flex flex-col leading-none">
         <span
           className={cn(
-            "font-brand font-bold tracking-tight",
+            "font-sans font-bold tracking-[-0.03em]",
             tagline ? "text-4xl" : "text-2xl",
           )}
         >

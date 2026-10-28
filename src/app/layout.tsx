@@ -1,16 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 import { ServiceWorker } from "@/components/pwa/service-worker";
 import { splashStartupImages } from "@/components/pwa/splash-screens";
-
-// Only the DigiFarm wordmark uses a web font; all other text uses the system font.
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["500", "700"],
-});
 
 export const metadata: Metadata = {
   title: {
@@ -39,10 +31,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en-GH"
-      className={`${spaceGrotesk.variable} h-full antialiased`}
-    >
+    <html lang="en-GH" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
         {children}
         <ServiceWorker />

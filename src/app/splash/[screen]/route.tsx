@@ -7,15 +7,14 @@ import { onGreenMarkSvg } from "@/components/brand/app-icon-svg";
 import { SPLASH_SCREENS } from "@/components/pwa/splash-screens";
 
 // iPhone launch images, generated at build time from the brand mark and wordmark.
+// Inter is the closest open-licence match to the iPhone system font used in the app.
 export function generateStaticParams() {
   return SPLASH_SCREENS.map((s) => ({ screen: `${s.id}.png` }));
 }
 
 const fonts = Promise.all(
   ["500", "700"].map((weight) =>
-    readFile(
-      path.join(process.cwd(), `src/assets/fonts/space-grotesk-${weight}.woff`),
-    ),
+    readFile(path.join(process.cwd(), `src/assets/fonts/inter-${weight}.woff`)),
   ),
 );
 
@@ -43,7 +42,7 @@ export async function GET(
         alignItems: "center",
         justifyContent: "center",
         background: "#17663a",
-        fontFamily: "Space Grotesk",
+        fontFamily: "Inter",
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -59,7 +58,7 @@ export async function GET(
           marginTop: unit * 7,
           fontSize: unit * 13,
           fontWeight: 700,
-          letterSpacing: -unit * 0.4,
+          letterSpacing: -unit * 0.45,
           color: "#ffffff",
         }}
       >
@@ -82,8 +81,8 @@ export async function GET(
       width,
       height,
       fonts: [
-        { name: "Space Grotesk", data: medium, weight: 500, style: "normal" },
-        { name: "Space Grotesk", data: bold, weight: 700, style: "normal" },
+        { name: "Inter", data: medium, weight: 500, style: "normal" },
+        { name: "Inter", data: bold, weight: 700, style: "normal" },
       ],
     },
   );
