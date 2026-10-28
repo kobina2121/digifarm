@@ -17,13 +17,11 @@ export default function SignUpPage() {
         For restaurants, hotels, caterers, retailers, wholesalers and food
         processors.
       </p>
-      {googleSignInEnabled() ? (
-        <div className="mt-8 grid gap-6">
-          <GoogleButton />
-          <OrDivider />
-        </div>
-      ) : null}
-      <div className={googleSignInEnabled() ? "mt-6" : "mt-8"}>
+      <div className="mt-8 grid gap-6">
+        <GoogleButton available={googleSignInEnabled()} />
+        <OrDivider />
+      </div>
+      <div className="mt-6">
         <SignUpForm />
       </div>
       <p className="mt-6 text-center text-sm text-muted-foreground">

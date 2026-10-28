@@ -34,11 +34,18 @@ function GoogleMark() {
  * business setup; returning users go to their home area. Google confirms the
  * email address, so no verification email is needed.
  */
-export function GoogleButton() {
+export function GoogleButton({ available }: { available: boolean }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function continueWithGoogle() {
+    // Shown before Google credentials are configured (see .env.example).
+    if (!available) {
+      setError(
+        "Google sign-in isn’t available yet. Please use your email for now.",
+      );
+      return;
+    }
     setPending(true);
     setError(null);
     const { error } = await authClient.signIn.social({
@@ -72,7 +79,7 @@ export function GoogleButton() {
         {pending ? "Opening Google…" : "Continue with Google"}
       </Button>
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-sm text-muted-foreground">
           {error}
         </p>
       ) : null}

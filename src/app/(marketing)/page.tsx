@@ -7,8 +7,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { GoogleButton } from "@/components/auth/google-button";
 import { LogoMark } from "@/components/brand/logo";
 import { buttonVariants } from "@/components/ui/button";
+import { googleSignInEnabled } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
 const BUYERS = [
@@ -68,6 +70,9 @@ export default function HomePage() {
           >
             Sign in
           </Link>
+        </div>
+        <div className="mt-3 sm:max-w-sm">
+          <GoogleButton available={googleSignInEnabled()} />
         </div>
         <ul
           className="mt-10 flex flex-wrap gap-2"
