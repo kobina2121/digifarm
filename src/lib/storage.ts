@@ -47,3 +47,41 @@ export function privateStorage(): PrivateStorage {
       return localStorage(config.STORAGE_LOCAL_DIR);
   }
 }
+
+/**
+ * Public file storage (listing photos). Anyone may read these; keys are random
+ * and files are immutable, so they can be cached for a long time.
+ */
+export interface PublicStorage {
+  put(key: string, bytes: Uint8Array): Promise<void>;
+  get(key: string): Promise<Uint8Array>;
+}
+
+export const PUBLIC_IMAGE_KEY = /^listings\/[0-9a-f-]{36}-(480|1200)\.webp$/;
+
+function localPublicStorage(root: string): PublicStorage {
+  const base = path.resolve(root, "public");
+  const check = (key: string) => {
+    if (!PUBLIC_IMAGE_KEY.test(key)) throw new Error("Invalid storage key");
+  };
+  return {
+    async put(key, bytes) {
+      check(key);
+      const file = path.join(base, key);
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, bytes, { flag: "wx" });
+    },
+    async get(key) {
+      check(key);
+      return readFile(path.join(base, key));
+    },
+  };
+}
+
+export function publicStorage(): PublicStorage {
+  const config = env();
+  switch (config.STORAGE_DRIVER) {
+    case "local":
+      return localPublicStorage(config.STORAGE_LOCAL_DIR);
+  }
+}
