@@ -140,3 +140,21 @@
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
 }
+
+/* In-app launch screen (components/pwa/launch-splash.tsx): hidden unless the
+   launch script adds .df-splash to <html>, then faded out with .df-splash-out. */
+.launch-splash {
+  display: none;
+  transition: opacity 300ms ease-out;
+}
+html.df-splash .launch-splash {
+  display: flex;
+}
+html.df-splash-out .launch-splash {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .launch-splash {
+    transition: none;
+  }
+}

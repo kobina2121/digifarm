@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+import { LaunchSplash } from "@/components/pwa/launch-splash";
 import { ServiceWorker } from "@/components/pwa/service-worker";
 import { splashStartupImages } from "@/components/pwa/splash-screens";
 
@@ -31,8 +32,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-GH" className="h-full antialiased">
+    // The launch screen adds a class to <html> before React loads.
+    <html lang="en-GH" className="h-full antialiased" suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
+        <LaunchSplash />
         {children}
         <ServiceWorker />
       </body>
