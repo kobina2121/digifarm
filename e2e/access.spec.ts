@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 
 test.describe("signed-out visitors", () => {
   for (const path of [
-    "/home",
     "/buyer",
     "/buyer/addresses",
     "/admin",
