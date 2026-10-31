@@ -34,8 +34,8 @@ export default async function BuyerHomePage() {
           <span>
             <span className="block text-lg font-bold">Browse the market</span>
             <span className="text-sm text-white/85">
-              Compare produce, prices and grades from approved farms. Ordering
-              opens soon.
+              Compare produce, prices and grades from approved farms, and order
+              what’s in stock.
             </span>
           </span>
         </span>

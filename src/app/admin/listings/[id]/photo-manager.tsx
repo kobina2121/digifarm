@@ -77,7 +77,7 @@ export function PhotoManager({
                 onClick={() => remove(photo.id)}
                 disabled={pending}
                 aria-label={`Remove photo ${i + 1}`}
-                className="absolute top-1 right-1 flex size-8 items-center justify-center rounded-full bg-soil/80 text-white"
+                className="absolute top-1 right-1 flex size-8 items-center justify-center rounded-full bg-ink/80 text-white"
               >
                 <Trash2 className="size-4" aria-hidden />
               </button>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { LaunchSplash } from "@/components/pwa/launch-splash";
+import { ThemeScript } from "@/components/theme/theme-script";
 import { ServiceWorker } from "@/components/pwa/service-worker";
 import { splashStartupImages } from "@/components/pwa/splash-screens";
 
@@ -32,9 +33,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // The launch screen adds a class to <html> before React loads.
+    // The theme and launch-screen scripts add classes to <html> before React loads.
     <html lang="en-GH" className="h-full antialiased" suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
+        <ThemeScript />
         <LaunchSplash />
         {children}
         <ServiceWorker />

@@ -26,7 +26,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="bg-soil pb-safe text-white">
+      <footer className="bg-ink pb-safe text-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-end sm:justify-between">
           <Logo tone="on-dark" tagline />
           <p className="max-w-sm text-sm text-white/70">

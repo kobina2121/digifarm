@@ -60,3 +60,21 @@ export const VERIFICATION_TONE = {
   REJECTED: "danger",
   SUSPENDED: "danger",
 } as const satisfies Record<string, Tone>;
+
+export const ORDER_TONE = {
+  PENDING_PAYMENT: "attention",
+  PAID: "success",
+  IN_FULFILMENT: "success",
+  PARTIALLY_DELIVERED: "attention",
+  DELIVERED: "success",
+  COMPLETED: "success",
+  CANCELLED: "neutral",
+  EXPIRED: "neutral",
+} as const satisfies Record<string, Tone>;
+
+export const REFUND_TONE = {
+  PENDING: "attention",
+  PROCESSING: "attention",
+  SUCCEEDED: "success",
+  FAILED: "danger",
+} as const satisfies Record<string, Tone>;

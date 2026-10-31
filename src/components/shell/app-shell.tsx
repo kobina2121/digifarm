@@ -24,11 +24,14 @@ export function AppShell({
   nav,
   areaLabel,
   tone = "light",
+  showSignOut = true,
   children,
 }: {
   nav: NavItem[];
   areaLabel: string;
   tone?: "light" | "dark";
+  /** Buyers sign out from their Profile page instead. */
+  showSignOut?: boolean;
   children: ReactNode;
 }) {
   const dark = tone === "dark";
@@ -62,7 +65,9 @@ export function AppShell({
             />
           ))}
         </nav>
-        <SignOutButton onDark={dark} className="mt-auto justify-start" />
+        {showSignOut ? (
+          <SignOutButton onDark={dark} className="mt-auto justify-start" />
+        ) : null}
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -78,28 +83,48 @@ export function AppShell({
             <Link href="/home" aria-label="DigiFarm home">
               <Logo tone={dark ? "on-dark" : "brand"} />
             </Link>
-            <SignOutButton onDark={dark} className="px-2" />
+            {showSignOut ? (
+              <SignOutButton onDark={dark} className="px-2" />
+            ) : null}
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-28 md:px-8 md:pt-10 md:pb-12">
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-32 md:px-8 md:pt-10 md:pb-12">
           {children}
         </main>
 
-        <nav
-          aria-label={areaLabel}
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card pb-safe md:hidden"
-        >
-          <ul className="flex">
-            {nav.map((item) => (
-              <li key={item.href} className="flex-1">
-                <ShellNavLink item={item} variant="tab" />
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <BottomTabBar label={areaLabel}>
+          {nav.map((item) => (
+            <li key={item.href} className="flex-1">
+              <ShellNavLink item={item} variant="tab" />
+            </li>
+          ))}
+        </BottomTabBar>
       </div>
     </div>
+  );
+}
+
+/**
+ * Phone tab bar: a rounded bar floating above the content, centred and lifted
+ * clear of the home indicator, within thumb reach.
+ */
+export function BottomTabBar({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <nav
+      aria-label={label}
+      className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
+    >
+      <ul className="flex w-full max-w-md rounded-full border border-border/60 bg-card/95 p-1.5 shadow-[0_10px_30px_rgb(31_42_31/0.16)] backdrop-blur">
+        {children}
+      </ul>
+    </nav>
   );
 }
 

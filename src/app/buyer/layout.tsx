@@ -7,7 +7,7 @@ import { BUYER_NAV } from "./nav";
 
 export default function BuyerLayout({ children }: LayoutProps<"/buyer">) {
   return (
-    <AppShell nav={BUYER_NAV} areaLabel="Buyer">
+    <AppShell nav={BUYER_NAV} areaLabel="Buyer" showSignOut={false}>
       {/* Pages read the session, so they stream in behind this boundary. */}
       <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
     </AppShell>

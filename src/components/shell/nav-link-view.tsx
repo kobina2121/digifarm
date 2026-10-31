@@ -25,8 +25,10 @@ export function NavLinkView({
         href={href}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium [&_svg]:size-5",
-          active ? "text-field-green" : "text-muted-foreground",
+          "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full text-[0.68rem] font-medium transition-colors [&_svg]:size-5",
+          active
+            ? "bg-field-green text-white"
+            : "text-muted-foreground hover:text-soil",
         )}
       >
         {icon}

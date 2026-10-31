@@ -4,10 +4,16 @@ test.describe("signed-out visitors", () => {
   for (const path of [
     "/buyer",
     "/buyer/addresses",
+    "/buyer/cart",
+    "/buyer/checkout",
+    "/buyer/orders",
+    "/buyer/profile",
     "/admin",
     "/admin/listings",
     "/admin/grades",
     "/admin/suppliers",
+    "/admin/orders",
+    "/admin/payments",
     "/onboarding",
   ]) {
     test(`are sent to sign in from ${path}`, async ({ page }) => {
@@ -65,6 +71,35 @@ test.describe("signed-out visitors", () => {
   }) => {
     await page.goto("/market/listings/not-a-real-id");
     await expect(page.getByText("could not be found")).toBeVisible();
+  });
+
+  test("are asked to sign in before ordering", async ({ page }) => {
+    await page.goto("/market");
+    const first = page.locator('a[href^="/market/listings/"]').first();
+    test.skip((await first.count()) === 0, "no listings in this database");
+    await first.click();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(
+      page
+        .getByRole("link", { name: "Sign in to order" })
+        .or(page.getByText("can’t be ordered right now")),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add to cart" })).toHaveCount(
+      0,
+    );
+  });
+
+  test("cannot send unsigned payment webhooks or run scheduled jobs", async ({
+    request,
+  }) => {
+    const webhook = await request.post("/api/webhooks/paystack", {
+      data: { event: "charge.success", data: { reference: "DF-FAKE" } },
+    });
+    expect(webhook.status()).toBe(401);
+    for (const job of ["expire-orders", "reconcile-payments"]) {
+      const response = await request.get(`/api/cron/${job}`);
+      expect(response.status()).toBe(401);
+    }
   });
 
   test("can still read the install guide", async ({ page }) => {

@@ -19,6 +19,8 @@
   --color-harvest-gold: #f2a900;
   --color-harvest-gold-soft: #fdf2d3;
   --color-paper: #f6f6f1;
+  /* Always-dark fill (toasts, photo overlays, footer) that stays dark in both themes. */
+  --color-ink: #13261a;
 
   /* System fonts: San Francisco on iPhone/iPad/Mac, Roboto on Android, Segoe UI on Windows. */
   --font-sans:
@@ -72,7 +74,6 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Light theme only for the MVP; a dark theme is a later addition. */
 :root {
   --background: #f6f6f1;
   --foreground: #13261a;
@@ -106,6 +107,44 @@
   --sidebar-accent-foreground: #f6f6f1;
   --sidebar-border: #24402d;
   --sidebar-ring: #8fd16a;
+}
+
+/*
+ * Dark theme: chosen in Profile (light, dark or follow the phone), applied by
+ * components/theme/theme-script.tsx as the "dark" class on <html>. Brand
+ * tokens are re-pointed too, so text-soil, text-field-green, bg-sprout-soft and
+ * friends read well on dark surfaces without per-component changes.
+ */
+.dark {
+  color-scheme: dark;
+  --color-paper: #0f1712;
+  --color-soil: #e6ede5;
+  --color-field-green: #2f8f57;
+  --color-field-green-dark: #9ad97a;
+  --color-sprout-soft: #1c3324;
+  --color-harvest-gold-soft: #3a3014;
+
+  --background: #0f1712;
+  --foreground: #e6ede5;
+  --card: #18231c;
+  --card-foreground: #e6ede5;
+  --popover: #18231c;
+  --popover-foreground: #e6ede5;
+  --primary: #2f8f57;
+  --primary-foreground: #ffffff;
+  --secondary: #1f2e24;
+  --secondary-foreground: #e6ede5;
+  --muted: #1b261f;
+  --muted-foreground: #9fb0a3;
+  --accent: #1f2e24;
+  --accent-foreground: #e6ede5;
+  --destructive: #f0645a;
+  --border: #2a382f;
+  --input: #34443a;
+  --ring: #4cbb7c;
+  --sidebar: #0b120d;
+  --sidebar-accent: #18231c;
+  --sidebar-border: #1f2e24;
 }
 
 @layer base {

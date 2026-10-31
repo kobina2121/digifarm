@@ -1,8 +1,11 @@
+import { House, LogIn, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, Suspense } from "react";
 
 import { Logo } from "@/components/brand/logo";
-import { AppShell } from "@/components/shell/app-shell";
+import { MarketStallIcon } from "@/components/icons/market-stall";
+import { AppShell, BottomTabBar } from "@/components/shell/app-shell";
+import { NavLinkView } from "@/components/shell/nav-link-view";
 import { PageSkeleton } from "@/components/shell/page-skeleton";
 import { buttonVariants } from "@/components/ui/button";
 import { isStaff } from "@/lib/authz";
@@ -42,7 +45,7 @@ async function MarketFrame({ children }: { children: ReactNode }) {
   }
   if (actor?.emailVerified && actor.membership?.organizationType === "BUYER") {
     return (
-      <AppShell nav={BUYER_NAV} areaLabel="Buyer">
+      <AppShell nav={BUYER_NAV} areaLabel="Buyer" showSignOut={false}>
         {children}
       </AppShell>
     );
@@ -76,9 +79,52 @@ async function MarketFrame({ children }: { children: ReactNode }) {
           )}
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-12 md:px-8 md:pt-10">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-32 md:px-8 md:pt-10 md:pb-12">
         {children}
       </main>
+      <BottomTabBar label="Market">
+        <li className="flex-1">
+          <NavLinkView
+            href="/market"
+            label="Market"
+            icon={<MarketStallIcon aria-hidden />}
+            active
+            variant="tab"
+          />
+        </li>
+        {actor ? (
+          <li className="flex-1">
+            <NavLinkView
+              href="/home"
+              label="My account"
+              icon={<House aria-hidden />}
+              active={false}
+              variant="tab"
+            />
+          </li>
+        ) : (
+          <>
+            <li className="flex-1">
+              <NavLinkView
+                href="/sign-in?next=%2Fmarket"
+                label="Sign in"
+                icon={<LogIn aria-hidden />}
+                active={false}
+                variant="tab"
+              />
+            </li>
+            <li className="flex-1">
+              <NavLinkView
+                href="/sign-up"
+                label="Join"
+                icon={<UserPlus aria-hidden />}
+                active={false}
+                variant="tab"
+              />
+            </li>
+          </>
+        )}
+      </BottomTabBar>
     </div>
   );
 }

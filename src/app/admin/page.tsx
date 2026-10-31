@@ -1,8 +1,9 @@
-import { ArrowRight, PhoneCall } from "lucide-react";
+import { ArrowRight, PhoneCall, TriangleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { countStaleListings } from "@/modules/catalog";
+import { countRefundsNeedingAttention } from "@/modules/ordering";
 import {
   countSuppliersByStatus,
   VERIFICATION_LABELS,
@@ -14,9 +15,10 @@ export const metadata: Metadata = { title: "Staff overview" };
 
 export default async function AdminOverviewPage() {
   const actor = await requireStaff();
-  const [counts, stale] = await Promise.all([
+  const [counts, stale, stuckRefunds] = await Promise.all([
     countSuppliersByStatus(actor),
     countStaleListings(actor),
+    countRefundsNeedingAttention(actor),
   ]);
   const awaiting = counts.VISITED;
 
@@ -28,6 +30,28 @@ export default async function AdminOverviewPage() {
         </p>
         <h1 className="mt-1 text-3xl font-bold">Overview</h1>
       </div>
+
+      {stuckRefunds ? (
+        <Link
+          href="/admin/orders?view=CANCELLED"
+          className="flex items-center justify-between gap-4 rounded-2xl border border-destructive/40 bg-destructive/5 p-5"
+        >
+          <span className="flex items-center gap-4">
+            <TriangleAlert
+              className="size-6 shrink-0 text-destructive"
+              aria-hidden
+            />
+            <span>
+              <span className="block text-3xl font-bold">{stuckRefunds}</span>
+              <span className="text-soil">
+                {stuckRefunds === 1 ? "refund hasn’t" : "refunds haven’t"} gone
+                through. Open the order to send it again.
+              </span>
+            </span>
+          </span>
+          <ArrowRight className="size-6 shrink-0" aria-hidden />
+        </Link>
+      ) : null}
 
       <Link
         href="/admin/suppliers?status=VISITED"

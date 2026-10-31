@@ -117,6 +117,15 @@ export async function getBuyerProfile(actor: Actor) {
   });
 }
 
+/** The signed-in person's own name and email, for their profile. */
+export async function getMyAccount(actor: Actor) {
+  assertCan(actor, "buyer.profile.read");
+  return db.user.findUniqueOrThrow({
+    where: { id: actor.userId },
+    select: { name: true, email: true },
+  });
+}
+
 export async function addDeliveryAddress(
   actor: Actor,
   input: DeliveryAddressInput,

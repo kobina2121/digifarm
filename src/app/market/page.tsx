@@ -161,13 +161,20 @@ export default async function MarketPage({
           ) : null}
         </div>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {items.map((listing) => (
-            <li key={listing.id}>
-              <ListingCard listing={listing} />
-            </li>
-          ))}
-        </ul>
+        <section aria-labelledby="results" className="grid gap-4">
+          <h2 id="results" className="text-xl font-semibold">
+            {items.length}
+            {nextCursor ? "+" : ""}{" "}
+            {items.length === 1 && !nextCursor ? "result" : "results"} found
+          </h2>
+          <ul className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((listing) => (
+              <li key={listing.id}>
+                <ListingCard listing={listing} />
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {nextCursor ? (

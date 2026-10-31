@@ -2,6 +2,7 @@ export {
   addDeliveryAddress,
   createBuyerOrganization,
   getBuyerProfile,
+  getMyAccount,
   removeDeliveryAddress,
 } from "./service";
 export {

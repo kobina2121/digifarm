@@ -10,9 +10,15 @@ import {
   VerifiedFarm,
 } from "@/components/market/listing-bits";
 import { ListingCard } from "@/components/market/listing-card";
+import { buttonVariants } from "@/components/ui/button";
+import { type Actor, isStaff } from "@/lib/authz";
 import { GHANA_REGIONS } from "@/lib/ghana";
 import { orNotFound } from "@/lib/not-found";
-import { getMarketListing } from "@/modules/catalog";
+import { getActor } from "@/lib/session";
+import { getMarketListing, type MarketListing } from "@/modules/catalog";
+import { PAYMENT_HOLD_MINUTES, quantityInCart } from "@/modules/ordering";
+
+import { AddToCart } from "./add-to-cart";
 
 export const metadata: Metadata = { title: "Produce" };
 
@@ -105,19 +111,7 @@ export default async function MarketListingPage({
             <GradeBadge grade={listing.grade} />
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-start gap-3">
-              <ShoppingBasket
-                className="mt-0.5 size-5 shrink-0 text-field-green"
-                aria-hidden
-              />
-              <p className="text-sm">
-                {listing.availability.available
-                  ? "In stock and ready to order. Ordering opens soon: once it does, you’ll pay here and we deliver to you."
-                  : "This can’t be ordered right now. Check back soon, or compare other farms below."}
-              </p>
-            </div>
-          </div>
+          <OrderPanel listing={listing} actor={await getActor()} />
 
           {listing.description ? (
             <p className="whitespace-pre-line">{listing.description}</p>
@@ -190,7 +184,7 @@ export default async function MarketListingPage({
           <h2 className="text-xl font-bold">
             Other farms selling {listing.productName.toLowerCase()}
           </h2>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
             {otherOffers.map((offer) => (
               <li key={offer.id}>
                 <ListingCard listing={offer} />
@@ -199,6 +193,80 @@ export default async function MarketListingPage({
           </ul>
         </section>
       ) : null}
+    </div>
+  );
+}
+
+async function OrderPanel({
+  listing,
+  actor,
+}: {
+  listing: MarketListing;
+  actor: Actor | null;
+}) {
+  const isBuyer =
+    actor?.emailVerified && actor.membership?.organizationType === "BUYER";
+  let body;
+  if (!listing.availability.available) {
+    body = (
+      <p className="text-sm">
+        This can’t be ordered right now. Check back soon, or compare other farms
+        below.
+      </p>
+    );
+  } else if (isBuyer && actor) {
+    body = (
+      <div className="grid gap-3">
+        <AddToCart
+          listingId={listing.id}
+          minOrderQty={listing.minOrderQty}
+          unitPlural={listing.unit.plural}
+          inCart={await quantityInCart(actor, listing.id)}
+        />
+        <p className="text-xs text-muted-foreground">
+          In stock now. At checkout we hold it for {PAYMENT_HOLD_MINUTES}{" "}
+          minutes while you pay; once paid, your order is confirmed and we
+          deliver it in {listing.zone.name}.
+        </p>
+      </div>
+    );
+  } else if (actor && isStaff(actor)) {
+    body = (
+      <p className="text-sm">
+        In stock. Buyers can order this from their DigiFarm account.
+      </p>
+    );
+  } else if (actor) {
+    body = (
+      <div className="grid gap-3 text-sm">
+        <p>In stock. Set up your business to order it.</p>
+        <Link href="/onboarding" className={buttonVariants()}>
+          Set up your business
+        </Link>
+      </div>
+    );
+  } else {
+    body = (
+      <div className="grid gap-3 text-sm">
+        <p>In stock and ready to order. Sign in to buy it.</p>
+        <Link
+          href={`/sign-in?next=${encodeURIComponent(`/market/listings/${listing.id}`)}`}
+          className={buttonVariants()}
+        >
+          Sign in to order
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="flex items-start gap-3">
+        <ShoppingBasket
+          className="mt-0.5 size-5 shrink-0 text-field-green"
+          aria-hidden
+        />
+        <div className="min-w-0 flex-1">{body}</div>
+      </div>
     </div>
   );
 }
