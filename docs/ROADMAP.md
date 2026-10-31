@@ -1,7 +1,7 @@
 # DigiFarm — Architecture & Delivery Roadmap
 
-Status: **v5 — Phase 1 (Foundation) implemented; see §10 for status and deviations**
-Date: 2026-10-27
+Status: **v6 — Phases 1 (Foundation) and 2 (Marketplace) implemented; see §10 and §11 for status and deviations**
+Date: 2026-10-31
 
 This document is the plan of record for building DigiFarm, a B2B agricultural sourcing marketplace and managed-fulfilment platform for Ghana. It covers the current state of the repository, the proposed architecture, the initial data model, the MVP scope, a phased plan with acceptance criteria, open business decisions, and the main risks.
 
@@ -588,3 +588,31 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 - Sign-out on other devices can lag up to 5 minutes (session cookie cache); suspensions apply immediately.
 - Android Emulator and a tunnel tool (`cloudflared`) are not installed yet, so Android and real-phone checks (§2.6) are still to do.
 - Nothing is deployed yet: Vercel project, real email provider, S3-compatible storage and Sentry need accounts (§6).
+
+---
+
+## 11. Phase 2 status (2026-10-31)
+
+**Done — a buyer can find and compare real listings; unapproved suppliers can't sell; every listing change is logged.**
+
+| Item | What exists | Verified by |
+| --- | --- | --- |
+| Reference data | 8 units (kg, tonne, bag, crate, basket, bunch, piece, tuber), 6 categories, 32 products, A/B/C grade wording per category. Seed data only — no fake farms or prices | `pnpm db:seed` (idempotent; never overwrites grade wording an admin edited) |
+| Listings | Staff create listings for approved suppliers only: product, unit, A/B/C grade, zone, price (pesewas), minimum order, weight per unit, harvest and availability dates, notes, opening stock. Draft → on sale → paused → archived, with a required reason to pause or archive | integration tests (approval gate, transitions, suspension removes listings from the market) |
+| Photos | Up to 6 per listing; resized to 480 px and 1200 px WebP, camera rotation applied, all metadata (including GPS) removed; served from `/media/listings/…` with long-lived caching | integration test checks EXIF is gone; manual upload in the browser |
+| Stock | One stock record per listing; "Confirm stock" after phoning the farmer sets the count and refreshes the confirmation time; append-only movement history; stock can't drop below what's held for orders | integration tests (DB trigger blocks edits to history) |
+| Stale stock | Listings without a confirmation in 72 hours stop being orderable and show "Stock being confirmed". The staff overview counts them and "Needs stock check" is the daily call list, oldest first | integration test |
+| Grades | Staff read and admins edit the A/B/C wording per category; every edit audited | integration test (ops refused) |
+| Public market | `/market` (no sign-in needed): search, category chips, bottom-sheet filters (zone, grade, price range, in stock only, sort), cursor paging; listing page with other farms selling the same product; farm profile with verified badge. Never shows a farmer's phone number or exact location | integration + E2E on iPhone (WebKit) and Pixel profiles |
+| Audit | `listing.created/updated/stock_confirmed/publish/pause/resume/archive/photos_added/photo_removed`, `grade.updated`, each with before/after values and the supplier as `onBehalfOfOrgId` | integration tests |
+
+**Deviations from the plan above, and why**
+- **Stale listings aren't paused by a background job.** Availability is worked out from the last confirmation time whenever a listing is read, so there is no job to fail or run late. The listing keeps its "On sale" status; buyers see "Stock being confirmed" until staff call the farm.
+- **Search uses case-insensitive matching on product, variety and category names** (served by the trigram index), not full-text ranking. Enough for a 32-product catalogue; revisit when the catalogue grows.
+- **Grade reference photos are not built yet.** Grades have names and descriptions only; photos follow once DigiFarm has real examples per category.
+- **Product photos use the local storage driver**, like farm-visit photos (§10). An S3-compatible driver is needed before staging.
+- **Ordering isn't open.** Listing pages say "Ordering opens soon"; cart and checkout are Phase 3.
+
+**Known limitations / follow-ups**
+- Staff pages take a few seconds locally because the development database is in London (see §10).
+- The "in stock only" filter can return a short page when stock is held for orders, because reservations are checked after the query. Harmless until Phase 3 creates reservations.
