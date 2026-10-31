@@ -148,7 +148,7 @@ RETURNING *;
 
 Zero rows affected ⇒ insufficient stock ⇒ the whole checkout transaction rolls back. Multi-line carts lock inventory rows in a consistent order (by `listingId`) to avoid deadlocks. Every change also writes an `InventoryMovement` row. DB `CHECK (reserved >= 0 AND reserved <= on_hand)` is the last line of defence.
 
-**Stock freshness (D1/D6).** Stock is what ops last recorded after phoning the farmer, so each listing stores `stockConfirmedAt`/`stockConfirmedById`. Listings not reconfirmed within a configurable window (e.g. 72h for perishables) auto-pause and show as unavailable. Out-of-stock listings are shown as unavailable and cannot be added to a cart.
+**Stock accuracy (D1/D6).** DigiFarm manages every farm's stock, so the stock in the app is the truth: if it shows, it can be bought; if not, the listing shows "Out of stock". Each listing stores `stockConfirmedAt`/`stockConfirmedById` (when stock was last updated, and by whom). Listings not updated for 72 hours appear on a staff reminder list; buyers are unaffected.
 
 **Idempotency.** Checkout and payment initiation accept an idempotency key (unique constraint). Webhooks are deduplicated by `(provider, providerEventId)` unique constraint and processed inside a transaction; a payment is only marked `SUCCEEDED` after **server-side verification with the provider's API**, never on the webhook body or redirect alone.
 
@@ -361,7 +361,7 @@ Any of `DELIVERED`/`PARTIALLY_DELIVERED`/`COMPLETED` (within a dispute window) c
 **Reservation lifecycle**
 Created at checkout (`ACTIVE`, expires in N minutes) → `COMMITTED` when payment is verified (decrements `onHand`) → `RELEASED` on expiry, cancellation, or supplier rejection.
 
-D1 (pay now; ops confirm with the farmer by phone within an SLA, else auto-refund) and D3 (prepaid only) are reflected above. `AWAITING_SUPPLIER → CONFIRMED` is recorded by ops staff in the MVP. Delivery states are provisional until D5 is decided.
+D1 (stock shown is DigiFarm-managed, so payment confirms the order) and D3 (prepaid only) are reflected above. Because DigiFarm's stock is the truth, a fulfilment starts as confirmed; the `PARTIALLY_CONFIRMED`/`REJECTED` paths are kept only for the exception where produce isn't there at pickup, which refunds the affected items. Delivery states are provisional until D5 is decided.
 
 ---
 
@@ -382,7 +382,7 @@ Goal: a real operator can run a **single-region pilot** end-to-end — onboardin
 - Managed sourcing: buyer request → ops builds quotation (versioned) → buyer accepts/rejects → accepted quote creates order.
 - Paystack integration (mobile money + card) behind a provider interface: initialize, redirect/callback, server-side verify, signed idempotent webhooks, abandoned-payment handling, refunds (admin-approved).
 - Ledger recording payment captures, supplier commission (D2 — the only revenue line in the MVP), refunds and supplier payables. Payout method and cadence are pending (D9).
-- Fulfilment ops console: recording farmer confirmation (from phone calls) within the SLA, partial quantities/shortages, quality inspection records, delivery recording and status updates (delivery model pending D5), proof-of-delivery photo + receiver name, failed delivery/reschedule.
+- Fulfilment ops console: pickup from farms, shortages found at pickup (refunded per D10), quality inspection records, delivery recording and status updates (delivery model pending D5), proof-of-delivery photo + receiver name, failed delivery/reschedule.
 - Disputes for missing/damaged/wrong produce with admin resolution (refund or credit note record).
 - Email notifications via outbox: verification, order placed/confirmed/rejected, payment result, quotation sent/expiring, delivery updates, cancellation/refund.
 - Admin dashboard: GMV, completed orders, platform revenue, AOV, fulfilment rate, on-time rate, cancellation/dispute rates, verification queue; audit log viewer.
@@ -430,7 +430,7 @@ Each step is a small, reviewable, tested increment.
 - Seed categories, canonical products, units (labelled seed data, not fake suppliers).
 - Listing CRUD by ops on behalf of approved suppliers, with image upload (resize/WebP), A/B/C grade, unit, MOQ, price, availability dates, pickup location and zone.
 - Grade definitions per category (A/B/C with reference photos), managed by admins.
-- "Confirm stock" quick action for ops after phoning a farmer; stale listings auto-pause.
+- Stock update quick action for staff; a reminder list for listings not updated in 3 days.
 - Inventory record per listing, stock adjustments with movement log.
 - Public catalogue: search (Postgres full-text + trigram), filters (category, region/district, price range, grade, availability, MOQ), cursor pagination, product detail, supplier profile + verified badge.
 - Admin listing moderation (pause/archive with reason).
@@ -450,7 +450,7 @@ Each step is a small, reviewable, tested increment.
 
 ### Phase 4 — Fulfilment (L)
 - **Before starting:** D5 (delivery model) and D9 (farmer payouts) decided.
-- Ops confirmation queue: record the farmer's accept/partial/reject from phone calls within the SLA; unconfirmed lines auto-refund; reservations released on rejection.
+- Shortage handling: when produce isn't there at pickup, staff record it and the affected items are refunded; reservations released.
 - Ops fulfilment console: pickup scheduling, carrier/rider assignment, delivery windows and fees, status updates, failed delivery + reschedule.
 - Quality inspections (pickup/delivery), shortage handling and partial refunds.
 - Proof of delivery (photo + receiver name); buyer receipt confirmation; auto-complete after N days.
@@ -496,7 +496,7 @@ Recorded 2026-10-27 with the founder.
 
 | # | Decision | Status | Answer and consequence |
 | --- | --- | --- | --- |
-| **D1** | Checkout order | **Decided** | Out-of-stock listings show as unavailable and can't be added to a cart. For available stock the buyer pays immediately; DigiFarm ops confirm with the farmer by phone within an SLA (default 4h, configurable), and unconfirmed or rejected lines are auto-refunded. |
+| **D1** | Checkout order | **Decided (revised 2026-10-31)** | DigiFarm manages every farm's stock and keeps it up to date in the app. Stock shown is available: the buyer pays and the order is confirmed straight away, with no farm-confirmation step after payment. Anything not available shows as out of stock and can't be bought. |
 | **D2** | Revenue model | **Decided** | Supplier commission only (basis points, snapshotted per fulfilment). No buyer service fee in the MVP. Managed-sourcing quotations show product cost and delivery; commission is deducted on the supplier side. |
 | **D3** | Credit terms | **Decided** | Prepaid only in the MVP. |
 | **D4** | Pilot geography | **Decided** | Greater Accra and Kumasi from the start, modelled as two operating zones. Open sub-question: are cross-zone orders allowed (e.g. Kumasi farm → Accra buyer)? Default until D5: yes for managed sourcing, same-zone only for marketplace orders. |
@@ -505,7 +505,7 @@ Recorded 2026-10-27 with the founder.
 | **D7** | Supplier verification | **Decided** | DigiFarm recruits farms through site visits. Verification = a recorded farm visit plus approval by a second staff member. No supplier ID-document uploads in the MVP. |
 | **D8** | Grading | **Decided** | DigiFarm A/B/C grades per category, with descriptions and reference photos, assigned by staff. |
 | **D9** | Farmer payouts | **Deferred** | Needed before Phase 4. The ledger tracks supplier payables from Phase 3 regardless. |
-| **D10** | Cancellation/refund/dispute policy | **Decided: Claude drafts, founder reviews** | One-page draft in `docs/` before Phase 3. |
+| **D10** | Cancellation/refund/dispute policy | **Drafted (v2, after the D1 revision) — awaiting founder review** | Draft: [`docs/policies/cancellations-refunds-disputes.md`](policies/cancellations-refunds-disputes.md), with six open questions in its §6. Its numbers become configuration in Phase 3 and 4. |
 | **D11** | Tax & invoicing | **Deferred** | Must be resolved with an accountant before live payments. Invoices are designed so tax lines can be added. |
 | **D12** | Handling customer funds (Act 987) | **Deferred** | Must be resolved before live payments. The MVP collects through a licensed provider and makes no escrow claims. |
 | **D13** | Hosting | **Decided** | Vercel (web) + Neon (Postgres). Background jobs run from a Postgres job table drained by Vercel Cron (§2.2). Regions to be matched. |
@@ -543,7 +543,7 @@ Recorded 2026-10-27 with the founder.
 | --- | --- |
 | Marketplace cold start (buyers without supply, suppliers without demand) | Managed sourcing as the wedge; ops-assisted supplier onboarding; focus on one region and a few categories |
 | Perishability and quality variance → disputes | Grade definitions with photos, quality inspection records, clear dispute policy, fast resolution SLAs |
-| Stock information goes stale (farmers don't update listings) | Availability expiry dates, supplier confirmation step, ops-assisted stock updates, auto-pause stale listings |
+| Stock in the app drifts from what farms actually have | DigiFarm staff update stock whenever a farm's situation changes; staff reminder list for listings not updated in 3 days; shortages at pickup recorded against the farm (3 in 30 days triggers review); affected items refunded per D10 |
 | Ops team becomes the bottleneck — every stock update and confirmation goes through staff phone calls (D6) | Fast ops tooling (bulk stock confirmation, daily call lists per zone), SLA metrics on confirmation time, supplier self-service once suppliers are ready |
 | Logistics cost erodes margin | Zone-based delivery fees, minimum order values, consolidation of pickups; record actual costs so contribution margin is measurable |
 | Supplier payout delays damage trust | Visible payable balances, predictable payout schedule (D9) |
@@ -601,13 +601,13 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 | Listings | Staff create listings for approved suppliers only: product, unit, A/B/C grade, zone, price (pesewas), minimum order, weight per unit, harvest and availability dates, notes, opening stock. Draft → on sale → paused → archived, with a required reason to pause or archive | integration tests (approval gate, transitions, suspension removes listings from the market) |
 | Photos | Up to 6 per listing; resized to 480 px and 1200 px WebP, camera rotation applied, all metadata (including GPS) removed; served from `/media/listings/…` with long-lived caching | integration test checks EXIF is gone; manual upload in the browser |
 | Stock | One stock record per listing; "Confirm stock" after phoning the farmer sets the count and refreshes the confirmation time; append-only movement history; stock can't drop below what's held for orders | integration tests (DB trigger blocks edits to history) |
-| Stale stock | Listings without a confirmation in 72 hours stop being orderable and show "Stock being confirmed". The staff overview counts them and "Needs stock check" is the daily call list, oldest first | integration test |
+| Stock reminders | Stock entered by staff stays orderable until it runs out. Listings not updated in 72 hours appear on the staff overview and the "Not updated in 3 days" list as a reminder; buyers are unaffected (revised 2026-10-31, D1) | integration test |
 | Grades | Staff read and admins edit the A/B/C wording per category; every edit audited | integration test (ops refused) |
 | Public market | `/market` (no sign-in needed): search, category chips, bottom-sheet filters (zone, grade, price range, in stock only, sort), cursor paging; listing page with other farms selling the same product; farm profile with verified badge. Never shows a farmer's phone number or exact location | integration + E2E on iPhone (WebKit) and Pixel profiles |
 | Audit | `listing.created/updated/stock_confirmed/publish/pause/resume/archive/photos_added/photo_removed`, `grade.updated`, each with before/after values and the supplier as `onBehalfOfOrgId` | integration tests |
 
 **Deviations from the plan above, and why**
-- **Stale listings aren't paused by a background job.** Availability is worked out from the last confirmation time whenever a listing is read, so there is no job to fail or run late. The listing keeps its "On sale" status; buyers see "Stock being confirmed" until staff call the farm.
+- **Old stock isn't hidden from buyers** (revised 2026-10-31). DigiFarm manages stock, so whatever staff entered stays orderable; a listing not updated in 3 days only appears on a staff reminder list.
 - **Search uses case-insensitive matching on product, variety and category names** (served by the trigram index), not full-text ranking. Enough for a 32-product catalogue; revisit when the catalogue grows.
 - **Grade reference photos are not built yet.** Grades have names and descriptions only; photos follow once DigiFarm has real examples per category.
 - **Product photos use the local storage driver**, like farm-visit photos (§10). An S3-compatible driver is needed before staging.
