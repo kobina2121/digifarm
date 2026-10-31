@@ -44,6 +44,10 @@ model User {
   verificationsDecided  SupplierVerification[] @relation("VerificationDecidedBy")
   managedSuppliersAdded Organization[]         @relation("OrganizationCreatedBy")
   auditEntries          AuditLog[]
+  listingsCreated       Listing[]              @relation("ListingCreatedBy")
+  stockConfirmations    Listing[]              @relation("ListingStockConfirmedBy")
+  inventoryMovements    InventoryMovement[]
+  gradeEdits            GradeDefinition[]
 
   @@map("user")
 }
@@ -163,6 +167,7 @@ model Organization {
   memberships  Membership[]
   addresses    Address[]
   verification SupplierVerification?
+  listings     Listing[]
 
   @@index([type, status])
   @@map("organization")
@@ -213,6 +218,7 @@ model OperatingZone {
   createdAt DateTime    @default(now())
 
   addresses Address[]
+  listings  Listing[]
 
   @@map("operating_zone")
 }
@@ -243,6 +249,8 @@ model Address {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   deletedAt      DateTime?
+
+  pickupFor Listing[]
 
   @@index([organizationId])
   @@map("address")
@@ -332,4 +340,184 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorUserId, createdAt])
   @@map("audit_log")
+}
+
+// ─── Catalogue (ROADMAP Phase 2) ─────────────────────────────────────────────
+
+enum UnitKind {
+  MASS // kg, tonne — convertible between each other
+  COUNT // piece, tuber
+  CONTAINER // bag, crate, basket — never converted to kg automatically
+  BUNDLE // bunch
+}
+
+model UnitOfMeasure {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  code         String   @unique
+  name         String
+  plural       String
+  kind         UnitKind
+  // Size in the kind's base unit (kg for MASS); only set where conversion is exact.
+  factorToBase Decimal? @db.Decimal(14, 3)
+  sortOrder    Int      @default(0)
+
+  listings Listing[]
+
+  @@map("unit_of_measure")
+}
+
+model ProductCategory {
+  id        String @id @default(uuid(7)) @db.Uuid
+  slug      String @unique
+  name      String
+  sortOrder Int    @default(0)
+
+  products Product[]
+  grades   GradeDefinition[]
+
+  @@map("product_category")
+}
+
+// DigiFarm's own A/B/C grades per category (ROADMAP D8).
+model GradeDefinition {
+  id          String          @id @default(uuid(7)) @db.Uuid
+  categoryId  String          @db.Uuid
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  code        String // A, B or C
+  title       String
+  description String
+  updatedById String?
+  updatedBy   User?           @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime        @updatedAt
+
+  listings Listing[]
+
+  @@unique([categoryId, code])
+  @@map("grade_definition")
+}
+
+// The canonical item, e.g. "Tomato — Pectomech". Suppliers sell it through listings.
+model Product {
+  id         String          @id @default(uuid(7)) @db.Uuid
+  categoryId String          @db.Uuid
+  category   ProductCategory @relation(fields: [categoryId], references: [id])
+  name       String
+  variety    String?
+  slug       String          @unique
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+
+  listings Listing[]
+
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "product_name_trgm_idx")
+  @@index([categoryId])
+  @@map("product")
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+model Listing {
+  id                 String           @id @default(uuid(7)) @db.Uuid
+  supplierOrgId      String           @db.Uuid
+  supplier           Organization     @relation(fields: [supplierOrgId], references: [id])
+  productId          String           @db.Uuid
+  product            Product          @relation(fields: [productId], references: [id])
+  unitId             String           @db.Uuid
+  unit               UnitOfMeasure    @relation(fields: [unitId], references: [id])
+  gradeId            String?          @db.Uuid
+  grade              GradeDefinition? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+  zoneId             String           @db.Uuid
+  zone               OperatingZone    @relation(fields: [zoneId], references: [id])
+  pickupAddressId    String?          @db.Uuid
+  pickupAddress      Address?         @relation(fields: [pickupAddressId], references: [id], onDelete: SetNull)
+  description        String?
+  unitPriceMinor     BigInt
+  currency           String           @default("GHS")
+  minOrderQty        Decimal          @db.Decimal(14, 3)
+  // Informational only (e.g. a 50 kg bag); never used to convert prices.
+  netWeightPerUnitKg Decimal?         @db.Decimal(10, 3)
+  harvestDate        DateTime?        @db.Date
+  availableFrom      DateTime         @db.Date
+  availableUntil     DateTime?        @db.Date
+  status             ListingStatus    @default(DRAFT)
+  statusReason       String?
+  // Set when staff confirm stock with the farmer by phone (ROADMAP D1/D6).
+  stockConfirmedAt   DateTime?
+  stockConfirmedById String?
+  stockConfirmedBy   User?            @relation("ListingStockConfirmedBy", fields: [stockConfirmedById], references: [id], onDelete: SetNull)
+  createdById        String
+  createdBy          User             @relation("ListingCreatedBy", fields: [createdById], references: [id])
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+
+  images    ListingImage[]
+  inventory InventoryRecord?
+
+  @@index([status, productId])
+  @@index([status, zoneId])
+  @@index([supplierOrgId])
+  @@map("listing")
+}
+
+// Public product photos (resized WebP, metadata stripped).
+model ListingImage {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  listingId  String   @db.Uuid
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  storageKey String   @unique // base key; files exist at <key>-480.webp and <key>-1200.webp
+  width      Int
+  height     Int
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([listingId, sortOrder])
+  @@map("listing_image")
+}
+
+model InventoryRecord {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  listingId String   @unique @db.Uuid
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  onHand    Decimal  @default(0) @db.Decimal(14, 3)
+  // Held by unpaid checkouts (Phase 3). Available = onHand - reserved.
+  reserved  Decimal  @default(0) @db.Decimal(14, 3)
+  version   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  movements InventoryMovement[]
+
+  @@map("inventory_record")
+}
+
+enum InventoryMovementType {
+  ADJUST
+  RESERVE
+  RELEASE
+  COMMIT
+  RETURN
+}
+
+// Append-only stock history (enforced by a database trigger).
+model InventoryMovement {
+  id          String                @id @default(uuid(7)) @db.Uuid
+  inventoryId String                @db.Uuid
+  inventory   InventoryRecord       @relation(fields: [inventoryId], references: [id], onDelete: Restrict)
+  type        InventoryMovementType
+  quantity    Decimal               @db.Decimal(14, 3) // signed change to on-hand stock
+  onHandAfter Decimal               @db.Decimal(14, 3)
+  reason      String?
+  refType     String?
+  refId       String?
+  actorUserId String?
+  actor       User?                 @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  createdAt   DateTime              @default(now())
+
+  @@index([inventoryId, createdAt])
+  @@map("inventory_movement")
 }
