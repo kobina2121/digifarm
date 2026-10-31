@@ -1,6 +1,5 @@
-import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { type ReactNode, Suspense } from "react";
+import { type ComponentType, type ReactNode, Suspense } from "react";
 
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
@@ -12,7 +11,8 @@ import { SignOutButton } from "./sign-out-button";
 export type NavItem = {
   href: string;
   label: string;
-  icon: LucideIcon;
+  /** A Lucide icon or one of ours from components/icons. */
+  icon: ComponentType<{ "aria-hidden"?: boolean }>;
   exact?: boolean;
 };
 
