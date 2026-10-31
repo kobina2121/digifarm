@@ -41,6 +41,20 @@ export const envSchema = z.object({
 
   STORAGE_DRIVER: z.enum(["local"]).default("local"),
   STORAGE_LOCAL_DIR: z.string().default(".storage"),
+
+  // "fake" is a development stand-in that never touches real money.
+  PAYMENT_PROVIDER: z.enum(["fake", "paystack"]).default("fake"),
+  // Test keys only until D11, D12 and D14 are resolved (ROADMAP §7).
+  PAYSTACK_SECRET_KEY: optionalSetting.refine(
+    (v) => v === undefined || v.startsWith("sk_test_"),
+    "Only Paystack test keys (sk_test_…) are allowed until live payments are approved",
+  ),
+
+  // Scheduled jobs (/api/cron/*) must send "Authorization: Bearer <CRON_SECRET>".
+  CRON_SECRET: optionalSetting.refine(
+    (v) => v === undefined || v.length >= 16,
+    "CRON_SECRET must be at least 16 characters",
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -58,6 +72,12 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
       "Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither",
     );
   }
+  if (
+    result.data.PAYMENT_PROVIDER === "paystack" &&
+    !result.data.PAYSTACK_SECRET_KEY
+  ) {
+    throw new Error("PAYMENT_PROVIDER=paystack needs PAYSTACK_SECRET_KEY");
+  }
   if (result.data.APP_ENV !== "development") {
     if (result.data.EMAIL_TRANSPORT === "console") {
       throw new Error(
@@ -67,6 +87,11 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     if (result.data.STORAGE_DRIVER === "local") {
       throw new Error(
         `STORAGE_DRIVER=local is not allowed when APP_ENV=${result.data.APP_ENV}`,
+      );
+    }
+    if (result.data.PAYMENT_PROVIDER === "fake") {
+      throw new Error(
+        `PAYMENT_PROVIDER=fake is not allowed when APP_ENV=${result.data.APP_ENV}`,
       );
     }
   }

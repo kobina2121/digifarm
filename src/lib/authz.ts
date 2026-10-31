@@ -35,6 +35,12 @@ export type Permission =
   | "listing.manage"
   | "stock.confirm"
   | "grade.manage"
+  | "cart.manage"
+  | "order.place"
+  | "order.read"
+  | "order.cancel"
+  | "order.manage"
+  | "payment.reconcile"
   | "audit.read"
   | "staff.manage";
 
@@ -60,6 +66,10 @@ export function can(actor: Actor, permission: Permission): boolean {
     case "buyer.onboard":
       return actor.platformRole === "USER" && actor.membership === null;
     case "buyer.profile.read":
+    case "cart.manage":
+    case "order.place":
+    case "order.read":
+    case "order.cancel":
       return isBuyerMember(actor);
     case "buyer.profile.update":
     case "buyer.address.manage":
@@ -72,8 +82,10 @@ export function can(actor: Actor, permission: Permission): boolean {
     case "verification.decide":
     case "listing.manage":
     case "stock.confirm":
+    case "order.manage":
       return isStaff(actor);
     case "grade.manage":
+    case "payment.reconcile":
     case "audit.read":
     case "staff.manage":
       return actor.platformRole === "ADMIN";

@@ -1,4 +1,4 @@
-// DigiFarm database schema — Phase 1 slice (docs/ROADMAP.md §3, step 1.3).
+// DigiFarm database schema (docs/ROADMAP.md §3).
 // Change it only through migrations: `pnpm db:migrate`.
 
 generator client {
@@ -48,6 +48,10 @@ model User {
   stockConfirmations    Listing[]              @relation("ListingStockConfirmedBy")
   inventoryMovements    InventoryMovement[]
   gradeEdits            GradeDefinition[]
+  ordersPlaced          Order[]                @relation("OrderPlacedBy")
+  orderStatusChanges    OrderStatusHistory[]
+  refundsRequested      Refund[]               @relation("RefundRequestedBy")
+  refundsApproved       Refund[]               @relation("RefundApprovedBy")
 
   @@map("user")
 }
@@ -168,6 +172,10 @@ model Organization {
   addresses    Address[]
   verification SupplierVerification?
   listings     Listing[]
+  cart         Cart?
+  orders       Order[]
+  fulfilments  Fulfilment[]
+  ledger       LedgerEntry[]
 
   @@index([type, status])
   @@map("organization")
@@ -456,8 +464,10 @@ model Listing {
   updatedAt          DateTime         @updatedAt
   deletedAt          DateTime?
 
-  images    ListingImage[]
-  inventory InventoryRecord?
+  images     ListingImage[]
+  inventory  InventoryRecord?
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 
   @@index([status, productId])
   @@index([status, zoneId])
@@ -490,7 +500,8 @@ model InventoryRecord {
   version   Int      @default(0)
   updatedAt DateTime @updatedAt
 
-  movements InventoryMovement[]
+  movements    InventoryMovement[]
+  reservations StockReservation[]
 
   @@map("inventory_record")
 }
@@ -520,4 +531,323 @@ model InventoryMovement {
 
   @@index([inventoryId, createdAt])
   @@map("inventory_movement")
+}
+
+// ─── Ordering (ROADMAP Phase 3) ──────────────────────────────────────────────
+
+// One server-side cart per buyer business, shared by its members.
+model Cart {
+  id         String       @id @default(uuid(7)) @db.Uuid
+  buyerOrgId String       @unique @db.Uuid
+  buyer      Organization @relation(fields: [buyerOrgId], references: [id], onDelete: Cascade)
+  updatedAt  DateTime     @updatedAt
+
+  items CartItem[]
+
+  @@map("cart")
+}
+
+model CartItem {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  cartId    String   @db.Uuid
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  listingId String   @db.Uuid
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  quantity  Decimal  @db.Decimal(14, 3)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, listingId])
+  @@map("cart_item")
+}
+
+enum OrderChannel {
+  MARKETPLACE
+  MANAGED // from an accepted sourcing quotation
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT // stock held while the buyer pays
+  PAID // paid = confirmed (ROADMAP D1)
+  IN_FULFILMENT
+  PARTIALLY_DELIVERED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  EXPIRED // payment didn't arrive before the hold ended
+}
+
+model Order {
+  id                      String       @id @default(uuid(7)) @db.Uuid
+  number                  String       @unique // e.g. DF-2026-000123
+  buyerOrgId              String       @db.Uuid
+  buyer                   Organization @relation(fields: [buyerOrgId], references: [id])
+  placedById              String
+  placedBy                User         @relation("OrderPlacedBy", fields: [placedById], references: [id])
+  channel                 OrderChannel @default(MARKETPLACE)
+  status                  OrderStatus  @default(PENDING_PAYMENT)
+  currency                String       @default("GHS")
+  subtotalMinor           BigInt
+  deliveryFeeMinor        BigInt
+  totalMinor              BigInt
+  zoneId                  String       @db.Uuid
+  deliveryAddressSnapshot Json
+  buyerNotes              String?
+  holdExpiresAt           DateTime
+  idempotencyKey          String       @unique
+  paidAt                  DateTime?
+  cancelledAt             DateTime?
+  cancelReason            String?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  fulfilments Fulfilment[]
+  items       OrderItem[]
+  history     OrderStatusHistory[]
+  payments    Payment[]
+  ledger      LedgerEntry[]
+
+  @@index([buyerOrgId, createdAt])
+  @@index([status, holdExpiresAt])
+  @@map("order")
+}
+
+enum FulfilmentStatus {
+  PENDING // waiting for payment
+  CONFIRMED // paid; DigiFarm's stock is the truth, so no farm confirmation step
+  PICKED_UP
+  DELIVERED
+  CANCELLED
+}
+
+// One per (order, supplier): how a multi-farm order is split.
+model Fulfilment {
+  id            String           @id @default(uuid(7)) @db.Uuid
+  orderId       String           @db.Uuid
+  order         Order            @relation(fields: [orderId], references: [id])
+  supplierOrgId String           @db.Uuid
+  supplier      Organization     @relation(fields: [supplierOrgId], references: [id])
+  supplierName  String // snapshot
+  status        FulfilmentStatus @default(PENDING)
+  subtotalMinor BigInt
+  commissionBps Int // snapshot of DigiFarm's commission (D2)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  items  OrderItem[]
+  ledger LedgerEntry[]
+
+  @@unique([orderId, supplierOrgId])
+  @@index([supplierOrgId, status])
+  @@map("fulfilment")
+}
+
+model OrderItem {
+  id             String     @id @default(uuid(7)) @db.Uuid
+  orderId        String     @db.Uuid
+  order          Order      @relation(fields: [orderId], references: [id])
+  fulfilmentId   String     @db.Uuid
+  fulfilment     Fulfilment @relation(fields: [fulfilmentId], references: [id])
+  listingId      String?    @db.Uuid
+  listing        Listing?   @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  // Snapshots: later listing edits never change a past order.
+  productName    String
+  variety        String?
+  gradeCode      String?
+  unitCode       String
+  unitName       String
+  unitPlural     String
+  quantity       Decimal    @db.Decimal(14, 3)
+  unitPriceMinor BigInt
+  lineTotalMinor BigInt
+  createdAt      DateTime   @default(now())
+
+  reservation StockReservation?
+
+  @@index([orderId])
+  @@map("order_item")
+}
+
+model OrderStatusHistory {
+  id          String       @id @default(uuid(7)) @db.Uuid
+  orderId     String       @db.Uuid
+  order       Order        @relation(fields: [orderId], references: [id])
+  from        OrderStatus?
+  to          OrderStatus
+  reason      String?
+  actorUserId String?
+  actor       User?        @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  createdAt   DateTime     @default(now())
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+
+enum ReservationStatus {
+  ACTIVE // holding stock while the buyer pays
+  COMMITTED // paid: taken out of stock
+  RELEASED // hold ended or order cancelled before payment
+}
+
+model StockReservation {
+  id          String            @id @default(uuid(7)) @db.Uuid
+  inventoryId String            @db.Uuid
+  inventory   InventoryRecord   @relation(fields: [inventoryId], references: [id], onDelete: Restrict)
+  orderItemId String            @unique @db.Uuid
+  orderItem   OrderItem         @relation(fields: [orderItemId], references: [id])
+  quantity    Decimal           @db.Decimal(14, 3)
+  status      ReservationStatus @default(ACTIVE)
+  expiresAt   DateTime
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([status, expiresAt])
+  @@index([inventoryId, status])
+  @@map("stock_reservation")
+}
+
+// ─── Payments (ROADMAP Phase 3; Paystack test mode until D11/D12/D14) ─────────
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  ABANDONED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+model Payment {
+  id          String        @id @default(uuid(7)) @db.Uuid
+  orderId     String        @db.Uuid
+  order       Order         @relation(fields: [orderId], references: [id])
+  provider    String // "paystack" or "fake" (development only)
+  amountMinor BigInt
+  currency    String        @default("GHS")
+  status      PaymentStatus @default(PENDING)
+  feeMinor    BigInt? // provider's fee, from verification
+  paidAt      DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  attempts PaymentAttempt[]
+  refunds  Refund[]
+  ledger   LedgerEntry[]
+
+  @@unique([orderId])
+  @@map("payment")
+}
+
+enum PaymentAttemptStatus {
+  INITIATED
+  SUCCEEDED
+  FAILED
+  ABANDONED
+}
+
+// One trip to the provider's checkout. A buyer can retry while the hold lasts.
+model PaymentAttempt {
+  id                    String               @id @default(uuid(7)) @db.Uuid
+  paymentId             String               @db.Uuid
+  payment               Payment              @relation(fields: [paymentId], references: [id])
+  provider              String
+  reference             String // our reference, sent to the provider
+  authorizationUrl      String?
+  providerTransactionId String?
+  channel               String? // mobile_money, card, …
+  status                PaymentAttemptStatus @default(INITIATED)
+  rawStatus             String?
+  failureReason         String?
+  verifiedAt            DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  refunds Refund[]
+
+  @@unique([provider, reference])
+  @@index([paymentId])
+  @@map("payment_attempt")
+}
+
+// Webhook dedupe log: the same event is processed once, however often it arrives.
+model ProviderEvent {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  provider    String
+  eventId     String
+  eventType   String
+  payload     Json
+  processedAt DateTime?
+  error       String?
+  receivedAt  DateTime  @default(now())
+
+  @@unique([provider, eventId])
+  @@map("provider_event")
+}
+
+enum RefundStatus {
+  PENDING // recorded, not yet sent to the provider
+  PROCESSING // accepted by the provider
+  SUCCEEDED
+  FAILED
+}
+
+model Refund {
+  id                String         @id @default(uuid(7)) @db.Uuid
+  paymentId         String         @db.Uuid
+  payment           Payment        @relation(fields: [paymentId], references: [id])
+  // The charge being refunded (a payment can have more than one if a buyer paid twice).
+  attemptId         String         @db.Uuid
+  attempt           PaymentAttempt @relation(fields: [attemptId], references: [id])
+  amountMinor       BigInt
+  reason            String
+  status            RefundStatus   @default(PENDING)
+  providerReference String?
+  failureReason     String?
+  requestedById     String?
+  requestedBy       User?          @relation("RefundRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  approvedById      String?
+  approvedBy        User?          @relation("RefundApprovedBy", fields: [approvedById], references: [id], onDelete: Restrict)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  ledger LedgerEntry[]
+
+  @@index([paymentId])
+  @@index([status])
+  @@map("refund")
+}
+
+enum LedgerEntryType {
+  PAYMENT_CAPTURED // + money received from the buyer
+  PROVIDER_FEE // - the payment provider's fee
+  SUPPLIER_PAYABLE // + owed to a farm (its share after commission); negative to reverse
+  COMMISSION // + DigiFarm's commission (D2); negative to reverse
+  DELIVERY_FEE // + delivery charged to the buyer
+  REFUND // - money returned to the buyer
+}
+
+// Append-only financial journal (enforced by a database trigger). Corrections
+// are new reversing entries, never edits.
+model LedgerEntry {
+  id            String          @id @default(uuid(7)) @db.Uuid
+  type          LedgerEntryType
+  amountMinor   BigInt // signed
+  currency      String          @default("GHS")
+  orderId       String?         @db.Uuid
+  order         Order?          @relation(fields: [orderId], references: [id])
+  fulfilmentId  String?         @db.Uuid
+  fulfilment    Fulfilment?     @relation(fields: [fulfilmentId], references: [id])
+  supplierOrgId String?         @db.Uuid
+  supplier      Organization?   @relation(fields: [supplierOrgId], references: [id])
+  paymentId     String?         @db.Uuid
+  payment       Payment?        @relation(fields: [paymentId], references: [id])
+  refundId      String?         @db.Uuid
+  refund        Refund?         @relation(fields: [refundId], references: [id])
+  memo          String?
+  createdAt     DateTime        @default(now())
+
+  @@index([orderId])
+  @@index([supplierOrgId, type])
+  @@index([type, createdAt])
+  @@map("ledger_entry")
 }

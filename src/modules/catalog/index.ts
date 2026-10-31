@@ -30,6 +30,8 @@ export {
   listListingsForStaff,
   type ListingPhoto,
   type MarketListing,
+  type OrderableListing,
+  orderableListings,
   MAX_PHOTOS_PER_LISTING,
   type PhotoUpload,
   removeListingPhoto,

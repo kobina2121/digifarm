@@ -34,6 +34,7 @@ async function record(
   onHandAfter: Decimal,
   actor: Actor | null,
   reason?: string,
+  ref?: StockRef,
 ) {
   await tx.inventoryMovement.create({
     data: {
@@ -42,10 +43,15 @@ async function record(
       quantity: quantity.toFixed(),
       onHandAfter: onHandAfter.toFixed(),
       reason,
+      refType: ref?.type,
+      refId: ref?.id,
       actorUserId: actor?.userId ?? null,
     },
   });
 }
+
+/** What a stock change was for, e.g. an order. */
+export type StockRef = { type: string; id: string };
 
 export async function createInventory(
   tx: Tx,
@@ -102,4 +108,101 @@ export async function setOnHand(
     after: next.toFixed(),
     changed: !delta.isZero(),
   };
+}
+
+// ─── Holds for checkout (ROADMAP §2.4 "Inventory concurrency") ──────────────
+// A hold only moves "reserved"; on-hand stock changes (and is logged) when the
+// order is paid or a paid order is cancelled.
+
+/**
+ * Hold stock for a checkout in one conditional update, so two buyers can never
+ * hold the same units. Returns false when there isn't enough left. Callers
+ * hold several listings in listing-ID order to avoid deadlocks.
+ */
+export async function reserveStock(
+  tx: Tx,
+  inventoryId: string,
+  quantity: string,
+): Promise<boolean> {
+  const updated = await tx.$executeRaw`
+    UPDATE "inventory_record"
+    SET reserved = reserved + ${quantity}::numeric,
+        version = version + 1,
+        "updatedAt" = now()
+    WHERE id = ${inventoryId}::uuid
+      AND ("onHand" - reserved) >= ${quantity}::numeric`;
+  return updated === 1;
+}
+
+/** End a hold without selling: the units go back on sale. */
+export async function releaseStock(
+  tx: Tx,
+  inventoryId: string,
+  quantity: string,
+) {
+  await tx.$executeRaw`
+    UPDATE "inventory_record"
+    SET reserved = reserved - ${quantity}::numeric,
+        version = version + 1,
+        "updatedAt" = now()
+    WHERE id = ${inventoryId}::uuid`;
+}
+
+/** A held quantity was paid for: take it out of stock. */
+export async function commitStock(
+  tx: Tx,
+  inventoryId: string,
+  quantity: string,
+  reason: string,
+  ref: StockRef,
+) {
+  const [row] = await tx.$queryRaw<{ onHand: string }[]>`
+    UPDATE "inventory_record"
+    SET "onHand" = "onHand" - ${quantity}::numeric,
+        reserved = reserved - ${quantity}::numeric,
+        version = version + 1,
+        "updatedAt" = now()
+    WHERE id = ${inventoryId}::uuid
+    RETURNING "onHand"::text AS "onHand"`;
+  if (!row) throw new NotFoundError("Stock record not found.");
+  const qty = new Decimal(quantity);
+  await record(
+    tx,
+    inventoryId,
+    "COMMIT",
+    qty.negated(),
+    new Decimal(row.onHand),
+    null,
+    reason,
+    ref,
+  );
+}
+
+/** Sold units came back (a paid order was cancelled before pickup). */
+export async function returnStock(
+  tx: Tx,
+  inventoryId: string,
+  quantity: string,
+  actor: Actor | null,
+  reason: string,
+  ref: StockRef,
+) {
+  const [row] = await tx.$queryRaw<{ onHand: string }[]>`
+    UPDATE "inventory_record"
+    SET "onHand" = "onHand" + ${quantity}::numeric,
+        version = version + 1,
+        "updatedAt" = now()
+    WHERE id = ${inventoryId}::uuid
+    RETURNING "onHand"::text AS "onHand"`;
+  if (!row) throw new NotFoundError("Stock record not found.");
+  await record(
+    tx,
+    inventoryId,
+    "RETURN",
+    new Decimal(quantity),
+    new Decimal(row.onHand),
+    actor,
+    reason,
+    ref,
+  );
 }

@@ -56,4 +56,25 @@ describe("parseEnv", () => {
         .GOOGLE_CLIENT_ID,
     ).toBeUndefined();
   });
+
+  it("only accepts Paystack test keys, and keeps the fake provider local", () => {
+    expect(parseEnv(valid).PAYMENT_PROVIDER).toBe("fake");
+    expect(() => parseEnv({ ...valid, PAYMENT_PROVIDER: "paystack" })).toThrow(
+      /needs PAYSTACK_SECRET_KEY/,
+    );
+    expect(() =>
+      parseEnv({
+        ...valid,
+        PAYMENT_PROVIDER: "paystack",
+        PAYSTACK_SECRET_KEY: "sk_live_abc",
+      }),
+    ).toThrow(/Only Paystack test keys/);
+    expect(() =>
+      parseEnv({
+        ...valid,
+        PAYMENT_PROVIDER: "paystack",
+        PAYSTACK_SECRET_KEY: "sk_test_abc",
+      }),
+    ).not.toThrow();
+  });
 });

@@ -1,6 +1,6 @@
 # DigiFarm — Architecture & Delivery Roadmap
 
-Status: **v6 — Phases 1 (Foundation) and 2 (Marketplace) implemented; see §10 and §11 for status and deviations**
+Status: **v7 — Phases 1 (Foundation) and 2 (Marketplace) implemented, Phase 3 (Transactions) in progress; see §10–§12 for status and deviations**
 Date: 2026-10-31
 
 This document is the plan of record for building DigiFarm, a B2B agricultural sourcing marketplace and managed-fulfilment platform for Ghana. It covers the current state of the repository, the proposed architecture, the initial data model, the MVP scope, a phased plan with acceptance criteria, open business decisions, and the main risks.
@@ -505,7 +505,7 @@ Recorded 2026-10-27 with the founder.
 | **D7** | Supplier verification | **Decided** | DigiFarm recruits farms through site visits. Verification = a recorded farm visit plus approval by a second staff member. No supplier ID-document uploads in the MVP. |
 | **D8** | Grading | **Decided** | DigiFarm A/B/C grades per category, with descriptions and reference photos, assigned by staff. |
 | **D9** | Farmer payouts | **Deferred** | Needed before Phase 4. The ledger tracks supplier payables from Phase 3 regardless. |
-| **D10** | Cancellation/refund/dispute policy | **Drafted (v2, after the D1 revision) — awaiting founder review** | Draft: [`docs/policies/cancellations-refunds-disputes.md`](policies/cancellations-refunds-disputes.md), with six open questions in its §6. Its numbers become configuration in Phase 3 and 4. |
+| **D10** | Cancellation/refund/dispute policy | **Draft v2 in use (2026-10-31) — six questions still open** | Draft: [`docs/policies/cancellations-refunds-disputes.md`](policies/cancellations-refunds-disputes.md). Phase 3 was started with the draft's proposals as defaults (30-minute hold, free cancellation until pickup, full refunds). The numbers live in `src/modules/ordering/config.ts`, so the answers to its §6 change configuration, not code. |
 | **D11** | Tax & invoicing | **Deferred** | Must be resolved with an accountant before live payments. Invoices are designed so tax lines can be added. |
 | **D12** | Handling customer funds (Act 987) | **Deferred** | Must be resolved before live payments. The MVP collects through a licensed provider and makes no escrow claims. |
 | **D13** | Hosting | **Decided** | Vercel (web) + Neon (Postgres). Background jobs run from a Postgres job table drained by Vercel Cron (§2.2). Regions to be matched. |
@@ -611,8 +611,41 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 - **Search uses case-insensitive matching on product, variety and category names** (served by the trigram index), not full-text ranking. Enough for a 32-product catalogue; revisit when the catalogue grows.
 - **Grade reference photos are not built yet.** Grades have names and descriptions only; photos follow once DigiFarm has real examples per category.
 - **Product photos use the local storage driver**, like farm-visit photos (§10). An S3-compatible driver is needed before staging.
-- **Ordering isn't open.** Listing pages say "Ordering opens soon"; cart and checkout are Phase 3.
+- **Ordering wasn't open in Phase 2.** It opened with Phase 3 (§12).
 
 **Known limitations / follow-ups**
 - Staff pages take a few seconds locally because the development database is in London (see §10).
-- The "in stock only" filter can return a short page when stock is held for orders, because reservations are checked after the query. Harmless until Phase 3 creates reservations.
+- The "in stock only" filter can return a short page when stock is held for orders, because reservations are checked after the query. Phase 3 now creates holds, so this can happen; fix by filtering on `onHand - reserved` in SQL when it matters.
+
+---
+
+## 12. Phase 3 status (2026-10-31)
+
+**In progress — a buyer can order from several farms, pay (test stand-in or Paystack test mode) and cancel for a refund; overselling is impossible under concurrent checkouts.** Managed sourcing and the installed-PWA payment check are still to do.
+
+| Item | What exists | Verified by |
+| --- | --- | --- |
+| Schema | Cart, CartItem, Order (numbers `DF-2026-000123` from a sequence), Fulfilment (one per farm, commission snapshot), OrderItem (snapshots), OrderStatusHistory, StockReservation, Payment, PaymentAttempt, ProviderEvent, Refund, LedgerEntry; CHECK constraints on amounts and quantities; ledger append-only by trigger | migrations; integration test (ledger UPDATE/DELETE refused) |
+| Cart | Server-side, one per buyer business; minimum order and stock checked on add; re-priced on every view; lines that stop being sold are flagged | integration tests |
+| Checkout | Re-checks price, stock, minimum order, dates and delivery area in one transaction; holds stock with a conditional update in listing order; all-or-nothing; idempotency key; same-zone orders only (D4) | integration tests, incl. **12 simultaneous checkouts on 25 crates ⇒ exactly 5 orders, 25 held** |
+| Holds | 30 minutes (`PAYMENT_HOLD_MINUTES`); expired holds released at the start of every checkout on the same listings and by `/api/cron/expire-orders`; before expiring, the provider is asked once more | integration tests (expire, last-moment payment) |
+| Order states | `PENDING_PAYMENT → PAID` (paid = confirmed, D1) / `EXPIRED` / `CANCELLED`; history row + audit for every change; Phase 4 states defined | unit + integration tests |
+| Payments | Provider interface; Paystack adapter (initialize, verify, refund, list, HMAC-SHA512 webhook signature); development stand-in with a clearly labelled `/dev/pay` page. An order is paid only after DigiFarm asks the provider; amount or currency mismatches are never confirmed; late or duplicate payments are refunded automatically | unit tests (adapter with mocked HTTP), integration tests |
+| Webhook | `/api/webhooks/paystack`: signature first, deduplicated by `(provider, eventId)`, 500 so Paystack retries on failure | integration test (unsigned refused, duplicate is a no-op) |
+| Cancellation | Before payment: hold released. Paid, nothing picked up: stock returned (logged), farm share reversed in the ledger, full refund. Afterwards: refused | integration tests, browser |
+| Refunds | Sent to the provider straight away; if unreachable they stay pending with the reason, show on the staff overview, and staff can send again | integration tests |
+| Ledger | Payment received, provider fee, owed to farm, commission, delivery fee, refunds; reversals for cancellations | integration tests |
+| Reconciliation | Provider vs DigiFarm successful payments per day: admin page `/admin/payments` and daily `/api/cron/reconcile-payments` | browser |
+| Screens | Buyer: add to cart on the product page, cart, checkout, order list and detail (pay countdown, cancel, order again). Staff: orders list/detail with ledger and refunds. Confirmation email (development transport) | browser (desktop), E2E access checks |
+
+**Deviations from the plan above, and why**
+- **Holds don't write stock-history rows.** A hold only changes `reserved`; the history records changes to stock on hand (sold, returned), so it isn't flooded by unpaid checkouts. `StockReservation` is the log of holds.
+- **No job table yet.** Expiry runs at checkout and from a cron route; reconciliation from a cron route. `vercel.json` schedules are added once the Vercel plan is known (Hobby allows daily cron only). Both routes need `CRON_SECRET`.
+- **Commission is 0% and delivery is free** until the rate (D2) and delivery model (D5) are set: `COMMISSION_BPS` and `DELIVERY_FEE_MINOR` in `src/modules/ordering/config.ts`.
+- **Notifications are a direct email after payment**, not the outbox described in §2.4. The outbox comes with the notification work in Phase 4.
+
+**Still to do in Phase 3**
+- Managed sourcing (request form, quotation builder, accept ⇒ order).
+- Paystack test keys from the founder (§6), then a test-mode run including the webhook, and checkout inside the **installed** PWA on iPhone and Android.
+- Paystack field names for refund webhooks are from documentation and need confirming against a test-mode refund.
+

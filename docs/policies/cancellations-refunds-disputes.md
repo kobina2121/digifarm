@@ -1,8 +1,8 @@
 # Cancellations, refunds and disputes — draft for review
 
-Status: **Draft v2 for founder review (ROADMAP decision D10)** · 2026-10-31
+Status: **Draft v2, in use as the default for Phase 3; §6 still open (ROADMAP decision D10)** · 2026-10-31
 
-This sets the rules Phase 3 (checkout and payments) and Phase 4 (fulfilment and disputes) will enforce in code. Every number in **bold** is a proposal you can change. Plain-language buyer terms will be written from this once it's agreed. This isn't legal advice: have a lawyer check the buyer-facing version before launch, alongside D11, D12 and D14.
+This sets the rules Phase 3 (checkout and payments) and Phase 4 (fulfilment and disputes) enforce in code. The Phase 3 numbers are in `src/modules/ordering/config.ts`. Every number in **bold** is a proposal you can change. Plain-language buyer terms will be written from this once it's agreed. This isn't legal advice: have a lawyer check the buyer-facing version before launch, alongside D11, D12 and D14.
 
 **Starting point (D1):** DigiFarm manages every farm's stock. Stock shown in the app is available, so paying confirms the order. There's no "waiting for the farm to confirm" step. Anything not available shows as out of stock and can't be bought.
 

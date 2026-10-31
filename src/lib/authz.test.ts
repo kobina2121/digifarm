@@ -42,6 +42,12 @@ const ALLOWED: Record<Permission, Who[]> = {
   "listing.manage": ["ops", "admin"],
   "stock.confirm": ["ops", "admin"],
   "grade.manage": ["admin"],
+  "cart.manage": ["buyerOwner", "buyerManager", "buyerMember"],
+  "order.place": ["buyerOwner", "buyerManager", "buyerMember"],
+  "order.read": ["buyerOwner", "buyerManager", "buyerMember"],
+  "order.cancel": ["buyerOwner", "buyerManager", "buyerMember"],
+  "order.manage": ["ops", "admin"],
+  "payment.reconcile": ["admin"],
   "audit.read": ["admin"],
   "staff.manage": ["admin"],
 };

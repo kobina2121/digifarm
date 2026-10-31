@@ -299,6 +299,49 @@ export async function browseListings(
   };
 }
 
+/** What ordering needs to know about a listing a buyer wants. */
+export type OrderableListing = MarketListing & {
+  supplierId: string;
+  unitPriceMinor: bigint;
+  zoneId: string;
+  inventoryId: string | null;
+};
+
+/**
+ * Listings that are on sale, by ID, for the cart and checkout. A listing that
+ * isn't public (paused, archived, supplier suspended) is simply missing from
+ * the result. Pass a transaction to read inside checkout.
+ */
+export async function orderableListings(
+  ids: string[],
+  now = new Date(),
+  client: Tx = db,
+): Promise<Map<string, OrderableListing>> {
+  const valid = ids.filter((id) => UUID.test(id));
+  if (!valid.length) return new Map();
+  const rows = await client.listing.findMany({
+    where: { id: { in: valid }, ...PUBLIC_LISTING },
+    select: {
+      ...marketListingSelect,
+      unitPriceMinor: true,
+      zoneId: true,
+      inventory: { select: { id: true, onHand: true, reserved: true } },
+    },
+  });
+  return new Map(
+    rows.map((row) => [
+      row.id,
+      {
+        ...toMarketListing(row, now),
+        supplierId: row.supplier.id,
+        unitPriceMinor: row.unitPriceMinor,
+        zoneId: row.zoneId,
+        inventoryId: row.inventory?.id ?? null,
+      },
+    ]),
+  );
+}
+
 /** One listing plus other approved farms selling the same product, cheapest first. */
 export async function getMarketListing(listingId: string, now = new Date()) {
   assertId(listingId, "Listing");
