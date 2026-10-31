@@ -13,6 +13,12 @@ const config = env();
 export const auth = betterAuth({
   appName: "DigiFarm",
   baseURL: config.BETTER_AUTH_URL,
+  // Requests from any other origin are refused (CSRF protection). In development
+  // the installed app runs on a production build at :3001 next to `next dev` at :3000.
+  trustedOrigins:
+    config.APP_ENV === "development"
+      ? [config.APP_URL, "http://localhost:3000", "http://localhost:3001"]
+      : [config.APP_URL],
   secret: config.BETTER_AUTH_SECRET,
   database: prismaAdapter(db, { provider: "postgresql" }),
 
@@ -99,7 +105,9 @@ export const auth = betterAuth({
   },
 
   advanced: {
-    useSecureCookies: config.NODE_ENV === "production",
+    // HTTPS-only cookies wherever the app is served over HTTPS (staging, production).
+    // Safari drops them on plain http://localhost, which would sign people out locally.
+    useSecureCookies: config.BETTER_AUTH_URL.startsWith("https://"),
   },
 
   // Lets server actions set auth cookies. Must stay last.
