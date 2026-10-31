@@ -20,7 +20,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "admin:create": "node --conditions=react-server --import tsx scripts/create-staff.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "preview": "next build && next start -p 3001"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
