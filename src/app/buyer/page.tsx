@@ -1,4 +1,4 @@
-import { MapPin, Phone, ShoppingBasket } from "lucide-react";
+import { ArrowRight, MapPin, Phone, ShoppingBasket } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -25,21 +25,22 @@ export default async function BuyerHomePage() {
         </h1>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-start gap-3">
-          <ShoppingBasket
-            className="mt-0.5 size-5 shrink-0 text-field-green"
-            aria-hidden
-          />
-          <div>
-            <h2 className="text-lg font-bold">Ordering opens soon</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              We’re adding produce from approved farms. Once listings are live
-              you’ll browse, compare and order here.
-            </p>
-          </div>
-        </div>
-      </section>
+      <Link
+        href="/market"
+        className="flex items-center justify-between gap-4 rounded-2xl bg-field-green p-5 text-white"
+      >
+        <span className="flex items-start gap-3">
+          <ShoppingBasket className="mt-0.5 size-5 shrink-0" aria-hidden />
+          <span>
+            <span className="block text-lg font-bold">Browse the market</span>
+            <span className="text-sm text-white/85">
+              Compare produce, prices and grades from approved farms. Ordering
+              opens soon.
+            </span>
+          </span>
+        </span>
+        <ArrowRight className="size-6 shrink-0" aria-hidden />
+      </Link>
 
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-5">

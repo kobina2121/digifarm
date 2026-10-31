@@ -168,6 +168,14 @@ export function WelcomeSteps() {
             >
               I already have an account
             </Link>
+            <Link
+              href="/market"
+              onClick={markSeen}
+              replace
+              className="py-1 text-center text-sm font-medium text-field-green underline-offset-4 hover:underline"
+            >
+              Just browse produce first
+            </Link>
           </div>
         ) : (
           <Button
