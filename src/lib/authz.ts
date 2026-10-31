@@ -32,6 +32,9 @@ export type Permission =
   | "farmVisit.record"
   | "farmVisit.photo.read"
   | "verification.decide"
+  | "listing.manage"
+  | "stock.confirm"
+  | "grade.manage"
   | "audit.read"
   | "staff.manage";
 
@@ -67,7 +70,10 @@ export function can(actor: Actor, permission: Permission): boolean {
     case "farmVisit.record":
     case "farmVisit.photo.read":
     case "verification.decide":
+    case "listing.manage":
+    case "stock.confirm":
       return isStaff(actor);
+    case "grade.manage":
     case "audit.read":
     case "staff.manage":
       return actor.platformRole === "ADMIN";

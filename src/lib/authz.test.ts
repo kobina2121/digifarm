@@ -39,6 +39,9 @@ const ALLOWED: Record<Permission, Who[]> = {
   "farmVisit.record": ["ops", "admin"],
   "farmVisit.photo.read": ["ops", "admin"],
   "verification.decide": ["ops", "admin"],
+  "listing.manage": ["ops", "admin"],
+  "stock.confirm": ["ops", "admin"],
+  "grade.manage": ["admin"],
   "audit.read": ["admin"],
   "staff.manage": ["admin"],
 };
