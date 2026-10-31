@@ -1,7 +1,8 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, PhoneCall } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { countStaleListings } from "@/modules/catalog";
 import {
   countSuppliersByStatus,
   VERIFICATION_LABELS,
@@ -13,7 +14,10 @@ export const metadata: Metadata = { title: "Staff overview" };
 
 export default async function AdminOverviewPage() {
   const actor = await requireStaff();
-  const counts = await countSuppliersByStatus(actor);
+  const [counts, stale] = await Promise.all([
+    countSuppliersByStatus(actor),
+    countStaleListings(actor),
+  ]);
   const awaiting = counts.VISITED;
 
   return (
@@ -37,6 +41,26 @@ export default async function AdminOverviewPage() {
           </span>
         </span>
         <ArrowRight className="size-6 shrink-0" aria-hidden />
+      </Link>
+
+      <Link
+        href="/admin/listings?view=stale"
+        className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:border-field-green"
+      >
+        <span className="flex items-center gap-4">
+          <PhoneCall className="size-6 shrink-0 text-field-green" aria-hidden />
+          <span>
+            <span className="block text-3xl font-bold">{stale}</span>
+            <span className="text-muted-foreground">
+              {stale === 1 ? "listing needs" : "listings need"} a stock check
+              call before buyers can order
+            </span>
+          </span>
+        </span>
+        <ArrowRight
+          className="size-6 shrink-0 text-muted-foreground"
+          aria-hidden
+        />
       </Link>
 
       <section>

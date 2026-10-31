@@ -1,9 +1,16 @@
-import { MapPin, Phone } from "lucide-react";
+import { MapPin, Phone, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { StatusBadge, VERIFICATION_TONE } from "@/components/status-badge";
+import {
+  LISTING_STATUS_LABELS,
+  LISTING_TONE,
+  StatusBadge,
+  VERIFICATION_TONE,
+} from "@/components/status-badge";
+import { buttonVariants } from "@/components/ui/button";
 import { formatGhanaPhone, GHANA_REGIONS } from "@/lib/ghana";
+import { listListingsForStaff } from "@/modules/catalog";
 import {
   getSupplier,
   SUPPLIER_KINDS,
@@ -27,7 +34,10 @@ export default async function SupplierPage({
 }: PageProps<"/admin/suppliers/[id]">) {
   const actor = await requireStaff();
   const { id } = await params;
-  const supplier = await getSupplier(actor, id);
+  const [supplier, listings] = await Promise.all([
+    getSupplier(actor, id),
+    listListingsForStaff(actor, { supplierId: id }),
+  ]);
   const { verification } = supplier;
   const farm = supplier.addresses[0];
 
@@ -109,6 +119,53 @@ export default async function SupplierPage({
             : null
         }
       />
+
+      <section className="grid gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-bold">Listings</h2>
+          {verification.status === "APPROVED" ? (
+            <Link
+              href={`/admin/listings/new?supplier=${supplier.id}`}
+              className={buttonVariants({ size: "sm" })}
+            >
+              <Plus aria-hidden />
+              New listing
+            </Link>
+          ) : null}
+        </div>
+        {listings.items.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
+            {verification.status === "APPROVED"
+              ? "Nothing listed yet. Call the farm to check what they have."
+              : "Produce can be listed once this supplier is approved."}
+          </p>
+        ) : (
+          <ul className="grid gap-2">
+            {listings.items.map((l) => (
+              <li key={l.id}>
+                <Link
+                  href={`/admin/listings/${l.id}`}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 hover:border-field-green"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">
+                      {l.productName}
+                      {l.variety ? ` · ${l.variety}` : ""}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {l.price} / {l.unit.name}
+                    </span>
+                  </span>
+                  <StatusBadge
+                    tone={LISTING_TONE[l.status]}
+                    label={LISTING_STATUS_LABELS[l.status]}
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="grid gap-3">
         <h2 className="text-xl font-bold">Farm visits</h2>

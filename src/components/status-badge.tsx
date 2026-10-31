@@ -39,6 +39,20 @@ export function StatusBadge({
   );
 }
 
+export const LISTING_TONE = {
+  DRAFT: "neutral",
+  ACTIVE: "success",
+  PAUSED: "attention",
+  ARCHIVED: "neutral",
+} as const satisfies Record<string, Tone>;
+
+export const LISTING_STATUS_LABELS = {
+  DRAFT: "Draft",
+  ACTIVE: "On sale",
+  PAUSED: "Paused",
+  ARCHIVED: "Archived",
+} as const;
+
 export const VERIFICATION_TONE = {
   PROSPECT: "neutral",
   VISITED: "attention",
