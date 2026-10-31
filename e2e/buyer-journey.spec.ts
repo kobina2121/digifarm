@@ -8,8 +8,7 @@ test("a new buyer signs up, confirms their email, sets up their business and add
   const email = uniqueEmail("buyer");
   const password = `e2e-${Date.now()}-pass`;
 
-  await page.goto("/");
-  await page.getByRole("link", { name: "Create a buyer account" }).click();
+  await page.goto("/sign-up");
   await expect(
     page.getByRole("heading", { name: "Create your account" }),
   ).toBeVisible();

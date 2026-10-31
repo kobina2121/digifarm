@@ -9,7 +9,7 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
     <>
       <header className="sticky top-0 z-40 border-b border-border/70 bg-paper/90 pt-safe backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
-          <Link href="/" aria-label="DigiFarm home" className="rounded-md">
+          <Link href="/home" aria-label="DigiFarm home" className="rounded-md">
             <Logo />
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2">

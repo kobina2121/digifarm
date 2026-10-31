@@ -33,7 +33,7 @@ test.describe("installable PWA", () => {
     page,
     context,
   }) => {
-    await page.goto("/");
+    await page.goto("/sign-in");
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.reload(); // now controlled by the service worker
     expect(

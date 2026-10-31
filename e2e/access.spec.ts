@@ -21,11 +21,25 @@ test.describe("signed-out visitors", () => {
     expect(response.status()).toBe(404);
   });
 
-  test("see the landing page and install guide", async ({ page }) => {
+  // "/" and "/home" show first-time visitors the welcome screens instead.
+  test("open the app at / and see the welcome screens first", async ({
+    page,
+  }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(
-      "Fresh produce",
-    );
+    await expect(page).toHaveURL(/\/welcome$/);
+    await expect(
+      page.getByRole("heading", { name: "Produce from farms we’ve visited" }),
+    ).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: "Skip" }).click();
+    await expect(page).toHaveURL(/\/sign-in/);
+
+    // Once the welcome screens have been seen, / goes straight to sign-in.
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/sign-in/);
+  });
+
+  test("can still read the install guide", async ({ page }) => {
     await page.goto("/install");
     await expect(
       page.getByRole("heading", { name: "iPhone (Safari)" }),

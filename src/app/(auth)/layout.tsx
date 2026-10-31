@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex min-h-dvh flex-col pt-safe pb-safe">
       <header className="mx-auto flex h-16 w-full max-w-md items-center px-4">
-        <Link href="/" aria-label="DigiFarm home">
+        <Link href="/home" aria-label="DigiFarm home">
           <Logo />
         </Link>
       </header>

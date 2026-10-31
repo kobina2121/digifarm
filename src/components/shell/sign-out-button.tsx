@@ -29,7 +29,7 @@ export function SignOutButton({
       onClick={() =>
         startTransition(async () => {
           await authClient.signOut();
-          router.replace("/");
+          router.replace("/sign-in");
           router.refresh();
         })
       }

@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
       allowedOrigins: ["*.trycloudflare.com"],
     },
   },
+  // There is no public homepage: "/" opens the app, which shows the welcome
+  // screens to first-time visitors and sign-in to everyone else (src/proxy.ts).
+  async redirects() {
+    return [{ source: "/", destination: "/home", permanent: false }];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
