@@ -12,7 +12,7 @@ import {
 import { ListingCard } from "@/components/market/listing-card";
 import { GHANA_REGIONS } from "@/lib/ghana";
 import { orNotFound } from "@/lib/not-found";
-import { getMarketListing, STOCK_FRESH_HOURS } from "@/modules/catalog";
+import { getMarketListing } from "@/modules/catalog";
 
 export const metadata: Metadata = { title: "Produce" };
 
@@ -113,10 +113,8 @@ export default async function MarketListingPage({
               />
               <p className="text-sm">
                 {listing.availability.available
-                  ? "Ordering opens soon. Once it does, you’ll pay here and our team confirms your quantities with the farm."
-                  : listing.availability.reason === "STOCK_NOT_CONFIRMED"
-                    ? `Our team checks stock with the farm at least every ${STOCK_FRESH_HOURS / 24} days. This one is being rechecked.`
-                    : "This can’t be ordered right now. Check back soon, or compare other farms below."}
+                  ? "In stock and ready to order. Ordering opens soon: once it does, you’ll pay here and we deliver to you."
+                  : "This can’t be ordered right now. Check back soon, or compare other farms below."}
               </p>
             </div>
           </div>

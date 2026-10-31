@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 
 import { confirmStockAction } from "../actions";
 
-/** After phoning the farmer: enter what they have now and confirm. */
+/** Set the stock buyers can order, e.g. after checking with the farmer. */
 export function ConfirmStockForm({
   listingId,
   onHand,
@@ -75,11 +75,11 @@ export function ConfirmStockForm({
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending}>
           <Check aria-hidden />
-          {pending ? "Saving…" : "Confirm stock"}
+          {pending ? "Saving…" : "Update stock"}
         </Button>
         {done ? (
           <p role="status" className="text-sm text-field-green">
-            Stock confirmed. Buyers can order this for the next 3 days.
+            Stock updated. Buyers see the new amount straight away.
           </p>
         ) : null}
       </div>

@@ -23,7 +23,7 @@ import { formatStockAge } from "./format";
 export const metadata: Metadata = { title: "Listings" };
 
 const VIEW_LABELS: Record<StaffListingView, string> = {
-  stale: "Needs stock check",
+  stale: "Not updated in 3 days",
   ACTIVE: "On sale",
   DRAFT: "Drafts",
   PAUSED: "Paused",
@@ -112,8 +112,8 @@ export default async function ListingsPage({
 
       {view === "stale" ? (
         <p className="rounded-lg bg-harvest-gold-soft px-3 py-2.5 text-sm text-soil">
-          Call these farms and confirm stock. Buyers can’t order them until you
-          do. Oldest confirmation first.
+          A reminder: these listings’ stock hasn’t been updated in 3 days.
+          Buyers can still order them. Oldest update first.
         </p>
       ) : null}
 
@@ -121,7 +121,7 @@ export default async function ListingsPage({
         <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
           <p className="font-medium">
             {view === "stale"
-              ? "Every listing has a recent stock check"
+              ? "Every listing’s stock was updated in the last 3 days"
               : "No listings here"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">

@@ -35,8 +35,8 @@ const STEPS: { title: string; body: string; Art: ComponentType }[] = [
     Art: PaySecurely,
   },
   {
-    title: "We confirm with the farm",
-    body: "Our team calls the farm to confirm your quantities. Anything they can’t supply is refunded automatically.",
+    title: "What you see is in stock",
+    body: "DigiFarm keeps every farm’s stock up to date. If you can order it, it’s available, and anything sold out says so.",
     Art: ConfirmWithFarm,
   },
   {

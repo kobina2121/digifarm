@@ -52,8 +52,8 @@ export default async function AdminOverviewPage() {
           <span>
             <span className="block text-3xl font-bold">{stale}</span>
             <span className="text-muted-foreground">
-              {stale === 1 ? "listing needs" : "listings need"} a stock check
-              call before buyers can order
+              {stale === 1 ? "listing hasn’t" : "listings haven’t"} had a stock
+              update in 3 days. Worth a check with the farm.
             </span>
           </span>
         </span>

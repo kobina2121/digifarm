@@ -1,6 +1,6 @@
 export {
   type Availability,
-  STOCK_FRESH_HOURS,
+  STOCK_REMINDER_HOURS,
   UNAVAILABLE_LABELS,
   type UnavailableReason,
 } from "./availability";

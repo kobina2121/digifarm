@@ -135,12 +135,16 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
     expect(JSON.stringify(profile)).not.toContain("0551234567");
   });
 
-  it("records a stock confirmation, and never lets stock fall below what is reserved", async () => {
+  it("records a stock update, and never lets stock fall below what is reserved", async () => {
     const { listing: created, staff } = await listing();
     await db.listing.update({
       where: { id: created.id },
       data: { stockConfirmedAt: new Date("2026-01-01") },
     });
+    // Old stock is still for sale (DigiFarm's stock is the truth); it only
+    // shows up on the staff reminder list.
+    const { listing: market } = await getMarketListing(created.id);
+    expect(market.availability.available).toBe(true);
     const staleIds = (
       await listListingsForStaff(staff, { view: "stale" })
     ).items.map((l) => l.id);

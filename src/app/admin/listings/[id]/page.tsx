@@ -110,7 +110,7 @@ export default async function ListingPage({
         <section className="grid gap-4 rounded-2xl border border-border bg-card p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold">Confirm stock</h2>
+              <h2 className="text-lg font-bold">Stock</h2>
               <p className="text-sm text-muted-foreground">
                 {listing.onHand} {plural(listing.onHand)} in stock
                 {listing.reserved !== "0"

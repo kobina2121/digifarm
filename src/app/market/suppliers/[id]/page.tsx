@@ -49,7 +49,8 @@ export default async function MarketSupplierPage({
           {supplier.verifiedSince
             ? ` in ${monthFormat.format(supplier.verifiedSince)}`
             : ""}
-          . We confirm stock with the farm by phone before every order.
+          . DigiFarm manages this farm’s stock, so what you see is what you can
+          order.
         </p>
       </div>
 

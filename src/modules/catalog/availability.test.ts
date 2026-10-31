@@ -6,7 +6,6 @@ const now = new Date("2026-10-30T10:00:00Z");
 const base: AvailabilityInput = {
   status: "ACTIVE",
   supplierApproved: true,
-  stockConfirmedAt: new Date("2026-10-29T09:00:00Z"),
   onHand: "100",
   reserved: "0",
   minOrderQty: "10",
@@ -15,7 +14,7 @@ const base: AvailabilityInput = {
 };
 
 describe("listing availability", () => {
-  it("is available when listed, approved, confirmed recently and stocked", () => {
+  it("is available when listed, approved, in season and stocked", () => {
     expect(availabilityOf(base, now)).toEqual({
       available: true,
       availableQty: "100",
@@ -32,26 +31,6 @@ describe("listing availability", () => {
     expect(
       availabilityOf({ ...base, supplierApproved: false }, now),
     ).toMatchObject({ reason: "NOT_LISTED" });
-  });
-
-  it("needs a stock confirmation within the last 72 hours", () => {
-    expect(
-      availabilityOf({ ...base, stockConfirmedAt: null }, now),
-    ).toMatchObject({
-      reason: "STOCK_NOT_CONFIRMED",
-    });
-    expect(
-      availabilityOf(
-        { ...base, stockConfirmedAt: new Date("2026-10-27T09:59:00Z") },
-        now,
-      ),
-    ).toMatchObject({ reason: "STOCK_NOT_CONFIRMED" });
-    expect(
-      availabilityOf(
-        { ...base, stockConfirmedAt: new Date("2026-10-27T10:01:00Z") },
-        now,
-      ).available,
-    ).toBe(true);
   });
 
   it("is out of stock when less than the minimum order is left after reservations", () => {

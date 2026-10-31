@@ -94,7 +94,7 @@ export async function setOnHand(
       delta,
       next,
       actor,
-      reason ?? "Stock confirmed with farmer",
+      reason ?? "Stock updated",
     );
   }
   return {

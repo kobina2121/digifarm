@@ -22,7 +22,7 @@ import { createInventory, setOnHand } from "@/modules/inventory";
 import {
   type Availability,
   availabilityOf,
-  stockFreshCutoff,
+  stockReminderCutoff,
 } from "./availability";
 import {
   type BrowseFilters,
@@ -192,7 +192,6 @@ function toMarketListing(row: MarketListingRow, now: Date): MarketListing {
       {
         status: row.status,
         supplierApproved,
-        stockConfirmedAt: row.stockConfirmedAt,
         onHand: row.inventory?.onHand.toString() ?? "0",
         reserved: row.inventory?.reserved.toString() ?? "0",
         minOrderQty,
@@ -268,7 +267,6 @@ export async function browseListings(
   if (f.inStock) {
     const today = startOfToday(now);
     and.push(
-      { stockConfirmedAt: { gte: stockFreshCutoff(now) } },
       { availableFrom: { lte: today } },
       { OR: [{ availableUntil: null }, { availableUntil: { gte: today } }] },
       { inventory: { onHand: { gt: 0 } } },
@@ -422,8 +420,8 @@ async function resolveListingRefs(
 }
 
 /**
- * Staff list produce for a farm they manage, after confirming stock with the
- * farmer by phone. Only approved suppliers can have listings.
+ * Staff list produce for a farm they manage. The stock entered is what buyers
+ * can order straight away. Only approved suppliers can have listings.
  */
 export async function createListing(actor: Actor, input: CreateListingInput) {
   assertCan(actor, "listing.manage");
@@ -601,8 +599,8 @@ export async function updateListing(
 }
 
 /**
- * The quick action after phoning a farmer: record what they have now. This
- * also refreshes the listing's stock confirmation, keeping it orderable.
+ * Staff set the stock buyers can order, e.g. after checking with the farmer.
+ * Also records when stock was last updated, for the staff reminder list.
  */
 export async function confirmStock(
   actor: Actor,
@@ -632,7 +630,7 @@ export async function confirmStock(
       listingId,
       data.onHand,
       actor,
-      data.note ?? "Stock confirmed with farmer",
+      data.note ?? "Stock updated",
     );
     const confirmedAt = new Date();
     await tx.listing.update({
@@ -828,7 +826,7 @@ function staleWhere(now: Date): Prisma.ListingWhereInput {
     deletedAt: null,
     OR: [
       { stockConfirmedAt: null },
-      { stockConfirmedAt: { lt: stockFreshCutoff(now) } },
+      { stockConfirmedAt: { lt: stockReminderCutoff(now) } },
     ],
   };
 }
@@ -861,8 +859,9 @@ function toStaffListing(
 }
 
 /**
- * Listings for the staff console. "stale" is the daily call list: listings on
- * sale whose stock hasn't been confirmed recently, oldest confirmation first.
+ * Listings for the staff console. "stale" is a reminder list: listings on sale
+ * whose stock hasn't been updated in 3 days, oldest update first. Buyers can
+ * still order them.
  */
 export async function listListingsForStaff(
   actor: Actor,
