@@ -28,15 +28,17 @@ export function ListingCard({
     <div className="relative h-full">
       <Link
         href={`/market/listings/${listing.id}`}
-        className="group flex h-full flex-col gap-2.5 rounded-3xl bg-card p-3 shadow-[0_1px_3px_rgb(31_42_31/0.06)] outline-offset-4 transition-shadow hover:shadow-[0_6px_20px_rgb(31_42_31/0.1)]"
+        className="group flex h-full flex-col overflow-hidden rounded-3xl bg-card shadow-[0_1px_3px_rgb(31_42_31/0.06)] outline-offset-4 transition-shadow hover:shadow-[0_6px_20px_rgb(31_42_31/0.1)]"
       >
-        <div className="relative overflow-hidden rounded-2xl bg-sprout-soft">
+        {/* The whole photo, never cropped, as wide as the card: it scales with
+            the card at any screen size or zoom. */}
+        <div className="relative bg-white">
           <ListingImage
             photo={listing.photos[0]}
             alt={title}
             sizes="(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw"
             className={cn(
-              "aspect-square w-full transition-transform duration-300 group-hover:scale-[1.04]",
+              "aspect-[4/3] w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]",
               !a.available && "opacity-60 grayscale-[40%]",
             )}
           />
@@ -47,37 +49,39 @@ export function ListingCard({
           ) : null}
         </div>
 
-        <div className="flex flex-wrap gap-1">
-          {listing.grade ? (
-            <span className="rounded-md bg-sprout-soft px-1.5 py-0.5 text-[0.7rem] font-semibold text-field-green-dark">
-              Grade {listing.grade.code}
+        <div className="flex flex-1 flex-col gap-2.5 p-3">
+          <div className="flex flex-wrap gap-1">
+            {listing.grade ? (
+              <span className="rounded-md bg-sprout-soft px-1.5 py-0.5 text-[0.7rem] font-semibold text-field-green-dark">
+                Grade {listing.grade.code}
+              </span>
+            ) : null}
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[0.7rem] font-semibold text-muted-foreground">
+              Min {listing.minOrderLabel}
             </span>
-          ) : null}
-          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[0.7rem] font-semibold text-muted-foreground">
-            Min {listing.minOrderLabel}
-          </span>
-        </div>
+          </div>
 
-        <div className="grid gap-0.5">
-          <h3 className="line-clamp-2 text-base leading-snug font-semibold">
-            {title}
-          </h3>
-          <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="size-3.5 shrink-0" aria-hidden />
-            <span className="truncate">{listing.zone.name}</span>
+          <div className="grid gap-0.5">
+            <h3 className="line-clamp-2 text-base leading-snug font-semibold">
+              {title}
+            </h3>
+            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="size-3.5 shrink-0" aria-hidden />
+              <span className="truncate">{listing.zone.name}</span>
+            </p>
+          </div>
+
+          {/* Room on the right for the + button. */}
+          <p className="mt-auto pr-12">
+            <span className="block text-lg leading-tight font-bold whitespace-nowrap">
+              {/* Whole cedis read cleaner on a small card: GH₵ 450, not GH₵ 450.00. */}
+              {listing.price.replace(/\.00$/, "")}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              per {listing.unit.name}
+            </span>
           </p>
         </div>
-
-        {/* Room on the right for the + button. */}
-        <p className="mt-auto pr-12">
-          <span className="block text-lg leading-tight font-bold whitespace-nowrap">
-            {/* Whole cedis read cleaner on a small card: GH₵ 450, not GH₵ 450.00. */}
-            {listing.price.replace(/\.00$/, "")}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            per {listing.unit.name}
-          </span>
-        </p>
       </Link>
       {action ? (
         <div className="absolute right-3 bottom-3">{action}</div>
