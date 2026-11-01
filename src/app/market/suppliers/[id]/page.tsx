@@ -5,8 +5,11 @@ import { connection } from "next/server";
 import { ListingCard } from "@/components/market/listing-card";
 import { GHANA_REGIONS } from "@/lib/ghana";
 import { orNotFound } from "@/lib/not-found";
+import { getActor } from "@/lib/session";
 import { getMarketSupplier } from "@/modules/catalog";
 import { SUPPLIER_KINDS } from "@/modules/suppliers";
+
+import { cardAction } from "../../card-action";
 
 export const metadata: Metadata = { title: "Farm" };
 
@@ -22,6 +25,7 @@ export default async function MarketSupplierPage({
   await connection();
   const { id } = await params;
   const supplier = await orNotFound(getMarketSupplier(id));
+  const actor = await getActor();
   const location = [supplier.district, GHANA_REGIONS[supplier.region]]
     .filter(Boolean)
     .join(", ");
@@ -61,10 +65,13 @@ export default async function MarketSupplierPage({
             Nothing on sale from this farm right now.
           </p>
         ) : (
-          <ul className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {supplier.listings.map((listing) => (
               <li key={listing.id}>
-                <ListingCard listing={listing} />
+                <ListingCard
+                  listing={listing}
+                  action={cardAction(listing, actor)}
+                />
               </li>
             ))}
           </ul>

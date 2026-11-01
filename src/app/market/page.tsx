@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { ListingCard } from "@/components/market/listing-card";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getActor } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import {
   type BrowseFilters,
@@ -14,6 +15,8 @@ import {
 } from "@/modules/catalog";
 
 import { MarketFilters } from "./market-filters";
+
+import { cardAction } from "./card-action";
 
 export const metadata: Metadata = {
   title: "Market",
@@ -52,6 +55,7 @@ export default async function MarketPage({
 }: PageProps<"/market">) {
   // Availability depends on the current time, so this always renders per request.
   await connection();
+  const actor = await getActor();
   const raw = await searchParams;
   const flat = Object.fromEntries(
     Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]),
@@ -167,10 +171,13 @@ export default async function MarketPage({
             {nextCursor ? "+" : ""}{" "}
             {items.length === 1 && !nextCursor ? "result" : "results"} found
           </h2>
-          <ul className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {items.map((listing) => (
               <li key={listing.id}>
-                <ListingCard listing={listing} />
+                <ListingCard
+                  listing={listing}
+                  action={cardAction(listing, actor)}
+                />
               </li>
             ))}
           </ul>

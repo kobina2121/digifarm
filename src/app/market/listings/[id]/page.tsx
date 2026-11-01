@@ -20,6 +20,8 @@ import { PAYMENT_HOLD_MINUTES, quantityInCart } from "@/modules/ordering";
 
 import { AddToCart } from "./add-to-cart";
 
+import { cardAction } from "../../card-action";
+
 export const metadata: Metadata = { title: "Produce" };
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
@@ -36,6 +38,7 @@ export default async function MarketListingPage({
   await connection();
   const { id } = await params;
   const { listing, otherOffers } = await orNotFound(getMarketListing(id));
+  const actor = await getActor();
   const title = listing.variety
     ? `${listing.productName} · ${listing.variety}`
     : listing.productName;
@@ -111,7 +114,7 @@ export default async function MarketListingPage({
             <GradeBadge grade={listing.grade} />
           </div>
 
-          <OrderPanel listing={listing} actor={await getActor()} />
+          <OrderPanel listing={listing} actor={actor} />
 
           {listing.description ? (
             <p className="whitespace-pre-line">{listing.description}</p>
@@ -184,10 +187,13 @@ export default async function MarketListingPage({
           <h2 className="text-xl font-bold">
             Other farms selling {listing.productName.toLowerCase()}
           </h2>
-          <ul className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {otherOffers.map((offer) => (
               <li key={offer.id}>
-                <ListingCard listing={offer} />
+                <ListingCard
+                  listing={offer}
+                  action={cardAction(offer, actor)}
+                />
               </li>
             ))}
           </ul>
