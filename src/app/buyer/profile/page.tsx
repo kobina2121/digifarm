@@ -3,13 +3,16 @@ import {
   ChevronRight,
   Mail,
   MapPin,
+  Palette,
   Phone,
   ReceiptText,
+  ShoppingCart,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Logo } from "@/components/brand/logo";
 import { SignOutButton } from "@/components/shell/sign-out-button";
 import { ThemePicker } from "@/components/theme/theme-picker";
 import { formatGhanaPhone } from "@/lib/ghana";
@@ -18,6 +21,7 @@ import {
   getBuyerProfile,
   getMyAccount,
 } from "@/modules/buyers";
+import { cartLineCount, countOrdersForBuyer } from "@/modules/ordering";
 
 import { requireBuyer } from "../guard";
 
@@ -25,11 +29,15 @@ export const metadata: Metadata = { title: "Profile" };
 
 export default async function ProfilePage() {
   const actor = await requireBuyer();
-  const [profile, account] = await Promise.all([
+  const [profile, account, orders, cartLines] = await Promise.all([
     getBuyerProfile(actor),
     getMyAccount(actor),
+    countOrdersForBuyer(actor),
+    cartLineCount(actor),
   ]);
   const business = profile.tradingName ?? profile.legalName;
+  const segment = BUYER_SEGMENTS[profile.buyerSegment ?? "OTHER"];
+  const address = profile.addresses[0];
   const initials = account.name
     .split(/\s+/)
     .map((w) => w[0])
@@ -39,61 +47,155 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto grid w-full max-w-xl gap-6">
-      <section className="flex items-center gap-4">
-        <span
-          aria-hidden
-          className="flex size-16 shrink-0 items-center justify-center rounded-full bg-field-green text-xl font-bold text-white"
-        >
-          {initials}
-        </span>
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-bold">{account.name}</h1>
-          <p className="truncate text-muted-foreground">{business}</p>
-        </div>
-      </section>
+      {/* Who you are */}
+      <div>
+        <section className="relative overflow-hidden rounded-3xl bg-field-green px-5 pt-6 pb-16 text-white">
+          <span
+            aria-hidden
+            className="absolute -top-10 -right-10 size-40 rounded-full bg-white/10"
+          />
+          <span
+            aria-hidden
+            className="absolute right-16 -bottom-14 size-28 rounded-full bg-white/10"
+          />
+          <div className="relative flex items-center gap-4">
+            <span
+              aria-hidden
+              className="flex size-18 shrink-0 items-center justify-center rounded-full bg-white text-2xl font-bold text-[#11502d] shadow-md"
+            >
+              {initials}
+            </span>
+            <div className="min-w-0">
+              <h1 className="truncate text-2xl font-bold">{account.name}</h1>
+              <p className="truncate text-white/80">{business}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <Chip>{segment}</Chip>
+                {address?.zone ? <Chip>{address.zone.name}</Chip> : null}
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <section className="grid gap-2">
-        <h2 className="px-1 eyebrow text-muted-foreground">Account</h2>
-        <ul className="divide-y divide-border overflow-hidden rounded-3xl bg-card">
-          <Row icon={<Mail />} label="Email" value={account.email} />
-          <Row
-            icon={<Building2 />}
-            label="Business"
-            value={`${business} · ${BUYER_SEGMENTS[profile.buyerSegment ?? "OTHER"]}`}
-          />
-          <Row
-            icon={<Phone />}
-            label="Business phone"
-            value={formatGhanaPhone(profile.phone)}
-          />
-        </ul>
-      </section>
-
-      <section className="grid gap-2">
-        <h2 className="px-1 eyebrow text-muted-foreground">Ordering</h2>
-        <ul className="divide-y divide-border overflow-hidden rounded-3xl bg-card">
-          <Row
-            icon={<MapPin />}
-            label="Delivery addresses"
-            value={`${profile.addresses.length} saved`}
-            href="/buyer/addresses"
-          />
-          <Row
-            icon={<ReceiptText />}
-            label="Orders"
-            value="Track, pay, cancel or order again"
+        {/* Counts, overlapping the header */}
+        <ul className="relative mx-4 -mt-10 grid grid-cols-3 divide-x divide-border rounded-3xl bg-card py-4 shadow-[0_8px_30px_rgb(31_42_31/0.12)]">
+          <Stat href="/buyer/orders" value={orders.total} label="Orders" />
+          <Stat
             href="/buyer/orders"
+            value={orders.active}
+            label="In progress"
+          />
+          <Stat
+            href="/buyer/addresses"
+            value={profile.addresses.length}
+            label={profile.addresses.length === 1 ? "Address" : "Addresses"}
           />
         </ul>
-      </section>
+      </div>
+
+      <Group title="Account">
+        <Row icon={<Mail />} label="Email" value={account.email} />
+        <Row
+          icon={<Phone />}
+          label="Business phone"
+          value={formatGhanaPhone(profile.phone)}
+        />
+        <Row
+          icon={<Building2 />}
+          label="Business"
+          value={`${business} · ${segment}`}
+        />
+      </Group>
+
+      <Group title="Ordering">
+        <Row
+          icon={<MapPin />}
+          label="Delivery addresses"
+          value={
+            address
+              ? [address.label, address.town, address.zone?.name]
+                  .filter(Boolean)
+                  .join(", ")
+              : "Add an address"
+          }
+          href="/buyer/addresses"
+        />
+        <Row
+          icon={<ReceiptText />}
+          label="Orders"
+          value={
+            orders.active
+              ? `${orders.active} in progress`
+              : "Track, pay, cancel or order again"
+          }
+          href="/buyer/orders"
+        />
+        <Row
+          icon={<ShoppingCart />}
+          label="Cart"
+          value={
+            cartLines
+              ? `${cartLines} ${cartLines === 1 ? "product" : "products"} waiting`
+              : "Empty"
+          }
+          href="/buyer/cart"
+        />
+      </Group>
 
       <section className="grid gap-2">
-        <h2 className="px-1 eyebrow text-muted-foreground">Appearance</h2>
+        <h2 className="flex items-center gap-1.5 px-1 eyebrow text-muted-foreground">
+          <Palette className="size-3.5" aria-hidden />
+          Appearance
+        </h2>
         <ThemePicker />
       </section>
 
-      <SignOutButton className="h-12 justify-center rounded-full border border-border bg-card" />
+      <SignOutButton className="h-12 justify-center rounded-full border border-border bg-card text-destructive hover:bg-destructive/5 hover:text-destructive" />
+
+      <footer className="grid justify-items-center gap-1 pb-2 text-center opacity-80">
+        <Logo />
+        <p className="text-xs text-muted-foreground">
+          Farm to buyer · Greater Accra and Kumasi
+        </p>
+      </footer>
     </div>
+  );
+}
+
+function Chip({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">
+      {children}
+    </span>
+  );
+}
+
+function Stat({
+  href,
+  value,
+  label,
+}: {
+  href: string;
+  value: number;
+  label: string;
+}) {
+  return (
+    <li>
+      <Link href={href} className="grid justify-items-center gap-0.5 px-2">
+        <span className="text-2xl font-bold">{value}</span>
+        <span className="text-xs text-muted-foreground">{label}</span>
+      </Link>
+    </li>
+  );
+}
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="grid gap-2">
+      <h2 className="px-1 eyebrow text-muted-foreground">{title}</h2>
+      <ul className="divide-y divide-border overflow-hidden rounded-3xl bg-card">
+        {children}
+      </ul>
+    </section>
   );
 }
 

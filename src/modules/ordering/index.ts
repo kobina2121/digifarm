@@ -17,6 +17,7 @@ export {
 export { expireUnpaidOrders } from "./expiry";
 export {
   cancelOrder,
+  countOrdersForBuyer,
   countRefundsNeedingAttention,
   type DeliveryAddressSnapshot,
   getOrderForBuyer,

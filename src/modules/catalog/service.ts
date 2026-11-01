@@ -144,6 +144,8 @@ export type MarketListing = {
   category: { slug: string; name: string };
   description: string | null;
   price: string;
+  /** Unit price in pesewas, as a string (bigint doesn't serialise). */
+  priceMinor: string;
   unit: { code: string; name: string; plural: string };
   minOrderQty: string;
   minOrderLabel: string;
@@ -173,6 +175,7 @@ function toMarketListing(row: MarketListingRow, now: Date): MarketListing {
     category: row.product.category,
     description: row.description,
     price: Money.ofMinor(row.unitPriceMinor).format(),
+    priceMinor: row.unitPriceMinor.toString(),
     unit: row.unit,
     minOrderQty,
     minOrderLabel: `${minOrderQty} ${unitLabel(row.unit, minOrderQty)}`,

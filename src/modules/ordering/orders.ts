@@ -329,6 +329,32 @@ export async function listOrdersForBuyer(
   return page({ buyerOrgId: buyerOrgOf(actor) }, cursor);
 }
 
+/** For the buyer's profile: how many orders, and how many are still under way. */
+export async function countOrdersForBuyer(actor: Actor) {
+  assertCan(actor, "order.read");
+  const buyerOrgId = buyerOrgOf(actor);
+  const [total, active] = await Promise.all([
+    db.order.count({
+      where: { buyerOrgId, status: { notIn: ["EXPIRED"] } },
+    }),
+    db.order.count({
+      where: {
+        buyerOrgId,
+        status: {
+          in: [
+            "PENDING_PAYMENT",
+            "PAID",
+            "IN_FULFILMENT",
+            "PARTIALLY_DELIVERED",
+            "DELIVERED",
+          ],
+        },
+      },
+    }),
+  ]);
+  return { total, active };
+}
+
 export const STAFF_ORDER_VIEWS = [
   "PENDING_PAYMENT",
   "PAID",

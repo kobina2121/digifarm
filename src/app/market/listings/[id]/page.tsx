@@ -1,26 +1,37 @@
-import { CalendarDays, MapPin, Scale, ShoppingBasket } from "lucide-react";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  CalendarDays,
+  ChevronRight,
+  MapPin,
+  Package,
+  ShieldCheck,
+  Tractor,
+  Truck,
+  Warehouse,
+  Weight,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import type { ReactNode } from "react";
 
-import {
-  AvailabilityBadge,
-  GradeBadge,
-  ListingImage,
-  VerifiedFarm,
-} from "@/components/market/listing-bits";
 import { ListingCard } from "@/components/market/listing-card";
-import { buttonVariants } from "@/components/ui/button";
 import { type Actor, isStaff } from "@/lib/authz";
 import { GHANA_REGIONS } from "@/lib/ghana";
 import { orNotFound } from "@/lib/not-found";
 import { getActor } from "@/lib/session";
-import { getMarketListing, type MarketListing } from "@/modules/catalog";
+import { cn } from "@/lib/utils";
+import {
+  getMarketListing,
+  type MarketListing,
+  UNAVAILABLE_LABELS,
+} from "@/modules/catalog";
 import { PAYMENT_HOLD_MINUTES, quantityInCart } from "@/modules/ordering";
 
-import { AddToCart } from "./add-to-cart";
-
 import { cardAction } from "../../card-action";
+import { OrderBar } from "./order-bar";
+import { ProductGallery } from "./product-gallery";
 
 export const metadata: Metadata = { title: "Produce" };
 
@@ -30,6 +41,10 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
   year: "numeric",
   timeZone: "UTC",
 });
+
+function unitLabel(unit: { name: string; plural: string }, qty: string) {
+  return `${qty} ${qty === "1" ? unit.name : unit.plural}`;
+}
 
 export default async function MarketListingPage({
   params,
@@ -42,7 +57,7 @@ export default async function MarketListingPage({
   const title = listing.variety
     ? `${listing.productName} · ${listing.variety}`
     : listing.productName;
-  const [cover, ...more] = listing.photos;
+  const a = listing.availability;
   const location = [
     listing.supplier.district,
     GHANA_REGIONS[listing.supplier.region],
@@ -51,134 +66,179 @@ export default async function MarketListingPage({
     .join(", ");
 
   return (
-    <div className="grid gap-6">
-      <Link
-        href={`/market?category=${listing.category.slug}`}
-        className="text-sm font-medium text-field-green underline-offset-4 hover:underline"
-      >
-        ← {listing.category.name}
-      </Link>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="grid gap-2">
-          <ListingImage
-            photo={cover}
-            alt={title}
-            sizes="(min-width: 768px) 480px, 100vw"
-            eager
-            className="aspect-[4/3] w-full rounded-2xl"
-          />
-          {more.length ? (
-            <ul className="grid grid-cols-4 gap-2">
-              {more.map((photo, i) => (
-                <li key={photo.src}>
-                  <ListingImage
-                    photo={photo}
-                    alt={`${title}, photo ${i + 2}`}
-                    sizes="120px"
-                    className="aspect-square w-full rounded-lg"
-                  />
-                </li>
-              ))}
-            </ul>
-          ) : null}
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-2 lg:gap-10">
+        {/* Photos */}
+        <div className="relative lg:sticky lg:top-6">
+          <ProductGallery photos={listing.photos} title={title} />
+          <Link
+            href={`/market?category=${listing.category.slug}`}
+            aria-label={`Back to ${listing.category.name}`}
+            className="absolute top-3 left-3 flex size-11 items-center justify-center rounded-full bg-card/90 text-foreground shadow-md backdrop-blur"
+          >
+            <ArrowLeft className="size-5" aria-hidden />
+          </Link>
+          <span
+            className={cn(
+              "absolute top-4 right-4 rounded-full px-3 py-1 text-xs font-semibold shadow-sm",
+              a.available
+                ? "bg-card/95 text-field-green-dark"
+                : "bg-ink/85 text-white",
+            )}
+          >
+            {a.available ? "In stock" : UNAVAILABLE_LABELS[a.reason]}
+          </span>
         </div>
 
-        <div className="grid content-start gap-4">
+        {/* Details */}
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5">
           <div>
-            <p className="eyebrow text-field-green">{listing.category.name}</p>
-            <h1 className="mt-1 text-3xl font-bold">{listing.productName}</h1>
+            <p className="eyebrow text-field-green-dark">
+              {listing.category.name}
+            </p>
+            <h1 className="mt-1 text-3xl leading-tight font-bold">
+              {listing.productName}
+            </h1>
             {listing.variety ? (
               <p className="text-lg text-muted-foreground">{listing.variety}</p>
             ) : null}
           </div>
 
-          <div>
+          <div className="flex items-end justify-between gap-4">
             <p>
-              <span className="text-3xl font-bold">{listing.price}</span>
+              <span className="text-4xl font-bold tracking-tight">
+                {listing.price.replace(/\.00$/, "")}
+              </span>
               <span className="text-muted-foreground">
                 {" "}
                 per {listing.unit.name}
               </span>
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Minimum order {listing.minOrderLabel}
-              {listing.netWeightPerUnitKg
-                ? ` · about ${listing.netWeightPerUnitKg} kg per ${listing.unit.name}`
-                : ""}
-            </p>
+            {listing.grade ? (
+              <span className="rounded-full bg-field-green px-3 py-1.5 text-sm font-semibold text-white">
+                Grade {listing.grade.code}
+              </span>
+            ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <AvailabilityBadge availability={listing.availability} />
-            <GradeBadge grade={listing.grade} />
-          </div>
+          <ul className="grid grid-cols-2 gap-3">
+            <Fact
+              icon={<Package />}
+              label="Minimum order"
+              value={listing.minOrderLabel}
+            />
+            <Fact
+              icon={<Warehouse />}
+              label="Available now"
+              value={
+                a.available
+                  ? unitLabel(listing.unit, a.availableQty)
+                  : UNAVAILABLE_LABELS[a.reason]
+              }
+            />
+            <Fact
+              icon={<MapPin />}
+              label="Delivered in"
+              value={listing.zone.name}
+            />
+            {listing.harvestDate ? (
+              <Fact
+                icon={<CalendarDays />}
+                label="Harvested"
+                value={dateFormat.format(listing.harvestDate)}
+              />
+            ) : listing.netWeightPerUnitKg ? (
+              <Fact
+                icon={<Weight />}
+                label={`Per ${listing.unit.name}`}
+                value={`About ${listing.netWeightPerUnitKg} kg`}
+              />
+            ) : (
+              <Fact
+                icon={<Weight />}
+                label="Sold by"
+                value={`The ${listing.unit.name}`}
+              />
+            )}
+          </ul>
 
-          <OrderPanel listing={listing} actor={actor} />
+          <OrderSection listing={listing} actor={actor} />
 
           {listing.description ? (
-            <p className="whitespace-pre-line">{listing.description}</p>
+            <section className="grid gap-2 rounded-3xl bg-card p-5">
+              <h2 className="font-semibold">About this produce</h2>
+              <p className="whitespace-pre-line text-muted-foreground">
+                {listing.description}
+              </p>
+              {listing.harvestDate && listing.netWeightPerUnitKg ? (
+                <p className="text-sm text-muted-foreground">
+                  About {listing.netWeightPerUnitKg} kg per {listing.unit.name}.
+                </p>
+              ) : null}
+            </section>
           ) : null}
 
-          <dl className="grid gap-3 text-sm">
-            <div className="flex items-start gap-3">
-              <MapPin
-                className="mt-0.5 size-4 shrink-0 text-field-green"
-                aria-hidden
-              />
+          {listing.grade ? (
+            <section className="flex gap-4 rounded-3xl bg-sprout-soft p-5">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-field-green text-lg font-bold text-white">
+                {listing.grade.code}
+              </span>
               <div>
-                <dt className="sr-only">Sold in</dt>
-                <dd>
-                  Delivered in {listing.zone.name}
-                  <span className="block text-muted-foreground">
-                    Grown in {location}
-                  </span>
-                </dd>
+                <h2 className="font-semibold">
+                  Grade {listing.grade.code} · {listing.grade.title}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {listing.grade.description}
+                </p>
               </div>
-            </div>
-            {listing.harvestDate ? (
-              <div className="flex items-start gap-3">
-                <CalendarDays
-                  className="mt-0.5 size-4 shrink-0 text-field-green"
-                  aria-hidden
-                />
-                <div>
-                  <dt className="sr-only">Harvest date</dt>
-                  <dd>Harvested {dateFormat.format(listing.harvestDate)}</dd>
-                </div>
-              </div>
-            ) : null}
-            {listing.grade ? (
-              <div className="flex items-start gap-3">
-                <Scale
-                  className="mt-0.5 size-4 shrink-0 text-field-green"
-                  aria-hidden
-                />
-                <div>
-                  <dt className="font-medium">
-                    Grade {listing.grade.code} · {listing.grade.title}
-                  </dt>
-                  <dd className="text-muted-foreground">
-                    {listing.grade.description}
-                  </dd>
-                </div>
-              </div>
-            ) : null}
-          </dl>
+            </section>
+          ) : null}
 
           <Link
             href={`/market/suppliers/${listing.supplier.id}`}
-            className="rounded-2xl border border-border bg-card p-4 transition-colors hover:border-field-green"
+            className="flex items-center gap-4 rounded-3xl bg-card p-5 transition-shadow hover:shadow-[0_6px_20px_rgb(31_42_31/0.1)]"
           >
-            <span className="eyebrow text-muted-foreground">Grown by</span>
-            <VerifiedFarm
-              name={listing.supplier.name}
-              className="mt-1 text-lg font-semibold"
-            />
-            <span className="block text-sm text-muted-foreground">
-              Visited and approved by DigiFarm
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-sprout-soft text-field-green-dark">
+              <Tractor className="size-6" aria-hidden />
             </span>
+            <span className="min-w-0 flex-1">
+              <span className="block eyebrow text-muted-foreground">
+                Grown by
+              </span>
+              <span className="flex items-center gap-1 font-semibold">
+                <span className="truncate">{listing.supplier.name}</span>
+                <BadgeCheck
+                  className="size-4 shrink-0 text-field-green-dark"
+                  aria-label="Verified farm"
+                />
+              </span>
+              <span className="block truncate text-sm text-muted-foreground">
+                {location} · visited and approved by DigiFarm
+              </span>
+            </span>
+            <ChevronRight
+              className="size-5 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
           </Link>
+
+          <ul className="grid gap-2 px-1 text-sm text-muted-foreground">
+            <li className="flex items-center gap-2">
+              <Truck
+                className="size-4 shrink-0 text-field-green-dark"
+                aria-hidden
+              />
+              Held for {PAYMENT_HOLD_MINUTES} minutes while you pay, then
+              delivered in {listing.zone.name}.
+            </li>
+            <li className="flex items-center gap-2">
+              <ShieldCheck
+                className="size-4 shrink-0 text-field-green-dark"
+                aria-hidden
+              />
+              Mobile money or card. Cancel free until it’s picked up.
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -199,80 +259,109 @@ export default async function MarketListingPage({
           </ul>
         </section>
       ) : null}
+
+      {/* Room for the order bar that floats above the tab bar on phones. */}
+      <div aria-hidden className="h-16 md:hidden" />
     </div>
   );
 }
 
-async function OrderPanel({
+function Fact({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <li className="flex items-center gap-3 rounded-2xl bg-card p-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sprout-soft text-field-green-dark [&_svg]:size-5">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-xs text-muted-foreground">{label}</span>
+        <span className="block truncate text-sm font-semibold">{value}</span>
+      </span>
+    </li>
+  );
+}
+
+/** Floats above the tab bar on phones; sits in the details column on wider screens. */
+function Floating({ children }: { children: ReactNode }) {
+  return (
+    <div className="fixed inset-x-0 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+4.75rem)] z-30 px-4 md:static md:z-auto md:px-0">
+      <div className="mx-auto max-w-md md:max-w-none">{children}</div>
+    </div>
+  );
+}
+
+const PILL =
+  "flex h-14 w-full items-center justify-center rounded-full text-sm font-semibold shadow-[0_8px_30px_rgb(31_42_31/0.16)] md:shadow-none";
+
+async function OrderSection({
   listing,
   actor,
 }: {
   listing: MarketListing;
   actor: Actor | null;
 }) {
-  const isBuyer =
-    actor?.emailVerified && actor.membership?.organizationType === "BUYER";
-  let body;
   if (!listing.availability.available) {
-    body = (
-      <p className="text-sm">
-        This can’t be ordered right now. Check back soon, or compare other farms
-        below.
+    return (
+      <p className="rounded-3xl bg-muted p-4 text-sm text-muted-foreground">
+        {UNAVAILABLE_LABELS[listing.availability.reason]}. Check back soon, or
+        compare other farms below.
       </p>
     );
-  } else if (isBuyer && actor) {
-    body = (
-      <div className="grid gap-3">
-        <AddToCart
+  }
+  if (actor && isStaff(actor)) {
+    return (
+      <p className="rounded-3xl bg-muted p-4 text-sm text-muted-foreground">
+        Buyers order this from their DigiFarm account.
+      </p>
+    );
+  }
+  if (actor?.emailVerified && actor.membership?.organizationType === "BUYER") {
+    return (
+      <Floating>
+        <OrderBar
           listingId={listing.id}
+          priceMinor={listing.priceMinor}
           minOrderQty={listing.minOrderQty}
+          unitName={listing.unit.name}
           unitPlural={listing.unit.plural}
           inCart={await quantityInCart(actor, listing.id)}
         />
-        <p className="text-xs text-muted-foreground">
-          In stock now. At checkout we hold it for {PAYMENT_HOLD_MINUTES}{" "}
-          minutes while you pay; once paid, your order is confirmed and we
-          deliver it in {listing.zone.name}.
-        </p>
-      </div>
+      </Floating>
     );
-  } else if (actor && isStaff(actor)) {
-    body = (
-      <p className="text-sm">
-        In stock. Buyers can order this from their DigiFarm account.
-      </p>
-    );
-  } else if (actor) {
-    body = (
-      <div className="grid gap-3 text-sm">
-        <p>In stock. Set up your business to order it.</p>
-        <Link href="/onboarding" className={buttonVariants()}>
-          Set up your business
-        </Link>
-      </div>
-    );
-  } else {
-    body = (
-      <div className="grid gap-3 text-sm">
-        <p>In stock and ready to order. Sign in to buy it.</p>
+  }
+  if (actor) {
+    return (
+      <Floating>
         <Link
-          href={`/sign-in?next=${encodeURIComponent(`/market/listings/${listing.id}`)}`}
-          className={buttonVariants()}
+          href="/onboarding"
+          className={cn(
+            PILL,
+            "bg-field-green-dark text-white dark:bg-field-green",
+          )}
         >
-          Sign in to order
+          Set up your business to order
         </Link>
-      </div>
+      </Floating>
     );
   }
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="flex items-start gap-3">
-        <ShoppingBasket
-          className="mt-0.5 size-5 shrink-0 text-field-green"
-          aria-hidden
-        />
-        <div className="min-w-0 flex-1">{body}</div>
-      </div>
-    </div>
+    <Floating>
+      <Link
+        href={`/sign-in?next=${encodeURIComponent(`/market/listings/${listing.id}`)}`}
+        className={cn(
+          PILL,
+          "bg-field-green-dark text-white dark:bg-field-green",
+        )}
+      >
+        Sign in to order
+      </Link>
+    </Floating>
   );
 }
