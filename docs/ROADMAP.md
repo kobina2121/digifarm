@@ -584,7 +584,7 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 - **Supplier self-service pages** (`src/app/supplier/`) not built, as decided in D6.
 
 **Known limitations / follow-ups**
-- Local pages take 1–5 s because each database query travels to London (~120 ms round trip). In production the app runs next to the database. Prisma's `relationJoins` preview feature would cut round trips further; not enabled while it is a preview.
+- Local pages take 1–5 s because each database query travels to London (~120 ms round trip). In production the app runs next to the database. Prisma's `relationJoins` preview feature is enabled (2026-11-01): relations load in one query instead of one per relation, which took the market page from 2–3 s to about 0.3 s once warm. Idle connections are retired after 60 s so a request never lands on a connection Neon closed while scaling to zero.
 - Sign-out on other devices can lag up to 5 minutes (session cookie cache); suspensions apply immediately.
 - Android Emulator and a tunnel tool (`cloudflared`) are not installed yet, so Android and real-phone checks (§2.6) are still to do.
 - Nothing is deployed yet: Vercel project, real email provider, S3-compatible storage and Sentry need accounts (§6).

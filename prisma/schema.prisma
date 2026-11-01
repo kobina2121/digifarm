@@ -4,6 +4,9 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  // Load relations with SQL joins: one round trip per query instead of one
+  // per relation. Matters while the database is far away (ROADMAP §10).
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

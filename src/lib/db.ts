@@ -10,7 +10,13 @@ import { env } from "./env";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createClient() {
-  const adapter = new PrismaPg({ connectionString: env().DATABASE_URL });
+  const adapter = new PrismaPg({
+    connectionString: env().DATABASE_URL,
+    // Neon closes idle connections when the database scales to zero; retire
+    // them ourselves first so a request never lands on a dead connection.
+    idleTimeoutMillis: 60_000,
+    keepAlive: true,
+  });
   return new PrismaClient({
     adapter,
     // Prisma's 5 s default is tight for multi-step writes (checkout, payment,
