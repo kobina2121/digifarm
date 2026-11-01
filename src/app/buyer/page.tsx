@@ -1,7 +1,6 @@
 import {
   Apple,
   ArrowRight,
-  BadgeCheck,
   Bean,
   Carrot,
   ChevronRight,
@@ -9,10 +8,8 @@ import {
   Leaf,
   MapPin,
   PackageCheck,
-  Scale,
   Search,
   ShoppingCart,
-  Smartphone,
   Sprout,
   Wheat,
 } from "lucide-react";
@@ -278,28 +275,6 @@ export default async function BuyerHomePage() {
           </ul>
         </section>
       ) : null}
-
-      {/* Why DigiFarm */}
-      <section
-        aria-label="Why buy on DigiFarm"
-        className="grid grid-cols-3 divide-x divide-border rounded-3xl bg-card py-4"
-      >
-        <TrustPoint
-          icon={<BadgeCheck />}
-          title="Visited farms"
-          text="Every farm is checked in person before it sells."
-        />
-        <TrustPoint
-          icon={<Scale />}
-          title="Graded A, B, C"
-          text="So you know what will arrive."
-        />
-        <TrustPoint
-          icon={<Smartphone />}
-          title="MoMo or card"
-          text="Cancel free until pickup."
-        />
-      </section>
     </div>
   );
 }
@@ -326,26 +301,6 @@ function SectionHeading({
       >
         {linkLabel}
       </Link>
-    </div>
-  );
-}
-
-function TrustPoint({
-  icon,
-  title,
-  text,
-}: {
-  icon: ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-2 px-2 text-center sm:px-4">
-      <span className="flex size-10 items-center justify-center rounded-full bg-sprout-soft text-field-green-dark [&_svg]:size-5">
-        {icon}
-      </span>
-      <p className="text-xs leading-tight font-semibold sm:text-sm">{title}</p>
-      <p className="hidden text-xs text-muted-foreground sm:block">{text}</p>
     </div>
   );
 }
