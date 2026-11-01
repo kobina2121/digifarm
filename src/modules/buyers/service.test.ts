@@ -16,9 +16,11 @@ import {
   createBuyerOrganization,
   getBuyerProfile,
   removeDeliveryAddress,
+  updateBusinessDetails,
 } from "./service";
 
 const input = {
+  accountType: "BUSINESS" as const,
   legalName: "Kofi's Kitchen Ltd",
   buyerSegment: "RESTAURANT" as const,
   phone: "024 123 4567",
@@ -43,6 +45,57 @@ async function onboardedBuyer(): Promise<Actor> {
     },
   };
 }
+
+describe.runIf(hasTestDatabase)("personal accounts (integration)", () => {
+  it("lets an individual sign up with just a phone and an address", async () => {
+    const actor = await createUser({ name: "Abena Owusu" });
+    const org = await createBuyerOrganization(actor, {
+      phone: "024 765 4321",
+      address: { label: "Home", zoneCode: "KUMASI", town: "Adum" },
+    });
+    expect(org.buyerKind).toBe("INDIVIDUAL");
+    expect(org.legalName).toBe("Abena Owusu");
+    expect(org.buyerSegment).toBeNull();
+  });
+
+  it("still asks businesses for their name and type", async () => {
+    const actor = await createUser();
+    await expect(
+      createBuyerOrganization(actor, {
+        accountType: "BUSINESS",
+        phone: "024 765 4321",
+        address: { label: "Shop", zoneCode: "ACCRA", town: "Osu" },
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("lets an individual switch to a business account later", async () => {
+    const user = await createUser({ name: "Yaw Mensah" });
+    const org = await createBuyerOrganization(user, {
+      phone: "024 765 4321",
+      address: { label: "Home", zoneCode: "ACCRA", town: "Osu" },
+    });
+    const actor: Actor = {
+      ...user,
+      membership: {
+        organizationId: org.id,
+        organizationType: "BUYER",
+        role: "OWNER",
+      },
+    };
+    await updateBusinessDetails(actor, {
+      legalName: "Yaw's Provisions",
+      buyerSegment: "RETAILER",
+    });
+    const profile = await getBuyerProfile(actor);
+    expect(profile).toMatchObject({
+      buyerKind: "BUSINESS",
+      legalName: "Yaw's Provisions",
+      buyerSegment: "RETAILER",
+    });
+    expect(profile.addresses).toHaveLength(1);
+  });
+});
 
 describe.runIf(hasTestDatabase)("buyer onboarding (integration)", () => {
   it("creates the business, owner membership, default address and an audit entry", async () => {

@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "DigiFarm",
     short_name: "DigiFarm",
     description:
-      "Fresh produce for your business, from verified Ghanaian farms.",
+      "Fresh produce for your home or business, from verified Ghanaian farms.",
     start_url: "/home",
     scope: "/",
     display: "standalone",

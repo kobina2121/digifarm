@@ -9,11 +9,11 @@ import { homePathFor, requireActor } from "@/lib/session";
 
 import { OnboardingForm } from "./onboarding-form";
 
-export const metadata: Metadata = { title: "Set up your business" };
+export const metadata: Metadata = { title: "Set up your account" };
 
 async function OnboardingGate() {
   const actor = await requireActor();
-  // Staff and users who already have a business don't onboard again.
+  // Staff and users who already have an account set up don't onboard again.
   if (actor.platformRole !== "USER" || actor.membership)
     redirect(homePathFor(actor));
   return <OnboardingForm />;
@@ -29,10 +29,10 @@ export default function OnboardingPage() {
       </header>
       <main className="mx-auto max-w-xl px-4 pt-4 pb-12">
         <p className="eyebrow text-field-green">Step 2 of 2</p>
-        <h1 className="mt-2 text-3xl font-bold">Set up your business</h1>
+        <h1 className="mt-2 text-3xl font-bold">Set up your account</h1>
         <p className="mt-2 text-muted-foreground">
-          Tell us who you are and where to deliver. You can add more delivery
-          addresses later.
+          Tell us where to deliver. Buying for a business? Choose it below. You
+          can add more delivery addresses later.
         </p>
         <div className="mt-8">
           <Suspense fallback={<FormSkeleton />}>

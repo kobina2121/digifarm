@@ -46,18 +46,57 @@ export const deliveryAddressSchema = z.object({
     .optional(),
 });
 
-export const buyerOnboardingSchema = z.object({
+export const BUYER_KINDS = {
+  INDIVIDUAL: "For myself",
+  BUSINESS: "For a business",
+} as const;
+
+/** Business details: required for businesses, never asked of individuals. */
+export const businessDetailsSchema = z.object({
   legalName: z.string().trim().min(2, "Enter your business name").max(120),
   tradingName: optionalText(120),
   buyerSegment: z.enum(
     Object.keys(BUYER_SEGMENTS) as [keyof typeof BUYER_SEGMENTS],
-    {
-      error: "Choose the type of business",
-    },
+    { error: "Choose the type of business" },
   ),
-  phone: ghanaPhoneSchema,
-  address: deliveryAddressSchema,
 });
 
+/**
+ * First-time setup. Everyone gives a phone number and a delivery address;
+ * only businesses also give a business name and type (D18).
+ */
+export const buyerOnboardingSchema = z
+  .object({
+    accountType: z
+      .enum(Object.keys(BUYER_KINDS) as [keyof typeof BUYER_KINDS])
+      .default("INDIVIDUAL"),
+    legalName: optionalText(120),
+    tradingName: optionalText(120),
+    buyerSegment: z
+      .enum(Object.keys(BUYER_SEGMENTS) as [keyof typeof BUYER_SEGMENTS])
+      .optional()
+      .catch(undefined),
+    phone: ghanaPhoneSchema,
+    address: deliveryAddressSchema,
+  })
+  .superRefine((v, ctx) => {
+    if (v.accountType !== "BUSINESS") return;
+    if (!v.legalName || v.legalName.length < 2) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["legalName"],
+        message: "Enter your business name",
+      });
+    }
+    if (!v.buyerSegment) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["buyerSegment"],
+        message: "Choose the type of business",
+      });
+    }
+  });
+
+export type BusinessDetailsInput = z.input<typeof businessDetailsSchema>;
 export type BuyerOnboardingInput = z.input<typeof buyerOnboardingSchema>;
 export type DeliveryAddressInput = z.input<typeof deliveryAddressSchema>;

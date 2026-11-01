@@ -513,6 +513,7 @@ Recorded 2026-10-27 with the founder.
 | **D15** | Brand source files | **Pending: files coming** | Designer to send the SVG/AI logo and font names. The redrawn SVG and Space Grotesk / Space Mono / Inter are used until then. |
 | **D16** | Client app | **Decided** | One Next.js app delivered as an installable **PWA** — no Expo or native app. Must be testable on the iOS Simulator, the Android Emulator and real phones (§2.6). |
 | **D17** | Phone-first priorities | **Decided** | Buyer and admin flows are designed phone-first. Every role can use the PWA on a phone, including farm-visit capture. |
+| **D18** | Who can buy | **Decided (2026-11-01)** | Individuals and households as well as businesses. At sign-up a buyer picks "For myself" (default: phone and delivery address only) or "For a business" (adds business name and type). An individual can add business details later from Profile. Both are one buyer account (`Organization.buyerKind`), so cart, orders and payments are the same. Minimum orders stay per listing and are set by staff. |
 
 **Gates:** Phase 3 starts with the D10 draft · live payments need D11, D12, D14 · Phase 4 needs D5 and D9.
 

@@ -7,6 +7,8 @@ import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { parseInput } from "@/lib/validation";
 
 import {
+  type BusinessDetailsInput,
+  businessDetailsSchema,
   type BuyerOnboardingInput,
   buyerOnboardingSchema,
   type DeliveryAddressInput,
@@ -23,7 +25,10 @@ async function activeZone(tx: Tx, code: string) {
   return zone;
 }
 
-/** Creates the buyer's business, makes them its owner, and saves their first delivery address. */
+/**
+ * Creates the buyer's account (a person or a business, D18), makes them its
+ * owner, and saves their first delivery address.
+ */
 export async function createBuyerOrganization(
   actor: Actor,
   input: BuyerOnboardingInput,
@@ -35,19 +40,30 @@ export async function createBuyerOrganization(
     // Serialise onboarding per user so a double submit can't create two businesses.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`onboard:${actor.userId}`}))`;
     if (await tx.membership.count({ where: { userId: actor.userId } })) {
-      throw new ConflictError("You already have a business set up.");
+      throw new ConflictError("Your account is already set up.");
     }
     const zone = await activeZone(tx, data.address.zoneCode);
+    const business = data.accountType === "BUSINESS";
+    // A personal account goes by the person's own name.
+    const legalName = business
+      ? data.legalName!
+      : (
+          await tx.user.findUniqueOrThrow({
+            where: { id: actor.userId },
+            select: { name: true },
+          })
+        ).name;
 
     const organization = await tx.organization.create({
       data: {
         type: "BUYER",
         status: "ACTIVE",
-        legalName: data.legalName,
-        tradingName: data.tradingName,
+        legalName,
+        tradingName: business ? data.tradingName : null,
         phone: data.phone,
         region: zone.region,
-        buyerSegment: data.buyerSegment,
+        buyerKind: data.accountType,
+        buyerSegment: business ? data.buyerSegment : null,
         createdById: actor.userId,
         memberships: { create: { userId: actor.userId, role: "OWNER" } },
         addresses: {
@@ -73,7 +89,8 @@ export async function createBuyerOrganization(
       entityId: organization.id,
       after: {
         legalName: organization.legalName,
-        buyerSegment: data.buyerSegment,
+        buyerKind: data.accountType,
+        buyerSegment: organization.buyerSegment,
         zone: zone.code,
       },
     });
@@ -96,6 +113,7 @@ export async function getBuyerProfile(actor: Actor) {
       legalName: true,
       tradingName: true,
       phone: true,
+      buyerKind: true,
       buyerSegment: true,
       status: true,
       addresses: {
@@ -114,6 +132,50 @@ export async function getBuyerProfile(actor: Actor) {
         },
       },
     },
+  });
+}
+
+/** An individual starts buying for a business, or a business updates its details. */
+export async function updateBusinessDetails(
+  actor: Actor,
+  input: BusinessDetailsInput,
+) {
+  assertCan(actor, "buyer.profile.update");
+  const data = parseInput(businessDetailsSchema, input);
+  const id = buyerOrgId(actor);
+  return db.$transaction(async (tx) => {
+    const before = await tx.organization.findUniqueOrThrow({
+      where: { id },
+      select: {
+        legalName: true,
+        tradingName: true,
+        buyerKind: true,
+        buyerSegment: true,
+      },
+    });
+    const after = await tx.organization.update({
+      where: { id },
+      data: {
+        buyerKind: "BUSINESS",
+        legalName: data.legalName,
+        tradingName: data.tradingName ?? null,
+        buyerSegment: data.buyerSegment,
+      },
+      select: {
+        legalName: true,
+        tradingName: true,
+        buyerKind: true,
+        buyerSegment: true,
+      },
+    });
+    await audit(tx, actor, {
+      action: "buyer.business_details_updated",
+      entityType: "Organization",
+      entityId: id,
+      before,
+      after,
+    });
+    return after;
   });
 }
 

@@ -20,7 +20,7 @@ test("a new buyer signs up, confirms their email, sets up their business and add
   await expect(page.getByText("Enter your full name")).toBeVisible();
 
   await page.getByLabel("Your full name").fill("Efua Boateng");
-  await page.getByLabel("Work email").fill(email);
+  await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(
@@ -39,9 +39,12 @@ test("a new buyer signs up, confirms their email, sets up their business and add
   await page.goto(await linkFromLatestEmail(email));
   await expect(page).toHaveURL(/\/onboarding$/);
   await expect(
-    page.getByRole("heading", { name: "Set up your business" }),
+    page.getByRole("heading", { name: "Set up your account" }),
   ).toBeVisible();
   await page.waitForLoadState("networkidle");
+
+  // Individuals are the default; this buyer is a business.
+  await page.getByText("For a business", { exact: true }).click();
 
   await page.getByLabel("Business name").fill("Efua's Chop Bar");
   await page.getByLabel("Type of business").selectOption("RESTAURANT");
@@ -52,9 +55,11 @@ test("a new buyer signs up, confirms their email, sets up their business and add
   await page.getByRole("button", { name: "Finish setup" }).click();
 
   await expect(page).toHaveURL(/\/buyer$/);
-  await expect(
-    page.getByRole("heading", { name: "Efua's Chop Bar" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Efua" })).toBeVisible();
+
+  // The business details are on the profile.
+  await page.goto("/buyer/profile");
+  await expect(page.getByText("Efua's Chop Bar").first()).toBeVisible();
   await expect(page.getByText("024 555 0101")).toBeVisible();
 
   // Second address, then confirm it's listed.
@@ -70,4 +75,39 @@ test("a new buyer signs up, confirms their email, sets up their business and add
   // Buyers can't open the staff area.
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/buyer$/);
+});
+
+test("an individual signs up without any business details", async ({
+  page,
+}) => {
+  const email = uniqueEmail("person");
+  const password = `e2e-${Date.now()}-pass`;
+
+  await page.goto("/sign-up");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("Your full name").fill("Kwame Asante");
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Check your email" }),
+  ).toBeVisible();
+
+  await page.goto(await linkFromLatestEmail(email));
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.waitForLoadState("networkidle");
+
+  // "For myself" is the default: no business name or type is asked for.
+  await expect(page.getByLabel("Business name")).toHaveCount(0);
+  await page.getByLabel("Phone number").fill("024 555 0202");
+  await page.getByText("Greater Accra", { exact: true }).click();
+  await page.getByLabel("Town or area").fill("East Legon");
+  await page.getByRole("button", { name: "Finish setup" }).click();
+
+  await expect(page).toHaveURL(/\/buyer$/);
+  await expect(page.getByRole("heading", { name: "Kwame" })).toBeVisible();
+
+  await page.goto("/buyer/profile");
+  await expect(page.getByText("Personal", { exact: true })).toBeVisible();
+  await expect(page.getByText("Add your business details")).toBeVisible();
 });

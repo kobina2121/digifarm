@@ -2,8 +2,8 @@
 // Change it only through migrations: `pnpm db:migrate`.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
   // Load relations with SQL joins: one round trip per query instead of one
   // per relation. Matters while the database is far away (ROADMAP §10).
   previewFeatures = ["relationJoins"]
@@ -139,6 +139,12 @@ enum BuyerSegment {
   OTHER
 }
 
+// Who a buyer account is for: a person or household, or a business (D18).
+enum BuyerKind {
+  INDIVIDUAL
+  BUSINESS
+}
+
 enum SupplierKind {
   FARMER
   COOPERATIVE
@@ -162,7 +168,8 @@ model Organization {
   email        String?
   region       GhanaRegion
   district     String?
-  buyerSegment BuyerSegment?
+  buyerKind    BuyerKind? // buyers only
+  buyerSegment BuyerSegment? // businesses only
   supplierKind SupplierKind?
   // Suppliers are managed by DigiFarm staff (ROADMAP D6) and may have no members.
   createdById  String?

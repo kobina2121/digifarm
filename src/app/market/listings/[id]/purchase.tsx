@@ -185,7 +185,7 @@ export function BuyBar() {
     case "onboard":
       action = (
         <Link href="/onboarding" className={WHITE_PILL}>
-          Set up your business
+          Finish setting up
         </Link>
       );
       break;

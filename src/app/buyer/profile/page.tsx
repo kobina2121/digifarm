@@ -35,6 +35,7 @@ export default async function ProfilePage() {
     countOrdersForBuyer(actor),
     cartLineCount(actor),
   ]);
+  const isBusiness = profile.buyerKind === "BUSINESS";
   const business = profile.tradingName ?? profile.legalName;
   const segment = BUYER_SEGMENTS[profile.buyerSegment ?? "OTHER"];
   const address = profile.addresses[0];
@@ -67,9 +68,11 @@ export default async function ProfilePage() {
             </span>
             <div className="min-w-0">
               <h1 className="truncate text-2xl font-bold">{account.name}</h1>
-              <p className="truncate text-white/80">{business}</p>
+              <p className="truncate text-white/80">
+                {isBusiness ? business : account.email}
+              </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                <Chip>{segment}</Chip>
+                <Chip>{isBusiness ? segment : "Personal"}</Chip>
                 {address?.zone ? <Chip>{address.zone.name}</Chip> : null}
               </div>
             </div>
@@ -96,14 +99,24 @@ export default async function ProfilePage() {
         <Row icon={<Mail />} label="Email" value={account.email} />
         <Row
           icon={<Phone />}
-          label="Business phone"
+          label={isBusiness ? "Business phone" : "Phone number"}
           value={formatGhanaPhone(profile.phone)}
         />
-        <Row
-          icon={<Building2 />}
-          label="Business"
-          value={`${business} · ${segment}`}
-        />
+        {isBusiness ? (
+          <Row
+            icon={<Building2 />}
+            label="Business"
+            value={`${business} · ${segment}`}
+            href="/buyer/business"
+          />
+        ) : (
+          <Row
+            icon={<Building2 />}
+            label="Buying for a business?"
+            value="Add your business details"
+            href="/buyer/business"
+          />
+        )}
       </Group>
 
       <Group title="Ordering">

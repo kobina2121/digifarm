@@ -11,11 +11,11 @@ export const metadata: Metadata = { title: "Create a buyer account" };
 export default function SignUpPage() {
   return (
     <>
-      <p className="eyebrow text-field-green">Buyer account</p>
+      <p className="eyebrow text-field-green">Join DigiFarm</p>
       <h1 className="mt-2 text-3xl font-bold">Create your account</h1>
       <p className="mt-2 text-muted-foreground">
-        For restaurants, hotels, caterers, retailers, wholesalers and food
-        processors.
+        Buy fresh produce straight from farms we’ve visited, for your home or
+        your business.
       </p>
       <div className="mt-8 grid gap-6">
         <GoogleButton available={googleSignInEnabled()} />

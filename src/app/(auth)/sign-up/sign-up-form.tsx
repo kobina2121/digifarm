@@ -59,7 +59,7 @@ export function SignUpForm() {
       </FormField>
       <FormField
         id="email"
-        label="Work email"
+        label="Email"
         hint="We'll send a link to confirm it."
         error={errors.email?.message}
       >

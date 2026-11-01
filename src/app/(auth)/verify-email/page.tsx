@@ -16,7 +16,7 @@ export default function VerifyEmailPage() {
       <h1 className="mt-6 text-3xl font-bold">Check your email</h1>
       <p className="mt-3 text-muted-foreground">
         We’ve sent you a link to confirm your email address. Open it on this
-        device to continue setting up your business.
+        device to continue setting up your account.
       </p>
       <div className="mt-8">
         <Suspense>
