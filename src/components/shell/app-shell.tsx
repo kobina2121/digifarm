@@ -17,7 +17,7 @@ export type NavItem = {
 };
 
 /**
- * Signed-in layout. Phones: top bar + bottom tab bar (thumb-reachable).
+ * Signed-in layout. Phones: top bar (scrolls away) + bottom tab bar.
  * Desktop: left sidebar. `tone="dark"` gives staff areas the Soil sidebar.
  */
 export function AppShell({
@@ -71,20 +71,28 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {/* Keeps the status bar area solid once the top bar has scrolled away. */}
+        <div
+          aria-hidden
+          className={cn(
+            "fixed inset-x-0 top-0 z-30 h-[env(safe-area-inset-top)] md:hidden",
+            dark ? "bg-sidebar" : "bg-paper",
+          )}
+        />
+        {/* Phones: logo centred; the bar scrolls away with the page. */}
         <header
           className={cn(
-            "sticky top-0 z-30 border-b pt-safe md:hidden",
-            dark
-              ? "border-sidebar-border bg-sidebar"
-              : "border-border bg-paper/95 backdrop-blur",
+            "border-b pt-safe md:hidden",
+            dark ? "border-sidebar-border bg-sidebar" : "border-border bg-paper",
           )}
         >
-          <div className="flex h-14 items-center justify-between px-4">
+          <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-4">
+            <span />
             <Link href="/home" aria-label="DigiFarm home">
               <Logo tone={dark ? "on-dark" : "brand"} />
             </Link>
             {showSignOut ? (
-              <SignOutButton onDark={dark} className="px-2" />
+              <SignOutButton onDark={dark} className="justify-self-end px-2" />
             ) : null}
           </div>
         </header>
