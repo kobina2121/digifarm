@@ -118,7 +118,8 @@ export type ListingPhoto = {
   height: number;
 };
 
-function photoUrls(image: {
+/** Public URLs for a stored listing photo (also used for order thumbnails). */
+export function photoUrls(image: {
   storageKey: string;
   width: number;
   height: number;

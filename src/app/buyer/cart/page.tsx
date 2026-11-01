@@ -1,12 +1,24 @@
-import { ChevronLeft, ShoppingCart, TriangleAlert } from "lucide-react";
+import {
+  ChevronLeft,
+  ShieldCheck,
+  ShoppingCart,
+  Tractor,
+  TriangleAlert,
+  Truck,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 
+import { BasketArt } from "@/components/illustrations/commerce-art";
 import { ListingImage, VerifiedFarm } from "@/components/market/listing-bits";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { type CartLine, getCart } from "@/modules/ordering";
+import {
+  type CartLine,
+  getCart,
+  PAYMENT_HOLD_MINUTES,
+} from "@/modules/ordering";
 
 import { requireBuyer } from "../guard";
 import { QuantityStepper, RemoveLineButton } from "./cart-line-editor";
@@ -43,13 +55,14 @@ export default async function CartPage() {
       </header>
 
       {cart.lineCount === 0 ? (
-        <div className="grid justify-items-center gap-3 rounded-3xl bg-card p-8 text-center">
-          <span className="flex size-16 items-center justify-center rounded-full bg-sprout-soft text-field-green">
-            <ShoppingCart className="size-7" aria-hidden />
-          </span>
-          <p className="text-lg font-semibold">Your cart is empty</p>
-          <p className="text-sm text-muted-foreground">
-            Find produce from approved farms and add it here.
+        <div className="grid justify-items-center gap-3 overflow-hidden rounded-3xl bg-card px-6 pt-4 pb-8 text-center">
+          <div className="w-full max-w-64 rounded-full bg-sprout-soft p-6">
+            <BasketArt className="h-auto w-full" />
+          </div>
+          <p className="mt-2 text-xl font-bold">Your basket is empty</p>
+          <p className="max-w-xs text-sm text-muted-foreground">
+            Fill it with fresh produce from farms DigiFarm has visited and
+            approved.
           </p>
           <Link
             href="/market"
@@ -60,6 +73,20 @@ export default async function CartPage() {
         </div>
       ) : (
         <>
+          <section className="relative overflow-hidden rounded-3xl bg-sprout-soft p-5 pr-36">
+            <p className="eyebrow text-field-green-dark">Your basket</p>
+            <p className="mt-1 text-2xl font-bold">{cart.total}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {cart.lineCount} {cart.lineCount === 1 ? "product" : "products"}{" "}
+              from {cart.groups.length}{" "}
+              {cart.groups.length === 1 ? "farm" : "farms"}
+              {cart.groups[0] && cart.zoneCodes.length === 1
+                ? ` · delivered in ${cart.groups[0].zoneName}`
+                : ""}
+            </p>
+            <BasketArt className="pointer-events-none absolute -right-2 -bottom-3 h-auto w-36" />
+          </section>
+
           {cart.zoneCodes.length > 1 ? (
             <p className="flex items-start gap-2 rounded-2xl bg-harvest-gold-soft px-4 py-3 text-sm text-soil">
               <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -72,17 +99,22 @@ export default async function CartPage() {
             <section
               key={group.supplierId}
               aria-label={group.supplierName}
-              className="grid gap-4"
+              className="grid gap-4 rounded-3xl bg-card p-4"
             >
-              <p className="flex flex-wrap items-baseline justify-between gap-x-3 px-1 text-sm">
-                <VerifiedFarm
-                  name={group.supplierName}
-                  className="font-semibold text-soil"
-                />
-                <span className="text-muted-foreground">
-                  Delivered in {group.zoneName}
+              <div className="flex items-center gap-3 border-b border-border pb-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sprout-soft text-field-green-dark">
+                  <Tractor className="size-4.5" aria-hidden />
                 </span>
-              </p>
+                <p className="min-w-0 text-sm">
+                  <VerifiedFarm
+                    name={group.supplierName}
+                    className="font-semibold text-soil"
+                  />
+                  <span className="block text-muted-foreground">
+                    Delivered in {group.zoneName}
+                  </span>
+                </p>
+              </div>
               <ul className="grid gap-5">
                 {group.lines.map((line) => (
                   <Line key={line.listingId} line={line} />
@@ -102,7 +134,7 @@ export default async function CartPage() {
             </section>
           ) : null}
 
-          <section className="grid gap-5 pt-2">
+          <section className="grid gap-5 rounded-3xl bg-card p-5">
             <dl className="grid gap-3">
               <div className="flex justify-between text-muted-foreground">
                 <dt>Sub total</dt>
@@ -132,6 +164,23 @@ export default async function CartPage() {
                 Sort out the items marked above to check out.
               </p>
             )}
+            <ul className="grid gap-2 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <Truck
+                  className="size-4 shrink-0 text-field-green-dark"
+                  aria-hidden
+                />
+                Stock is held for {PAYMENT_HOLD_MINUTES} minutes while you pay,
+                then delivered to you.
+              </li>
+              <li className="flex items-center gap-2">
+                <ShieldCheck
+                  className="size-4 shrink-0 text-field-green-dark"
+                  aria-hidden
+                />
+                Mobile money or card. Cancel free until pickup.
+              </li>
+            </ul>
           </section>
         </>
       )}

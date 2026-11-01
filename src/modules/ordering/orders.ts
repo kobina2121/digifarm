@@ -14,6 +14,7 @@ import { db } from "@/lib/db";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { Money } from "@/lib/money";
 import { parseInput } from "@/lib/validation";
+import { photoUrls } from "@/modules/catalog";
 import { returnStock } from "@/modules/inventory";
 import { type LedgerLine, recordLedger } from "@/modules/ledger";
 
@@ -259,6 +260,23 @@ const orderSummarySelect = {
   holdExpiresAt: true,
   buyer: { select: { legalName: true, tradingName: true } },
   fulfilments: { select: { supplierName: true } },
+  items: {
+    orderBy: { createdAt: "asc" },
+    take: 4,
+    select: {
+      id: true,
+      productName: true,
+      listing: {
+        select: {
+          images: {
+            orderBy: { sortOrder: "asc" },
+            take: 1,
+            select: { storageKey: true, width: true, height: true },
+          },
+        },
+      },
+    },
+  },
   _count: { select: { items: true } },
 } satisfies Prisma.OrderSelect;
 
@@ -276,6 +294,12 @@ function toSummary(
     buyerName: o.buyer.tradingName ?? o.buyer.legalName,
     supplierNames: o.fulfilments.map((f) => f.supplierName),
     itemCount: o._count.items,
+    /** Up to four products, with a photo where the listing still has one. */
+    previews: o.items.map((i) => ({
+      id: i.id,
+      productName: i.productName,
+      photo: i.listing?.images[0] ? photoUrls(i.listing.images[0]) : null,
+    })),
   };
 }
 

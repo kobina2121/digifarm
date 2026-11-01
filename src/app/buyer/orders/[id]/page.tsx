@@ -9,10 +9,12 @@ import {
   REFUND_TONE,
   StatusBadge,
 } from "@/components/status-badge";
+import { DeliveryArt } from "@/components/illustrations/commerce-art";
 import { orNotFound } from "@/lib/not-found";
 import { getOrderForBuyer } from "@/modules/ordering";
 
 import { requireBuyer } from "../../guard";
+import { OrderProgress } from "../order-progress";
 import {
   CancelOrder,
   HoldCountdown,
@@ -74,24 +76,31 @@ export default async function OrderPage({
 
   return (
     <div className="grid gap-6">
-      <div>
-        <Link
-          href="/buyer/orders"
-          className="text-sm font-medium text-field-green underline-offset-4 hover:underline"
-        >
-          ← Orders
-        </Link>
-        <h1 className="mt-2 font-mono text-2xl font-bold">{order.number}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <StatusBadge
-            tone={ORDER_TONE[order.status]}
-            label={order.statusLabel}
-          />
-          <span className="text-sm text-muted-foreground">
+      <Link
+        href="/buyer/orders"
+        className="text-sm font-medium text-field-green-dark underline-offset-4 hover:underline"
+      >
+        ← Orders
+      </Link>
+
+      <section className="grid gap-5 overflow-hidden rounded-3xl bg-card p-5">
+        <div className="relative pr-28 sm:pr-40">
+          <h1 className="font-mono text-xl font-bold whitespace-nowrap sm:text-2xl">
+            {order.number}
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <StatusBadge
+              tone={ORDER_TONE[order.status]}
+              label={order.statusLabel}
+            />
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
             Placed {dateTime.format(order.createdAt)} by {order.placedBy}
-          </span>
+          </p>
+          <DeliveryArt className="pointer-events-none absolute -top-1 -right-2 h-auto w-28 sm:w-40" />
         </div>
-      </div>
+        <OrderProgress status={order.status} size="lg" />
+      </section>
 
       {waiting ? <RefreshWhilePending /> : null}
       {message && !(paymentParam === "pending" && order.status === "PAID") ? (
@@ -110,7 +119,7 @@ export default async function OrderPage({
       ) : null}
 
       {order.canPay ? (
-        <section className="grid gap-3 rounded-2xl border border-harvest-gold bg-harvest-gold-soft/40 p-5">
+        <section className="grid gap-3 rounded-3xl bg-harvest-gold-soft p-5">
           <p className="flex items-center gap-2 font-medium">
             <Clock className="size-5 text-soil" aria-hidden />
             Pay within{" "}
@@ -129,10 +138,7 @@ export default async function OrderPage({
       ) : null}
 
       {order.fulfilments.map((f) => (
-        <section
-          key={f.id}
-          className="grid gap-3 rounded-2xl border border-border bg-card p-4"
-        >
+        <section key={f.id} className="grid gap-3 rounded-3xl bg-card p-4">
           <VerifiedFarm name={f.supplierName} className="font-semibold" />
           <ul className="grid gap-2 text-sm">
             {f.items.map((item) => (
@@ -152,7 +158,7 @@ export default async function OrderPage({
         </section>
       ))}
 
-      <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
+      <section className="grid gap-3 rounded-3xl bg-card p-5">
         <dl className="grid gap-1 text-sm">
           <div className="flex justify-between">
             <dt>Produce</dt>
@@ -183,7 +189,7 @@ export default async function OrderPage({
         ))}
       </section>
 
-      <section className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5 text-sm">
+      <section className="flex items-start gap-3 rounded-3xl bg-card p-5 text-sm">
         <MapPin
           className="mt-0.5 size-4 shrink-0 text-field-green"
           aria-hidden

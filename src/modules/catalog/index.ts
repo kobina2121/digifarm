@@ -32,6 +32,7 @@ export {
   type MarketListing,
   type OrderableListing,
   orderableListings,
+  photoUrls,
   MAX_PHOTOS_PER_LISTING,
   type PhotoUpload,
   removeListingPhoto,
