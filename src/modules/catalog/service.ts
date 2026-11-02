@@ -392,6 +392,76 @@ export async function getMarketSupplier(supplierId: string, now = new Date()) {
   };
 }
 
+// ─── Buyers: saved listings ─────────────────────────────────────────────────
+
+// Saving uses the cart permission: anyone who can shop for the buyer can keep
+// a list of favourites for it.
+function savedOrgOf(actor: Actor): string {
+  assertCan(actor, "cart.manage");
+  const orgId = actor.membership?.organizationId;
+  if (!orgId) throw new NotFoundError("Set up your account first.");
+  return orgId;
+}
+
+/** IDs of the buyer's saved listings among `listingIds`, for hearts on cards. */
+export async function savedListingIds(
+  actor: Actor,
+  listingIds: string[],
+): Promise<Set<string>> {
+  if (listingIds.length === 0) return new Set();
+  const rows = await db.savedListing.findMany({
+    where: { buyerOrgId: savedOrgOf(actor), listingId: { in: listingIds } },
+    select: { listingId: true },
+  });
+  return new Set(rows.map((r) => r.listingId));
+}
+
+/** How many listings the buyer has saved that are still on sale. */
+export async function savedListingCount(actor: Actor): Promise<number> {
+  return db.savedListing.count({
+    where: { buyerOrgId: savedOrgOf(actor), listing: PUBLIC_LISTING },
+  });
+}
+
+/** Save or unsave a listing. Saving twice (or unsaving twice) is harmless. */
+export async function setListingSaved(
+  actor: Actor,
+  listingId: string,
+  saved: boolean,
+): Promise<{ saved: boolean }> {
+  const buyerOrgId = savedOrgOf(actor);
+  assertId(listingId, "Listing");
+  if (!saved) {
+    await db.savedListing.deleteMany({ where: { buyerOrgId, listingId } });
+    return { saved: false };
+  }
+  const listing = await db.listing.findFirst({
+    where: { id: listingId, ...PUBLIC_LISTING },
+    select: { id: true },
+  });
+  if (!listing) throw new NotFoundError("This listing isn’t on sale.");
+  await db.savedListing.upsert({
+    where: { buyerOrgId_listingId: { buyerOrgId, listingId } },
+    create: { buyerOrgId, listingId },
+    update: {},
+  });
+  return { saved: true };
+}
+
+/** The buyer's saved listings that are still public, most recently saved first. */
+export async function listSavedListings(
+  actor: Actor,
+  now = new Date(),
+): Promise<MarketListing[]> {
+  const rows = await db.savedListing.findMany({
+    where: { buyerOrgId: savedOrgOf(actor), listing: PUBLIC_LISTING },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 100,
+    select: { listing: { select: marketListingSelect } },
+  });
+  return rows.map((r) => toMarketListing(r.listing, now));
+}
+
 // ─── Staff: listings ────────────────────────────────────────────────────────
 
 /** Everything the "new listing" form needs to offer. */
@@ -491,11 +561,7 @@ export async function createListing(actor: Actor, input: CreateListingInput) {
         fieldErrors: { unitCode: "Choose a unit" },
       });
     }
-    const { grade } = await resolveListingRefs(
-      tx,
-      product.categoryId,
-      data,
-    );
+    const { grade } = await resolveListingRefs(tx, product.categoryId, data);
 
     const status: ListingStatus = data.publish ? "ACTIVE" : "DRAFT";
     const listing = await tx.listing.create({

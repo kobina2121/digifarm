@@ -9,7 +9,7 @@ import { getActor } from "@/lib/session";
 import { getMarketSupplier } from "@/modules/catalog";
 import { SUPPLIER_KINDS } from "@/modules/suppliers";
 
-import { cardAction } from "../../card-action";
+import { cardAction, cardSave, savedAmong } from "../../card-action";
 
 export const metadata: Metadata = { title: "Farm" };
 
@@ -26,6 +26,7 @@ export default async function MarketSupplierPage({
   const { id } = await params;
   const supplier = await orNotFound(getMarketSupplier(id));
   const actor = await getActor();
+  const saved = await savedAmong(actor, supplier.listings);
   const location = [supplier.district, GHANA_REGIONS[supplier.region]]
     .filter(Boolean)
     .join(", ");
@@ -71,6 +72,7 @@ export default async function MarketSupplierPage({
                 <ListingCard
                   listing={listing}
                   action={cardAction(listing, actor)}
+                  corner={cardSave(listing, actor, saved)}
                 />
               </li>
             ))}

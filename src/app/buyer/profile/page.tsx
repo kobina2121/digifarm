@@ -1,6 +1,7 @@
 import {
   Building2,
   ChevronRight,
+  Heart,
   Mail,
   MapPin,
   Palette,
@@ -21,6 +22,7 @@ import {
   getBuyerProfile,
   getMyAccount,
 } from "@/modules/buyers";
+import { savedListingCount } from "@/modules/catalog";
 import { cartLineCount, countOrdersForBuyer } from "@/modules/ordering";
 
 import { requireBuyer } from "../guard";
@@ -29,11 +31,12 @@ export const metadata: Metadata = { title: "Profile" };
 
 export default async function ProfilePage() {
   const actor = await requireBuyer();
-  const [profile, account, orders, cartLines] = await Promise.all([
+  const [profile, account, orders, cartLines, savedCount] = await Promise.all([
     getBuyerProfile(actor),
     getMyAccount(actor),
     countOrdersForBuyer(actor),
     cartLineCount(actor),
+    savedListingCount(actor),
   ]);
   const isBusiness = profile.buyerKind === "BUSINESS";
   const business = profile.tradingName ?? profile.legalName;
@@ -151,6 +154,16 @@ export default async function ProfilePage() {
               : "Empty"
           }
           href="/buyer/cart"
+        />
+        <Row
+          icon={<Heart />}
+          label="Saved"
+          value={
+            savedCount
+              ? `${savedCount} ${savedCount === 1 ? "product" : "products"}`
+              : "Tap the heart on a product to save it"
+          }
+          href="/buyer/saved"
         />
       </Group>
 

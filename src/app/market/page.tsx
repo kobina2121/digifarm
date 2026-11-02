@@ -16,7 +16,7 @@ import {
 
 import { MarketFilters } from "./market-filters";
 
-import { cardAction } from "./card-action";
+import { cardAction, cardSave, savedAmong } from "./card-action";
 
 export const metadata: Metadata = {
   title: "Market",
@@ -63,6 +63,7 @@ export default async function MarketPage({
     browseListings(flat),
     listCategories(),
   ]);
+  const saved = await savedAmong(actor, items);
   const activeFilters = [
     filters.region,
     filters.minPrice,
@@ -174,6 +175,7 @@ export default async function MarketPage({
                 <ListingCard
                   listing={listing}
                   action={cardAction(listing, actor)}
+                  corner={cardSave(listing, actor, saved)}
                 />
               </li>
             ))}

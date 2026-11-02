@@ -183,6 +183,7 @@ model Organization {
   verification SupplierVerification?
   listings     Listing[]
   cart         Cart?
+  saved        SavedListing[]
   orders       Order[]
   fulfilments  Fulfilment[]
   ledger       LedgerEntry[]
@@ -480,6 +481,7 @@ model Listing {
   images     ListingImage[]
   inventory  InventoryRecord?
   cartItems  CartItem[]
+  savedBy    SavedListing[]
   orderItems OrderItem[]
 
   @@index([status, productId])
@@ -572,6 +574,20 @@ model CartItem {
 
   @@unique([cartId, listingId])
   @@map("cart_item")
+}
+
+/// A buyer's saved (favourite) listings: one heart per listing, newest first.
+model SavedListing {
+  id         String       @id @default(uuid(7)) @db.Uuid
+  buyerOrgId String       @db.Uuid
+  buyer      Organization @relation(fields: [buyerOrgId], references: [id], onDelete: Cascade)
+  listingId  String       @db.Uuid
+  listing    Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+
+  @@unique([buyerOrgId, listingId])
+  @@index([buyerOrgId, createdAt])
+  @@map("saved_listing")
 }
 
 enum OrderChannel {

@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 
+import { SaveButton, SignInToSave } from "@/components/market/save-button";
 import { type Actor, isStaff } from "@/lib/authz";
 import { GHANA_REGIONS } from "@/lib/ghana";
 import { orNotFound } from "@/lib/not-found";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 import {
   getMarketListing,
   type MarketListing,
+  savedListingIds,
   UNAVAILABLE_LABELS,
 } from "@/modules/catalog";
 import { cartLineCount, quantityInCart } from "@/modules/ordering";
@@ -72,9 +74,11 @@ export default async function MarketListingPage({
   const { id } = await params;
   const { listing } = await orNotFound(getMarketListing(id));
   const actor = await getActor();
-  const [mode, cartLines] = await Promise.all([
+  const buyer = isBuyer(actor) && !isStaff(actor) ? actor : null;
+  const [mode, cartLines, saved] = await Promise.all([
     purchaseMode(listing, actor),
-    isBuyer(actor) ? cartLineCount(actor) : null,
+    buyer ? cartLineCount(buyer) : null,
+    buyer ? savedListingIds(buyer, [listing.id]) : null,
   ]);
 
   const title = listing.variety
@@ -126,8 +130,22 @@ export default async function MarketListingPage({
               <span />
             )}
           </div>
-          <div className="mt-2">
+          <div className="relative mt-2">
             <Gallery photos={listing.photos} title={title} />
+            {saved ? (
+              <SaveButton
+                listingId={listing.id}
+                productName={listing.productName}
+                saved={saved.has(listing.id)}
+                className="absolute top-3 right-3 size-11"
+              />
+            ) : !actor ? (
+              <SignInToSave
+                listingId={listing.id}
+                productName={listing.productName}
+                className="absolute top-3 right-3 size-11"
+              />
+            ) : null}
           </div>
         </section>
 

@@ -11,15 +11,17 @@ import { ListingImage } from "./listing-bits";
 /**
  * Compact product card for two-up grids: photo, name, where the farm is and
  * the price per unit. Tapping it opens the listing with the rest (farm,
- * description). `action` (the + button) sits in the bottom-right corner,
- * outside the link.
+ * description). `action` (the + button) sits in the bottom-right corner and
+ * `corner` (the save heart) in the top-right, both outside the link.
  */
 export function ListingCard({
   listing,
   action,
+  corner,
 }: {
   listing: MarketListing;
   action?: ReactNode;
+  corner?: ReactNode;
 }) {
   const title = listing.variety
     ? `${listing.productName} · ${listing.variety}`
@@ -78,6 +80,7 @@ export function ListingCard({
       {action ? (
         <div className="absolute right-3 bottom-3">{action}</div>
       ) : null}
+      {corner ? <div className="absolute top-2 right-2">{corner}</div> : null}
     </div>
   );
 }

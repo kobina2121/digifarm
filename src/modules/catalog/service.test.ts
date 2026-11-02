@@ -9,6 +9,7 @@ import {
   ValidationError,
 } from "@/lib/errors";
 import { publicStorage } from "@/lib/storage";
+import { createBuyerOrganization } from "@/modules/buyers";
 import {
   createManagedSupplier,
   decideVerification,
@@ -29,6 +30,9 @@ import {
   getMarketSupplier,
   listGrades,
   listListingsForStaff,
+  listSavedListings,
+  savedListingIds,
+  setListingSaved,
   updateGrade,
   updateListing,
 } from "./service";
@@ -331,5 +335,58 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
     await expect(
       addListingPhotos(staff, created.id, [{ bytes: fake, size: fake.length }]),
     ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("lets a buyer save and unsave listings, showing only ones still on sale", async () => {
+    const { listing: tomato, staff } = await listing();
+    const { listing: other } = await listing();
+    const user = await createUser({ name: "Esi Owusu" });
+    const org = await createBuyerOrganization(user, {
+      phone: "0241234567",
+      address: { label: "Home", region: "CENTRAL", town: "Cape Coast" },
+    });
+    const buyer = {
+      ...user,
+      membership: {
+        organizationId: org.id,
+        organizationType: "BUYER" as const,
+        role: "OWNER" as const,
+      },
+    };
+
+    await setListingSaved(buyer, tomato.id, true);
+    await setListingSaved(buyer, tomato.id, true); // saving twice is harmless
+    await setListingSaved(buyer, other.id, true);
+    expect((await listSavedListings(buyer)).map((l) => l.id)).toEqual([
+      other.id,
+      tomato.id,
+    ]);
+    expect(await savedListingIds(buyer, [tomato.id])).toEqual(
+      new Set([tomato.id]),
+    );
+
+    // A paused listing drops off the saved list.
+    await changeListingStatus(staff, other.id, {
+      action: "PAUSE",
+      reason: "Farmer is restocking",
+    });
+    expect((await listSavedListings(buyer)).map((l) => l.id)).toEqual([
+      tomato.id,
+    ]);
+
+    await setListingSaved(buyer, tomato.id, false);
+    await setListingSaved(buyer, tomato.id, false);
+    expect(await savedListingIds(buyer, [tomato.id, other.id])).toEqual(
+      new Set([other.id]),
+    );
+
+    // Only buyers can save.
+    await expect(
+      setListingSaved(
+        await createUser({ platformRole: "OPS" }),
+        tomato.id,
+        true,
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 });
