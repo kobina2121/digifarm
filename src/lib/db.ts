@@ -4,6 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "@/generated/prisma/client";
 
+import { createTimedClient } from "./db-timing";
 import { env } from "./env";
 
 // One client per server instance; reused across hot reloads in development.
@@ -16,6 +17,7 @@ function createClient() {
     // them ourselves first so a request never lands on a dead connection.
     idleTimeoutMillis: 60_000,
     keepAlive: true,
+    Client: createTimedClient(),
   });
   return new PrismaClient({
     adapter,
