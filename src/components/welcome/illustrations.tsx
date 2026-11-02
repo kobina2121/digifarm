@@ -123,7 +123,7 @@ export function VerifiedFarm() {
   );
 }
 
-/** Step 2 — comparing price, unit, grade and minimum order. */
+/** Step 2 — comparing price and unit. */
 export function ChooseProduce() {
   return (
     <Frame>

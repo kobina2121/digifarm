@@ -2,6 +2,7 @@ import { MapPin } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Badge } from "@/components/ui/badge";
+import { GHANA_REGIONS } from "@/lib/ghana";
 import { getBuyerProfile } from "@/modules/buyers";
 
 import { requireBuyer } from "../guard";
@@ -20,7 +21,7 @@ export default async function AddressesPage() {
       <div>
         <h1 className="text-3xl font-bold">Delivery addresses</h1>
         <p className="mt-1 text-muted-foreground">
-          Where we bring your orders in Greater Accra and Kumasi.
+          Where we bring your orders, anywhere in Ghana.
         </p>
       </div>
 
@@ -46,7 +47,7 @@ export default async function AddressesPage() {
                   address.street,
                   address.town,
                   address.district,
-                  address.zone?.name,
+                  GHANA_REGIONS[address.region],
                 ]
                   .filter(Boolean)
                   .join(", ")}

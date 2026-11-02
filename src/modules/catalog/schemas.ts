@@ -1,7 +1,8 @@
 import { z } from "zod";
 
+import { ghanaRegionSchema } from "@/lib/ghana";
+
 export const GRADE_CODES = ["A", "B", "C"] as const;
-export const ZONE_CODES = ["ACCRA", "KUMASI"] as const;
 export const LISTING_SORTS = {
   newest: "Newest",
   price_asc: "Price: low to high",
@@ -60,9 +61,9 @@ const gradeCode = z
 
 const listingDetails = {
   gradeCode,
-  zoneCode: z.enum(ZONE_CODES, { error: "Choose Greater Accra or Kumasi" }),
   price: priceSchema,
-  minOrderQty: quantity("the minimum order"),
+  // Minimum orders are off for now: any quantity from 1 can be ordered.
+  minOrderQty: quantity("the minimum order").optional().default("1"),
   netWeightPerUnitKg: optionalQuantity("the weight per unit"),
   harvestDate: optionalDate,
   availableFrom: date,
@@ -129,7 +130,8 @@ export const gradeUpdateSchema = z.object({
 export const browseSchema = z.object({
   q: optionalText(80),
   category: optionalText(40),
-  zone: z.enum(ZONE_CODES).optional().catch(undefined),
+  /** Where the farm is (DigiFarm delivers anywhere in Ghana). */
+  region: ghanaRegionSchema.optional().catch(undefined),
   grade: z.enum(GRADE_CODES).optional().catch(undefined),
   minPrice: priceSchema.optional().catch(undefined),
   maxPrice: priceSchema.optional().catch(undefined),

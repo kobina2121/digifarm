@@ -19,22 +19,21 @@ export function QuantityStepper({
   listingId,
   productName,
   quantity,
-  minOrderQty,
   unitName,
   unitPlural,
 }: {
   listingId: string;
   productName: string;
   quantity: string;
-  minOrderQty: string;
   unitName: string;
   unitPlural: string;
 }) {
   const [value, setValue] = useState(quantity);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const min = Number(minOrderQty);
-  const step = min >= 1 ? 1 : min;
+  // No minimum orders: step by one, never below one.
+  const min = 1;
+  const step = 1;
 
   function save(next: string) {
     setValue(next);

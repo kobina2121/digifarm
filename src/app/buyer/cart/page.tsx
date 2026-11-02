@@ -3,7 +3,6 @@ import {
   ShieldCheck,
   ShoppingCart,
   Tractor,
-  TriangleAlert,
   Truck,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -79,21 +78,11 @@ export default async function CartPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {cart.lineCount} {cart.lineCount === 1 ? "product" : "products"}{" "}
               from {cart.groups.length}{" "}
-              {cart.groups.length === 1 ? "farm" : "farms"}
-              {cart.groups[0] && cart.zoneCodes.length === 1
-                ? ` · delivered in ${cart.groups[0].zoneName}`
-                : ""}
+              {cart.groups.length === 1 ? "farm" : "farms"} · delivered anywhere
+              in Ghana
             </p>
             <BasketArt className="pointer-events-none absolute -right-2 -bottom-3 h-auto w-36" />
           </section>
-
-          {cart.zoneCodes.length > 1 ? (
-            <p className="flex items-start gap-2 rounded-2xl bg-harvest-gold-soft px-4 py-3 text-sm text-soil">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-              Your cart has produce for both Accra and Kumasi. One order is
-              delivered to one area, so check out each area separately.
-            </p>
-          ) : null}
 
           {cart.groups.map((group) => (
             <section
@@ -111,7 +100,7 @@ export default async function CartPage() {
                     className="font-semibold text-soil"
                   />
                   <span className="block text-muted-foreground">
-                    Delivered in {group.zoneName}
+                    Farm in {group.farmRegion}
                   </span>
                 </p>
               </div>
@@ -149,7 +138,7 @@ export default async function CartPage() {
                 <dd className="font-bold">{cart.total}</dd>
               </div>
             </dl>
-            {cart.canCheckout && cart.zoneCodes.length === 1 ? (
+            {cart.canCheckout ? (
               <Link
                 href="/buyer/checkout"
                 className={cn(
@@ -226,11 +215,6 @@ function Line({ line }: { line: CartLine }) {
               <span className="rounded-full bg-sprout-soft px-2.5 py-0.5 text-xs font-medium text-field-green-dark">
                 {l.price} / {l.unit.name}
               </span>
-              {l.grade ? (
-                <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-soil">
-                  Grade {l.grade.code}
-                </span>
-              ) : null}
             </p>
             <p className="text-lg font-bold text-field-green">
               {line.lineTotal}
@@ -240,13 +224,12 @@ function Line({ line }: { line: CartLine }) {
                 listingId={line.listingId}
                 productName={line.productName}
                 quantity={line.quantity}
-                minOrderQty={l.minOrderQty}
                 unitName={l.unit.name}
                 unitPlural={l.unit.plural}
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {line.quantityLabel} · min {l.minOrderLabel}
+              {line.quantityLabel}
             </p>
           </>
         ) : null}

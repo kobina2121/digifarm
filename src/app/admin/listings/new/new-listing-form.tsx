@@ -24,7 +24,6 @@ type Options = {
     products: { id: string; name: string; variety: string | null }[];
   }[];
   units: { code: string; name: string; plural: string }[];
-  zones: { code: string; name: string; region: string }[];
 };
 
 function today() {
@@ -41,16 +40,10 @@ export function NewListingForm({
 }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
-  const zoneFor = (id?: string) => {
-    const region = options.suppliers.find((s) => s.id === id)?.region;
-    return (options.zones.find((z) => z.region === region)?.code ?? "") as
-      "ACCRA" | "KUMASI";
-  };
   const {
     register,
     handleSubmit,
     setError,
-    setValue,
     control,
     formState: { errors, isSubmitting },
   } = useForm<CreateListingInput>({
@@ -59,8 +52,6 @@ export function NewListingForm({
       supplierId: supplierId ?? "",
       productId: "",
       unitCode: "",
-      gradeCode: "",
-      zoneCode: zoneFor(supplierId),
       availableFrom: today(),
       publish: true,
     },
@@ -81,8 +72,6 @@ export function NewListingForm({
     router.push(`/admin/listings/${result.data.id}`);
   }
 
-  const supplierField = register("supplierId");
-
   return (
     <form
       method="post"
@@ -99,12 +88,7 @@ export function NewListingForm({
         <NativeSelect
           id="supplierId"
           aria-invalid={!!errors.supplierId}
-          {...supplierField}
-          onChange={(e) => {
-            void supplierField.onChange(e);
-            const zone = zoneFor(e.target.value);
-            if (zone) setValue("zoneCode", zone);
-          }}
+          {...register("supplierId")}
         >
           <option value="">Choose an approved supplier</option>
           {options.suppliers.map((s) => (
@@ -172,61 +156,18 @@ export function NewListingForm({
         </FormField>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <FormField
-          id="minOrderQty"
-          label={`Minimum order (${unit?.plural ?? "units"})`}
-          error={errors.minOrderQty?.message}
-        >
-          <Input
-            id="minOrderQty"
-            inputMode="decimal"
-            aria-invalid={!!errors.minOrderQty}
-            {...register("minOrderQty")}
-          />
-        </FormField>
-        <FormField
+      <FormField
+        id="initialStock"
+        label={`Stock now (${unit?.plural ?? "units"})`}
+        error={errors.initialStock?.message}
+      >
+        <Input
           id="initialStock"
-          label={`Stock now (${unit?.plural ?? "units"})`}
-          error={errors.initialStock?.message}
-        >
-          <Input
-            id="initialStock"
-            inputMode="decimal"
-            aria-invalid={!!errors.initialStock}
-            {...register("initialStock")}
-          />
-        </FormField>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <FormField id="gradeCode" label="DigiFarm grade">
-          <NativeSelect id="gradeCode" {...register("gradeCode")}>
-            <option value="">Not graded</option>
-            <option value="A">Grade A</option>
-            <option value="B">Grade B</option>
-            <option value="C">Grade C</option>
-          </NativeSelect>
-        </FormField>
-        <FormField
-          id="zoneCode"
-          label="Sold in"
-          error={errors.zoneCode?.message}
-        >
-          <NativeSelect
-            id="zoneCode"
-            aria-invalid={!!errors.zoneCode}
-            {...register("zoneCode")}
-          >
-            <option value="">Zone</option>
-            {options.zones.map((z) => (
-              <option key={z.code} value={z.code}>
-                {z.name}
-              </option>
-            ))}
-          </NativeSelect>
-        </FormField>
-      </div>
+          inputMode="decimal"
+          aria-invalid={!!errors.initialStock}
+          {...register("initialStock")}
+        />
+      </FormField>
 
       <FormField
         id="netWeightPerUnitKg"

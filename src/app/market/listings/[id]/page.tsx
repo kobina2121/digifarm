@@ -1,26 +1,21 @@
 import {
   ArrowLeft,
   BadgeCheck,
-  CalendarDays,
   ChevronRight,
   MapPin,
-  Package,
   ShoppingCart,
   Tractor,
-  Warehouse,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import type { ReactNode } from "react";
 
-import { ListingTile } from "@/components/market/listing-tile";
 import { type Actor, isStaff } from "@/lib/authz";
 import { GHANA_REGIONS } from "@/lib/ghana";
 import { orNotFound } from "@/lib/not-found";
 import { getActor } from "@/lib/session";
+import { cn } from "@/lib/utils";
 import {
-  browseListings,
   getMarketListing,
   type MarketListing,
   UNAVAILABLE_LABELS,
@@ -37,12 +32,6 @@ import {
 import { SeeMore } from "./see-more";
 
 export const metadata: Metadata = { title: "Produce" };
-
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
 
 function isBuyer(actor: Actor | null): actor is Actor {
   return Boolean(
@@ -71,25 +60,22 @@ async function purchaseMode(
   };
 }
 
+/**
+ * Product details, kept simple: photo, name, stock, price per unit,
+ * description, and the farm and where it is. Then quantity and add to cart.
+ */
 export default async function MarketListingPage({
   params,
 }: PageProps<"/market/listings/[id]">) {
   // Availability depends on the current time, so this always renders per request.
   await connection();
   const { id } = await params;
-  const { listing, otherOffers } = await orNotFound(getMarketListing(id));
+  const { listing } = await orNotFound(getMarketListing(id));
   const actor = await getActor();
-  const [mode, sameCategory, cartLines] = await Promise.all([
+  const [mode, cartLines] = await Promise.all([
     purchaseMode(listing, actor),
-    browseListings({ category: listing.category.slug }),
     isBuyer(actor) ? cartLineCount(actor) : null,
   ]);
-
-  // Other farms selling the same thing first, then the rest of the category.
-  const seen = new Set([listing.id]);
-  const related = [...otherOffers, ...sameCategory.items]
-    .filter((l) => (seen.has(l.id) ? false : (seen.add(l.id), true)))
-    .slice(0, 10);
 
   const title = listing.variety
     ? `${listing.productName} · ${listing.variety}`
@@ -107,7 +93,6 @@ export default async function MarketListingPage({
       listingId={listing.id}
       priceLabel={listing.price.replace(/\.00$/, "")}
       priceMinor={listing.priceMinor}
-      minOrderQty={listing.minOrderQty}
       unitName={listing.unit.name}
       unitPlural={listing.unit.plural}
       mode={mode}
@@ -146,77 +131,42 @@ export default async function MarketListingPage({
           </div>
         </section>
 
-        {/* Name and quantity */}
+        {/* Name, stock, price per unit, quantity */}
         <section className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl leading-tight font-bold">{title}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {listing.grade ? (
-                <span className="rounded-full bg-field-green px-2.5 py-1 text-xs font-semibold text-white">
-                  Grade {listing.grade.code} · {listing.grade.title}
-                </span>
-              ) : null}
-              <span
-                className={
-                  a.available
-                    ? "rounded-full bg-sprout-soft px-2.5 py-1 text-xs font-semibold text-field-green-dark"
-                    : "rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground"
-                }
-              >
-                {a.available ? "In stock" : UNAVAILABLE_LABELS[a.reason]}
+            <span
+              className={cn(
+                "mt-2 inline-block rounded-full px-2.5 py-1 text-xs font-semibold",
+                a.available
+                  ? "bg-sprout-soft text-field-green-dark"
+                  : "bg-muted text-muted-foreground",
+              )}
+            >
+              {a.available ? "In stock" : UNAVAILABLE_LABELS[a.reason]}
+            </span>
+            <p className="mt-3">
+              <span className="text-3xl font-bold tracking-tight">
+                {listing.price.replace(/\.00$/, "")}
               </span>
-            </div>
+              <span className="text-muted-foreground">
+                {" "}
+                per {listing.unit.name}
+              </span>
+            </p>
           </div>
           <QuantityStepper />
         </section>
 
         {/* Description */}
-        <section className="grid gap-2">
-          <h2 className="text-lg font-bold">Description</h2>
-          <SeeMore
-            text={
-              listing.description ??
-              `${listing.productName} from ${listing.supplier.name}, a farm in ${location} that DigiFarm has visited and approved.`
-            }
-          />
-          {listing.grade ? (
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
-                Grade {listing.grade.code}:
-              </span>{" "}
-              {listing.grade.description}
-            </p>
-          ) : null}
-        </section>
+        {listing.description ? (
+          <section className="grid gap-2">
+            <h2 className="text-lg font-bold">Description</h2>
+            <SeeMore text={listing.description} />
+          </section>
+        ) : null}
 
-        {/* Quick facts */}
-        <ul className="-mx-4 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0 [&::-webkit-scrollbar]:hidden">
-          <FactChip icon={<Package />} text={`Min ${listing.minOrderLabel}`} />
-          {a.available ? (
-            <FactChip
-              icon={<Warehouse />}
-              text={`${a.availableQty} ${a.availableQty === "1" ? listing.unit.name : listing.unit.plural} available`}
-            />
-          ) : null}
-          <FactChip
-            icon={<MapPin />}
-            text={`Delivered in ${listing.zone.name}`}
-          />
-          {listing.harvestDate ? (
-            <FactChip
-              icon={<CalendarDays />}
-              text={`Harvested ${dateFormat.format(listing.harvestDate)}`}
-            />
-          ) : null}
-          {listing.netWeightPerUnitKg ? (
-            <FactChip
-              icon={<Package />}
-              text={`~${listing.netWeightPerUnitKg} kg per ${listing.unit.name}`}
-            />
-          ) : null}
-        </ul>
-
-        {/* Farm */}
+        {/* Farm and location */}
         <Link
           href={`/market/suppliers/${listing.supplier.id}`}
           className="flex items-center gap-3 rounded-3xl bg-card p-4"
@@ -232,8 +182,9 @@ export default async function MarketListingPage({
                 aria-label="Verified farm"
               />
             </span>
-            <span className="block truncate text-sm text-muted-foreground">
-              {location} · visited by DigiFarm
+            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+              <MapPin className="size-3.5 shrink-0" aria-hidden />
+              <span className="truncate">{location}</span>
             </span>
           </span>
           <ChevronRight
@@ -242,37 +193,11 @@ export default async function MarketListingPage({
           />
         </Link>
 
-        {/* Related */}
-        {related.length ? (
-          <section className="grid grid-cols-[minmax(0,1fr)] gap-3">
-            <h2 className="text-lg font-bold">Related items</h2>
-            <ul className="-mx-4 flex snap-x [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
-              {related.map((item) => (
-                <li
-                  key={item.id}
-                  className="w-36 shrink-0 snap-start rounded-3xl bg-card p-2 sm:w-40"
-                >
-                  <ListingTile listing={item} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
         <BuyBar />
 
         {/* Room for the price bar that floats above the tab bar on phones. */}
         <div aria-hidden className="h-24 md:hidden" />
       </div>
     </PurchaseProvider>
-  );
-}
-
-function FactChip({ icon, text }: { icon: ReactNode; text: string }) {
-  return (
-    <li className="flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3 py-2 text-sm font-medium whitespace-nowrap [&_svg]:size-4 [&_svg]:text-field-green-dark">
-      {icon}
-      {text}
-    </li>
   );
 }

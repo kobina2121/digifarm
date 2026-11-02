@@ -12,7 +12,7 @@ const ROUND =
   "flex size-11 items-center justify-center rounded-full shadow-md transition-transform active:scale-95";
 
 /**
- * The card's + button: adds the minimum order to the cart in one tap. The
+ * The card's + button: adds one unit to the cart in one tap. The
  * amount can be changed in the cart or on the product page.
  */
 export function AddButton({

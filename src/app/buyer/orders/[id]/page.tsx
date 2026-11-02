@@ -146,7 +146,6 @@ export default async function OrderPage({
                 <span className="min-w-0">
                   {item.productName}
                   {item.variety ? ` · ${item.variety}` : ""}
-                  {item.gradeCode ? ` · Grade ${item.gradeCode}` : ""}
                   <span className="block text-muted-foreground">
                     {item.quantityLabel} × {item.unitPrice}
                   </span>
@@ -197,7 +196,11 @@ export default async function OrderPage({
         <div>
           <p className="font-medium">{order.address.label}</p>
           <p className="text-muted-foreground">
-            {[order.address.street, order.address.town, order.address.zone.name]
+            {[
+              order.address.street,
+              order.address.town,
+              order.address.regionName ?? order.address.zone?.name,
+            ]
               .filter(Boolean)
               .join(", ")}
           </p>

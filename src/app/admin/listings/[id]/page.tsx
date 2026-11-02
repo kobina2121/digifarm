@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import {
   AvailabilityBadge,
-  GradeBadge,
 } from "@/components/market/listing-bits";
 import {
   LISTING_STATUS_LABELS,
@@ -78,7 +77,6 @@ export default async function ListingPage({
           {listing.status === "ACTIVE" ? (
             <AvailabilityBadge availability={listing.availability} />
           ) : null}
-          <GradeBadge grade={listing.grade} />
         </div>
         <p className="mt-2 text-muted-foreground">
           <Link
@@ -87,8 +85,7 @@ export default async function ListingPage({
           >
             {listing.supplier.name}
           </Link>{" "}
-          · {listing.price} / {listing.unit.name} · min. {listing.minOrderLabel}{" "}
-          · {listing.zone.name}
+          · {listing.price} / {listing.unit.name}
         </p>
         {listing.statusReason && listing.status !== "ACTIVE" ? (
           <p className="mt-1 text-sm text-muted-foreground">

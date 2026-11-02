@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
 import { SignOutButton } from "@/components/shell/sign-out-button";
 import { ThemePicker } from "@/components/theme/theme-picker";
-import { formatGhanaPhone } from "@/lib/ghana";
+import { formatGhanaPhone, GHANA_REGIONS } from "@/lib/ghana";
 import {
   BUYER_SEGMENTS,
   getBuyerProfile,
@@ -73,7 +73,7 @@ export default async function ProfilePage() {
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <Chip>{isBusiness ? segment : "Personal"}</Chip>
-                {address?.zone ? <Chip>{address.zone.name}</Chip> : null}
+                {address ? <Chip>{GHANA_REGIONS[address.region]}</Chip> : null}
               </div>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default async function ProfilePage() {
           label="Delivery addresses"
           value={
             address
-              ? [address.label, address.town, address.zone?.name]
+              ? [address.label, address.town, GHANA_REGIONS[address.region]]
                   .filter(Boolean)
                   .join(", ")
               : "Add an address"
@@ -167,7 +167,7 @@ export default async function ProfilePage() {
       <footer className="grid justify-items-center gap-1 pb-2 text-center opacity-80">
         <Logo />
         <p className="text-xs text-muted-foreground">
-          Farm to buyer · Greater Accra and Kumasi
+          Farm to buyer · anywhere in Ghana
         </p>
       </footer>
     </div>

@@ -58,9 +58,9 @@ test.describe("signed-out visitors", () => {
 
     await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: "Filters" }).click();
-    await page.getByLabel("Sold in").selectOption("KUMASI");
+    await page.getByLabel("Farm region").selectOption("ASHANTI");
     await page.getByRole("button", { name: "Show results" }).click();
-    await expect(page).toHaveURL(/zone=KUMASI/);
+    await expect(page).toHaveURL(/region=ASHANTI/);
     await expect(
       page.getByRole("heading", { level: 1, name: "Market" }),
     ).toBeVisible();

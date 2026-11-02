@@ -8,10 +8,10 @@ import { FormError, FormField } from "@/components/forms/form-field";
 import { NativeSelect } from "@/components/forms/native-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GHANA_REGIONS } from "@/lib/ghana";
 import {
   type DeliveryAddressInput,
   deliveryAddressSchema,
-  SERVICED_ZONES,
 } from "@/modules/buyers/schemas";
 
 import { addAddress } from "./actions";
@@ -72,21 +72,17 @@ export function AddAddressForm() {
           {...register("label")}
         />
       </FormField>
-      <FormField
-        id="zoneCode"
-        label="Delivery area"
-        error={errors.zoneCode?.message}
-      >
+      <FormField id="region" label="Region" error={errors.region?.message}>
         <NativeSelect
-          id="zoneCode"
+          id="region"
           defaultValue=""
-          aria-invalid={!!errors.zoneCode}
-          {...register("zoneCode")}
+          aria-invalid={!!errors.region}
+          {...register("region")}
         >
           <option value="" disabled>
-            Choose an area
+            Choose a region
           </option>
-          {Object.entries(SERVICED_ZONES).map(([code, name]) => (
+          {Object.entries(GHANA_REGIONS).map(([code, name]) => (
             <option key={code} value={code}>
               {name}
             </option>

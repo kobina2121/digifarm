@@ -494,7 +494,10 @@ export type DeliveryAddressSnapshot = {
   street: string | null;
   landmark: string | null;
   digitalAddress: string | null;
-  zone: { code: string; name: string };
+  /** Orders placed since D4 was revised. */
+  regionName?: string;
+  /** Older orders were delivered to an Accra or Kumasi area. */
+  zone?: { code: string; name: string };
 };
 
 function toDetail(o: OrderRow, now: Date) {

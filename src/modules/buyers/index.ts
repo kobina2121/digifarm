@@ -15,5 +15,4 @@ export {
   buyerOnboardingSchema,
   type DeliveryAddressInput,
   deliveryAddressSchema,
-  SERVICED_ZONES,
 } from "./schemas";

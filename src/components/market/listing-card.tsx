@@ -2,16 +2,17 @@ import { MapPin } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { GHANA_REGIONS } from "@/lib/ghana";
 import { cn } from "@/lib/utils";
 import { type MarketListing, UNAVAILABLE_LABELS } from "@/modules/catalog";
 
 import { ListingImage } from "./listing-bits";
 
 /**
- * Compact product card for two-up grids: photo, grade chip, name, area and
- * price. Tapping it opens the listing with everything else (farm, minimum
- * order, harvest date, grade wording). `action` (the + button) sits in the
- * bottom-right corner, outside the link.
+ * Compact product card for two-up grids: photo, name, where the farm is and
+ * the price per unit. Tapping it opens the listing with the rest (farm,
+ * description). `action` (the + button) sits in the bottom-right corner,
+ * outside the link.
  */
 export function ListingCard({
   listing,
@@ -50,24 +51,15 @@ export function ListingCard({
         </div>
 
         <div className="flex flex-1 flex-col gap-2.5 p-3">
-          <div className="flex flex-wrap gap-1">
-            {listing.grade ? (
-              <span className="rounded-md bg-sprout-soft px-1.5 py-0.5 text-[0.7rem] font-semibold text-field-green-dark">
-                Grade {listing.grade.code}
-              </span>
-            ) : null}
-            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[0.7rem] font-semibold text-muted-foreground">
-              Min {listing.minOrderLabel}
-            </span>
-          </div>
-
           <div className="grid gap-0.5">
             <h3 className="line-clamp-2 text-base leading-snug font-semibold">
               {title}
             </h3>
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="size-3.5 shrink-0" aria-hidden />
-              <span className="truncate">{listing.zone.name}</span>
+              <span className="truncate">
+                {GHANA_REGIONS[listing.supplier.region]}
+              </span>
             </p>
           </div>
 

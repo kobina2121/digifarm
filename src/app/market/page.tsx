@@ -21,7 +21,7 @@ import { cardAction } from "./card-action";
 export const metadata: Metadata = {
   title: "Market",
   description:
-    "Fresh produce from farms DigiFarm has visited and approved, in Greater Accra and Kumasi.",
+    "Fresh produce from farms DigiFarm has visited and approved, delivered anywhere in Ghana.",
 };
 
 /** Filters as URL parameters, without the page cursor. */
@@ -32,8 +32,7 @@ function filterParams(
   const values: Record<string, string | undefined> = {
     q: f.q,
     category: f.category,
-    zone: f.zone,
-    grade: f.grade,
+    region: f.region,
     minPrice: f.minPrice,
     maxPrice: f.maxPrice,
     inStock: f.inStock ? "1" : undefined,
@@ -65,8 +64,7 @@ export default async function MarketPage({
     listCategories(),
   ]);
   const activeFilters = [
-    filters.zone,
-    filters.grade,
+    filters.region,
     filters.minPrice,
     filters.maxPrice,
     filters.inStock || undefined,
@@ -110,8 +108,7 @@ export default async function MarketPage({
           values={{
             q: filters.q ?? "",
             category: filters.category ?? "",
-            zone: filters.zone ?? "",
-            grade: filters.grade ?? "",
+            region: filters.region ?? "",
             minPrice: filters.minPrice ?? "",
             maxPrice: filters.maxPrice ?? "",
             inStock: filters.inStock,

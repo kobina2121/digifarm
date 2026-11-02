@@ -21,11 +21,6 @@ export function ListingTile({ listing }: { listing: MarketListing }) {
           sizes="200px"
           className="aspect-[4/3] w-full transition-transform duration-300 group-hover:scale-[1.04]"
         />
-        {listing.grade ? (
-          <span className="absolute top-2 left-2 rounded-full bg-card/95 px-2 py-0.5 text-[0.7rem] font-semibold text-field-green-dark shadow-sm">
-            Grade {listing.grade.code}
-          </span>
-        ) : null}
       </div>
       <div className="grid gap-0.5 px-0.5">
         <p className="truncate font-semibold">{title}</p>

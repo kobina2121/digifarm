@@ -9,13 +9,13 @@ import { FormError, FormField } from "@/components/forms/form-field";
 import { NativeSelect } from "@/components/forms/native-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GHANA_REGIONS } from "@/lib/ghana";
 import { cn } from "@/lib/utils";
 import {
   BUYER_KINDS,
   BUYER_SEGMENTS,
   type BuyerOnboardingInput,
   buyerOnboardingSchema,
-  SERVICED_ZONES,
 } from "@/modules/buyers/schemas";
 
 import { onboardBuyer } from "./actions";
@@ -36,7 +36,6 @@ export function OnboardingForm() {
       address: { label: "Home" },
     },
   });
-  const zone = useWatch({ control, name: "address.zoneCode" });
   const accountType = useWatch({ control, name: "accountType" });
   const business = accountType === "BUSINESS";
 
@@ -174,40 +173,28 @@ export function OnboardingForm() {
         <legend className="mb-2 font-heading text-lg font-bold">
           Where should we deliver?
         </legend>
-        <div
-          role="radiogroup"
-          aria-label="Delivery area"
-          className="grid grid-cols-2 gap-3"
+        <FormField
+          id="address.region"
+          label="Region"
+          hint="We deliver anywhere in Ghana."
+          error={errors.address?.region?.message}
         >
-          {Object.entries(SERVICED_ZONES).map(([code, name]) => (
-            <label
-              key={code}
-              className={cn(
-                "flex min-h-14 cursor-pointer items-center justify-center rounded-xl border bg-card px-3 text-center font-medium transition-colors",
-                zone === code
-                  ? "border-field-green bg-sprout-soft text-soil ring-2 ring-field-green/30"
-                  : "border-input",
-              )}
-            >
-              <input
-                type="radio"
-                value={code}
-                className="sr-only"
-                {...register("address.zoneCode")}
-              />
-              {name}
-            </label>
-          ))}
-        </div>
-        {errors.address?.zoneCode ? (
-          <p role="alert" className="-mt-2 text-sm text-destructive">
-            {errors.address.zoneCode.message}
-          </p>
-        ) : (
-          <p className="-mt-2 text-sm text-muted-foreground">
-            We currently deliver in Greater Accra and Kumasi.
-          </p>
-        )}
+          <NativeSelect
+            id="address.region"
+            defaultValue=""
+            aria-invalid={!!errors.address?.region}
+            {...register("address.region")}
+          >
+            <option value="" disabled>
+              Choose a region
+            </option>
+            {Object.entries(GHANA_REGIONS).map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </NativeSelect>
+        </FormField>
         <FormField
           id="address.label"
           label="Name for this address"

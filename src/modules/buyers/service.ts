@@ -2,8 +2,8 @@ import "server-only";
 
 import { audit } from "@/lib/audit";
 import { type Actor, assertCan } from "@/lib/authz";
-import { db, type Tx } from "@/lib/db";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { db } from "@/lib/db";
+import { ConflictError, NotFoundError } from "@/lib/errors";
 import { parseInput } from "@/lib/validation";
 
 import {
@@ -14,16 +14,6 @@ import {
   type DeliveryAddressInput,
   deliveryAddressSchema,
 } from "./schemas";
-
-async function activeZone(tx: Tx, code: string) {
-  const zone = await tx.operatingZone.findUnique({ where: { code } });
-  if (!zone || !zone.isActive) {
-    throw new ValidationError("DigiFarm doesn't deliver to that area yet.", {
-      fieldErrors: { "address.zoneCode": "Choose Greater Accra or Kumasi" },
-    });
-  }
-  return zone;
-}
 
 /**
  * Creates the buyer's account (a person or a business, D18), makes them its
@@ -42,7 +32,6 @@ export async function createBuyerOrganization(
     if (await tx.membership.count({ where: { userId: actor.userId } })) {
       throw new ConflictError("Your account is already set up.");
     }
-    const zone = await activeZone(tx, data.address.zoneCode);
     const business = data.accountType === "BUSINESS";
     // A personal account goes by the person's own name.
     const legalName = business
@@ -61,7 +50,7 @@ export async function createBuyerOrganization(
         legalName,
         tradingName: business ? data.tradingName : null,
         phone: data.phone,
-        region: zone.region,
+        region: data.address.region,
         buyerKind: data.accountType,
         buyerSegment: business ? data.buyerSegment : null,
         createdById: actor.userId,
@@ -70,8 +59,7 @@ export async function createBuyerOrganization(
           create: {
             kind: "DELIVERY",
             label: data.address.label,
-            region: zone.region,
-            zoneId: zone.id,
+            region: data.address.region,
             town: data.address.town,
             district: data.address.district,
             street: data.address.street,
@@ -91,7 +79,7 @@ export async function createBuyerOrganization(
         legalName: organization.legalName,
         buyerKind: data.accountType,
         buyerSegment: organization.buyerSegment,
-        zone: zone.code,
+        region: data.address.region,
       },
     });
     return organization;
@@ -128,7 +116,7 @@ export async function getBuyerProfile(actor: Actor) {
           landmark: true,
           digitalAddress: true,
           isDefault: true,
-          zone: { select: { code: true, name: true } },
+          region: true,
         },
       },
     },
@@ -197,14 +185,12 @@ export async function addDeliveryAddress(
   const organizationId = buyerOrgId(actor);
 
   return db.$transaction(async (tx) => {
-    const zone = await activeZone(tx, data.zoneCode);
     const address = await tx.address.create({
       data: {
         organizationId,
         kind: "DELIVERY",
         label: data.label,
-        region: zone.region,
-        zoneId: zone.id,
+        region: data.region,
         town: data.town,
         district: data.district,
         street: data.street,
@@ -216,7 +202,7 @@ export async function addDeliveryAddress(
       action: "buyer.address.added",
       entityType: "Address",
       entityId: address.id,
-      after: { label: address.label, zone: zone.code },
+      after: { label: address.label, region: data.region },
     });
     return address;
   });

@@ -226,7 +226,8 @@ enum GhanaRegion {
   WESTERN_NORTH
 }
 
-// Areas DigiFarm currently delivers to (ROADMAP D4): Accra and Kumasi.
+// Former delivery areas (Accra, Kumasi). Kept for history: since D4 was
+// revised, DigiFarm delivers anywhere in Ghana and addresses use regions.
 model OperatingZone {
   id        String      @id @default(uuid(7)) @db.Uuid
   code      String      @unique
@@ -449,14 +450,16 @@ model Listing {
   unit               UnitOfMeasure    @relation(fields: [unitId], references: [id])
   gradeId            String?          @db.Uuid
   grade              GradeDefinition? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
-  zoneId             String           @db.Uuid
-  zone               OperatingZone    @relation(fields: [zoneId], references: [id])
+  // No longer used: DigiFarm delivers anywhere in Ghana (D4 revised).
+  zoneId             String?          @db.Uuid
+  zone               OperatingZone?   @relation(fields: [zoneId], references: [id])
   pickupAddressId    String?          @db.Uuid
   pickupAddress      Address?         @relation(fields: [pickupAddressId], references: [id], onDelete: SetNull)
   description        String?
   unitPriceMinor     BigInt
   currency           String           @default("GHS")
-  minOrderQty        Decimal          @db.Decimal(14, 3)
+  // Minimum orders are off for now (always 1); kept for when they return.
+  minOrderQty        Decimal          @default(1) @db.Decimal(14, 3)
   // Informational only (e.g. a 50 kg bag); never used to convert prices.
   netWeightPerUnitKg Decimal?         @db.Decimal(10, 3)
   harvestDate        DateTime?        @db.Date
@@ -600,7 +603,7 @@ model Order {
   subtotalMinor           BigInt
   deliveryFeeMinor        BigInt
   totalMinor              BigInt
-  zoneId                  String       @db.Uuid
+  zoneId                  String?      @db.Uuid // unused since D4 was revised
   deliveryAddressSnapshot Json
   buyerNotes              String?
   holdExpiresAt           DateTime

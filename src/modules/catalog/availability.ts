@@ -25,7 +25,6 @@ export type AvailabilityInput = {
   supplierApproved: boolean;
   onHand: string;
   reserved: string;
-  minOrderQty: string;
   availableFrom: Date;
   availableUntil: Date | null;
 };
@@ -62,7 +61,7 @@ export function availabilityOf(
   if (day(l.availableFrom) > day(now)) return no("NOT_YET_AVAILABLE");
   if (l.availableUntil && day(l.availableUntil) < day(now))
     return no("NO_LONGER_AVAILABLE");
-  if (new Decimal(availableQty).lessThan(l.minOrderQty))
-    return no("OUT_OF_STOCK");
+  // No minimum orders for now: anything left can be ordered.
+  if (!new Decimal(availableQty).greaterThan(0)) return no("OUT_OF_STOCK");
   return { available: true, availableQty };
 }

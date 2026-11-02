@@ -88,7 +88,6 @@ const marketListingSelect = {
   },
   unit: { select: { code: true, name: true, plural: true } },
   grade: { select: { code: true, title: true, description: true } },
-  zone: { select: { code: true, name: true } },
   supplier: {
     select: {
       id: true,
@@ -152,7 +151,6 @@ export type MarketListing = {
   netWeightPerUnitKg: string | null;
   harvestDate: Date | null;
   grade: { code: string; title: string; description: string } | null;
-  zone: { code: string; name: string };
   supplier: {
     id: string;
     name: string;
@@ -182,7 +180,6 @@ function toMarketListing(row: MarketListingRow, now: Date): MarketListing {
     netWeightPerUnitKg: row.netWeightPerUnitKg?.toString() ?? null,
     harvestDate: row.harvestDate,
     grade: row.grade,
-    zone: row.zone,
     supplier: {
       id: row.supplier.id,
       name: row.supplier.tradingName ?? row.supplier.legalName,
@@ -198,7 +195,6 @@ function toMarketListing(row: MarketListingRow, now: Date): MarketListing {
         supplierApproved,
         onHand: row.inventory?.onHand.toString() ?? "0",
         reserved: row.inventory?.reserved.toString() ?? "0",
-        minOrderQty,
         availableFrom: row.availableFrom,
         availableUntil: row.availableUntil,
       },
@@ -262,7 +258,7 @@ export async function browseListings(
     });
   }
   if (f.category) and.push({ product: { category: { slug: f.category } } });
-  if (f.zone) and.push({ zone: { code: f.zone } });
+  if (f.region) and.push({ supplier: { region: f.region } });
   if (f.grade) and.push({ grade: { code: f.grade } });
   if (f.minPrice)
     and.push({ unitPriceMinor: { gte: Money.parse(f.minPrice).amountMinor } });
@@ -307,7 +303,6 @@ export async function browseListings(
 export type OrderableListing = MarketListing & {
   supplierId: string;
   unitPriceMinor: bigint;
-  zoneId: string;
   inventoryId: string | null;
 };
 
@@ -328,7 +323,6 @@ export async function orderableListings(
     select: {
       ...marketListingSelect,
       unitPriceMinor: true,
-      zoneId: true,
       inventory: { select: { id: true, onHand: true, reserved: true } },
     },
   });
@@ -339,7 +333,6 @@ export async function orderableListings(
         ...toMarketListing(row, now),
         supplierId: row.supplier.id,
         unitPriceMinor: row.unitPriceMinor,
-        zoneId: row.zoneId,
         inventoryId: row.inventory?.id ?? null,
       },
     ]),
@@ -404,7 +397,7 @@ export async function getMarketSupplier(supplierId: string, now = new Date()) {
 /** Everything the "new listing" form needs to offer. */
 export async function listingFormOptions(actor: Actor) {
   assertCan(actor, "listing.manage");
-  const [suppliers, categories, units, zones] = await Promise.all([
+  const [suppliers, categories, units] = await Promise.all([
     db.organization.findMany({
       where: PUBLIC_SUPPLIER,
       orderBy: { legalName: "asc" },
@@ -425,11 +418,6 @@ export async function listingFormOptions(actor: Actor) {
       orderBy: { sortOrder: "asc" },
       select: { code: true, name: true, plural: true },
     }),
-    db.operatingZone.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-      select: { code: true, name: true, region: true },
-    }),
   ]);
   return {
     suppliers: suppliers.map((s) => ({
@@ -439,31 +427,21 @@ export async function listingFormOptions(actor: Actor) {
     })),
     categories,
     units,
-    zones,
   };
 }
 
 async function resolveListingRefs(
   tx: Tx,
   categoryId: string,
-  data: { gradeCode?: string; zoneCode: string },
+  data: { gradeCode?: string },
 ) {
-  const zone = await tx.operatingZone.findFirst({
-    where: { code: data.zoneCode, isActive: true },
-    select: { id: true, name: true },
-  });
-  if (!zone) {
-    throw new ValidationError("Please check the highlighted fields.", {
-      fieldErrors: { zoneCode: "Choose Greater Accra or Kumasi" },
-    });
-  }
   const grade = data.gradeCode
     ? await tx.gradeDefinition.findUnique({
         where: { categoryId_code: { categoryId, code: data.gradeCode } },
         select: { id: true, code: true },
       })
     : null;
-  return { zone, grade };
+  return { grade };
 }
 
 /**
@@ -513,7 +491,7 @@ export async function createListing(actor: Actor, input: CreateListingInput) {
         fieldErrors: { unitCode: "Choose a unit" },
       });
     }
-    const { zone, grade } = await resolveListingRefs(
+    const { grade } = await resolveListingRefs(
       tx,
       product.categoryId,
       data,
@@ -526,7 +504,6 @@ export async function createListing(actor: Actor, input: CreateListingInput) {
         productId: product.id,
         unitId: unit.id,
         gradeId: grade?.id ?? null,
-        zoneId: zone.id,
         pickupAddressId: supplier.addresses[0]?.id ?? null,
         description: data.description,
         unitPriceMinor: Money.parse(data.price).amountMinor,
@@ -552,7 +529,6 @@ export async function createListing(actor: Actor, input: CreateListingInput) {
         price: data.price,
         unit: data.unitCode,
         grade: grade?.code ?? null,
-        zone: data.zoneCode,
         minOrderQty: data.minOrderQty,
         stock: data.initialStock,
         status,
@@ -574,7 +550,6 @@ const editableSelect = {
   availableUntil: true,
   description: true,
   grade: { select: { code: true } },
-  zone: { select: { code: true } },
   product: { select: { categoryId: true } },
 } satisfies Prisma.ListingSelect;
 
@@ -586,7 +561,6 @@ function editableSnapshot(
     minOrderQty: l.minOrderQty.toString(),
     netWeightPerUnitKg: l.netWeightPerUnitKg?.toString() ?? null,
     grade: l.grade?.code ?? null,
-    zone: l.zone.code,
     harvestDate: isoDate(l.harvestDate) || null,
     availableFrom: isoDate(l.availableFrom),
     availableUntil: isoDate(l.availableUntil) || null,
@@ -613,7 +587,7 @@ export async function updateListing(
     if (current.status === "ARCHIVED") {
       throw new ConflictError("Archived listings can’t be changed.");
     }
-    const { zone, grade } = await resolveListingRefs(
+    const { grade } = await resolveListingRefs(
       tx,
       current.product.categoryId,
       data,
@@ -625,7 +599,6 @@ export async function updateListing(
         minOrderQty: data.minOrderQty,
         netWeightPerUnitKg: data.netWeightPerUnitKg ?? null,
         gradeId: grade?.id ?? null,
-        zoneId: zone.id,
         harvestDate: dateOnly(data.harvestDate),
         availableFrom: dateOnly(data.availableFrom),
         availableUntil: dateOnly(data.availableUntil),
@@ -1046,7 +1019,6 @@ export async function getListingForStaff(
       minOrderQty: row.minOrderQty.toString(),
       netWeightPerUnitKg: row.netWeightPerUnitKg?.toString() ?? "",
       gradeCode: (row.grade?.code ?? "") as "" | "A" | "B" | "C",
-      zoneCode: row.zone.code as "ACCRA" | "KUMASI",
       harvestDate: isoDate(row.harvestDate),
       availableFrom: isoDate(row.availableFrom),
       availableUntil: isoDate(row.availableUntil),

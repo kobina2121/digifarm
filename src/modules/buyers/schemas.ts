@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import { digitalAddressSchema, ghanaPhoneSchema } from "@/lib/ghana";
+import type { GhanaRegion } from "@/generated/prisma/enums";
+import {
+  digitalAddressSchema,
+  GHANA_REGIONS,
+  ghanaPhoneSchema,
+} from "@/lib/ghana";
 
 export const BUYER_SEGMENTS = {
   RESTAURANT: "Restaurant",
@@ -10,11 +15,6 @@ export const BUYER_SEGMENTS = {
   WHOLESALER: "Wholesaler",
   FOOD_PROCESSOR: "Food processor",
   OTHER: "Other",
-} as const;
-
-export const SERVICED_ZONES = {
-  ACCRA: "Greater Accra",
-  KUMASI: "Kumasi",
 } as const;
 
 const optionalText = (max: number) =>
@@ -31,9 +31,11 @@ export const deliveryAddressSchema = z.object({
     .trim()
     .min(2, "Give this address a name, e.g. Main kitchen")
     .max(60),
-  zoneCode: z.enum(Object.keys(SERVICED_ZONES) as ["ACCRA", "KUMASI"], {
-    error: "Choose Greater Accra or Kumasi",
-  }),
+  // DigiFarm delivers anywhere in Ghana (D4 revised).
+  region: z.enum(
+    Object.keys(GHANA_REGIONS) as [GhanaRegion, ...GhanaRegion[]],
+    { error: "Choose the region" },
+  ),
   town: z.string().trim().min(2, "Enter the town or area").max(80),
   district: optionalText(80),
   street: optionalText(120),

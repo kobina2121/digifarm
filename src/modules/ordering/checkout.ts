@@ -7,6 +7,7 @@ import { audit } from "@/lib/audit";
 import { type Actor, assertCan } from "@/lib/authz";
 import { db, type Tx } from "@/lib/db";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { GHANA_REGIONS } from "@/lib/ghana";
 import { Money } from "@/lib/money";
 import { Quantity } from "@/lib/quantity";
 import { parseInput } from "@/lib/validation";
@@ -106,13 +107,10 @@ async function placeOrder(
       organizationId: orgId,
       kind: "DELIVERY",
       deletedAt: null,
-      zone: { isActive: true },
     },
-    include: { zone: true },
   });
-  if (!address?.zone)
+  if (!address)
     throw new NotFoundError("Choose one of your delivery addresses.");
-  const zone = address.zone;
 
   const listings = await orderableListings(
     items.map((i) => i.listingId),
@@ -126,11 +124,6 @@ async function placeOrder(
     const problem = lineProblem(listing, quantity);
     if (problem || !listing) {
       throw new ValidationError(`${name}: ${problem}`);
-    }
-    if (listing.zoneId !== zone.id) {
-      throw new ValidationError(
-        `${name} is delivered in ${listing.zone.name}, but your address is in ${zone.name}. Remove it or choose another address.`,
-      );
     }
     if (!listing.inventoryId)
       throw new ValidationError(`${name}: Out of stock`);
@@ -176,7 +169,6 @@ async function placeOrder(
       subtotalMinor: subtotal.amountMinor,
       deliveryFeeMinor: deliveryFee.amountMinor,
       totalMinor: subtotal.add(deliveryFee).amountMinor,
-      zoneId: zone.id,
       deliveryAddressSnapshot: {
         label: address.label,
         town: address.town,
@@ -185,7 +177,7 @@ async function placeOrder(
         digitalAddress: address.digitalAddress,
         district: address.district,
         region: address.region,
-        zone: { code: zone.code, name: zone.name },
+        regionName: GHANA_REGIONS[address.region],
       },
       buyerNotes: data.notes,
       holdExpiresAt,

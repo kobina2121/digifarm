@@ -67,9 +67,7 @@ async function listing(
     productId: await productId(),
     unitCode: "CRATE",
     gradeCode: "A",
-    zoneCode: "KUMASI",
     price: "450",
-    minOrderQty: "5",
     availableFrom: "2026-10-01",
     initialStock: "40",
     ...overrides,
@@ -84,9 +82,7 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
       supplierId: org.id,
       productId: await productId(),
       unitCode: "CRATE",
-      zoneCode: "KUMASI" as const,
       price: "450",
-      minOrderQty: "5",
       availableFrom: "2026-10-01",
       initialStock: "40",
     };
@@ -126,7 +122,7 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
     const { listing: created, org } = await listing();
     const { listing: market } = await getMarketListing(created.id);
     expect(market.price).toBe("GH₵ 450.00");
-    expect(market.minOrderLabel).toBe("5 crates");
+    expect(market.minOrderLabel).toBe("1 crate");
     expect(market.supplier.verified).toBe(true);
     expect(JSON.stringify(market)).not.toContain("0551234567");
 
@@ -238,16 +234,14 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
     );
   });
 
-  it("filters the market by search, category, zone, grade, price and stock", async () => {
+  it("filters the market by search, category, farm region, grade, price and stock", async () => {
     const { listing: tomato, org, staff } = await listing();
     const maize = await createListing(staff, {
       supplierId: org.id,
       productId: await productId("maize-white"),
       unitCode: "BAG",
       gradeCode: "B",
-      zoneCode: "ACCRA",
       price: "900",
-      minOrderQty: "2",
       availableFrom: "2026-10-01",
       initialStock: "0",
     });
@@ -258,7 +252,9 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
     expect(await ids({ q: "pectomech" })).not.toContain(maize.id);
     expect(await ids({ category: "grains" })).toContain(maize.id);
     expect(await ids({ category: "grains" })).not.toContain(tomato.id);
-    expect(await ids({ zone: "ACCRA" })).not.toContain(tomato.id);
+    // The farm is in Ashanti.
+    expect(await ids({ region: "ASHANTI" })).toContain(tomato.id);
+    expect(await ids({ region: "VOLTA" })).not.toContain(tomato.id);
     expect(await ids({ grade: "B" })).toContain(maize.id);
     expect(await ids({ maxPrice: "500" })).not.toContain(maize.id);
     expect(await ids({ minPrice: "500" })).toContain(maize.id);
@@ -268,7 +264,7 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
     expect(await ids({ inStock: "1" })).toContain(tomato.id);
     // Junk in the URL is ignored, not an error.
     await expect(
-      browseListings({ zone: "LAGOS", minPrice: "abc", cursor: "x" }),
+      browseListings({ region: "LAGOS", minPrice: "abc", cursor: "x" }),
     ).resolves.toBeTruthy();
   });
 
@@ -276,9 +272,7 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
     const { listing: created, staff } = await listing();
     await updateListing(staff, created.id, {
       price: "480.50",
-      minOrderQty: "5",
       gradeCode: "B",
-      zoneCode: "KUMASI",
       availableFrom: "2026-10-01",
     });
     const entry = await db.auditLog.findFirstOrThrow({

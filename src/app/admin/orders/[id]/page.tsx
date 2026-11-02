@@ -68,7 +68,11 @@ export default async function StaffOrderPage({
           <p className="font-semibold">{order.buyer.name}</p>
           <p className="text-sm text-muted-foreground">
             Placed by {order.placedBy} · deliver to {order.address.label},{" "}
-            {[order.address.street, order.address.town, order.address.zone.name]
+            {[
+              order.address.street,
+              order.address.town,
+              order.address.regionName ?? order.address.zone?.name,
+            ]
               .filter(Boolean)
               .join(", ")}
             {order.address.landmark ? ` (near ${order.address.landmark})` : ""}
@@ -109,7 +113,6 @@ export default async function StaffOrderPage({
                 <span>
                   {item.productName}
                   {item.variety ? ` · ${item.variety}` : ""}
-                  {item.gradeCode ? ` · Grade ${item.gradeCode}` : ""}
                   <span className="block text-muted-foreground">
                     {item.quantityLabel} × {item.unitPrice}
                   </span>

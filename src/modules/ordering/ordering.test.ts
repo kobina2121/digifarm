@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Actor } from "@/lib/authz";
 import { db } from "@/lib/db";
+import type { GhanaRegion } from "@/generated/prisma/enums";
 import {
   ConflictError,
   ForbiddenError,
@@ -61,8 +62,6 @@ async function approvedSupplier(name: string) {
 async function listing({
   stock = "40",
   price = "450",
-  minOrderQty = "5",
-  zoneCode = "KUMASI" as "KUMASI" | "ACCRA",
   supplier = "Ejura Tomato Farm",
 } = {}) {
   const { org, staff } = await approvedSupplier(supplier);
@@ -73,17 +72,14 @@ async function listing({
     supplierId: org.id,
     productId: product.id,
     unitCode: "CRATE",
-    gradeCode: "A",
-    zoneCode,
     price,
-    minOrderQty,
     availableFrom: "2026-10-01",
     initialStock: stock,
   });
   return { id: created.id, supplierId: org.id, staff };
 }
 
-async function buyer(zoneCode: "KUMASI" | "ACCRA" = "KUMASI"): Promise<{
+async function buyer(region: GhanaRegion = "ASHANTI"): Promise<{
   actor: Actor;
   addressId: string;
 }> {
@@ -92,7 +88,7 @@ async function buyer(zoneCode: "KUMASI" | "ACCRA" = "KUMASI"): Promise<{
     legalName: "Adum Kitchen",
     buyerSegment: "RESTAURANT",
     phone: "0241234567",
-    address: { label: "Main kitchen", zoneCode, town: "Adum" },
+    address: { label: "Main kitchen", region, town: "Adum" },
   });
   const address = await db.address.findFirstOrThrow({
     where: { organizationId: org.id },
@@ -153,12 +149,9 @@ vi.setConfig({ testTimeout: 90_000 });
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 describe.runIf(hasTestDatabase)("cart (integration)", () => {
-  it("checks minimum order and stock when adding, and adds up quantities", async () => {
+  it("takes any quantity up to the stock left, and adds up quantities", async () => {
     const l = await listing({ stock: "12" });
     const b = await buyer();
-    await expect(
-      setCartItem(b.actor, { listingId: l.id, quantity: "2" }),
-    ).rejects.toThrow(/minimum order is 5 crates/);
     await expect(
       setCartItem(b.actor, { listingId: l.id, quantity: "20" }),
     ).rejects.toThrow(/Only 12 crates left/);
@@ -231,19 +224,18 @@ describe.runIf(hasTestDatabase)("checkout (integration)", () => {
     expect(await stockOf(l.id)).toEqual({ onHand: "40", reserved: "10" });
   });
 
-  it("refuses produce delivered in another zone", async () => {
-    const l = await listing({ zoneCode: "KUMASI" });
-    const b = await buyer("ACCRA");
-    await setCartItem(b.actor, { listingId: l.id, quantity: "5" });
-    await expect(
-      checkout(b.actor, {
-        addressId: b.addressId,
-        idempotencyKey: randomUUID(),
-      }),
-    ).rejects.toThrow(
-      /delivered in Kumasi, but your address is in Greater Accra/,
-    );
-    expect(await stockOf(l.id)).toEqual({ onHand: "40", reserved: "0" });
+  it("delivers anywhere in Ghana, whatever region the farm is in", async () => {
+    // The farm is in Ashanti; the buyer is in the Volta Region.
+    const l = await listing();
+    const b = await buyer("VOLTA");
+    await setCartItem(b.actor, { listingId: l.id, quantity: "1" });
+    const order = await checkout(b.actor, {
+      addressId: b.addressId,
+      idempotencyKey: randomUUID(),
+    });
+    const detail = await getOrderForBuyer(b.actor, order.id);
+    expect(detail.address.regionName).toBe("Volta");
+    expect(await stockOf(l.id)).toEqual({ onHand: "40", reserved: "1" });
   });
 
   it("won't deliver to another business's address", async () => {

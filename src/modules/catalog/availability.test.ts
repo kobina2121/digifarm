@@ -8,7 +8,6 @@ const base: AvailabilityInput = {
   supplierApproved: true,
   onHand: "100",
   reserved: "0",
-  minOrderQty: "10",
   availableFrom: new Date("2026-10-01"),
   availableUntil: null,
 };
@@ -33,16 +32,17 @@ describe("listing availability", () => {
     ).toMatchObject({ reason: "NOT_LISTED" });
   });
 
-  it("is out of stock when less than the minimum order is left after reservations", () => {
+  it("is out of stock only when nothing is left after reservations", () => {
     expect(
-      availabilityOf({ ...base, onHand: "15", reserved: "6" }, now),
+      availabilityOf({ ...base, onHand: "15", reserved: "15" }, now),
     ).toEqual({
       available: false,
       reason: "OUT_OF_STOCK",
-      availableQty: "9",
+      availableQty: "0",
     });
+    // No minimum orders: even a little left can be ordered.
     expect(
-      availabilityOf({ ...base, onHand: "10.5", reserved: "0.5" }, now)
+      availabilityOf({ ...base, onHand: "10.5", reserved: "10" }, now)
         .available,
     ).toBe(true);
   });

@@ -16,14 +16,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { GHANA_REGIONS } from "@/lib/ghana";
 import { cn } from "@/lib/utils";
 import { LISTING_SORTS } from "@/modules/catalog/schemas";
 
 type Values = {
   q: string;
   category: string;
-  zone: string;
-  grade: string;
+  region: string;
   minPrice: string;
   maxPrice: string;
   inStock: boolean;
@@ -69,31 +69,22 @@ export function MarketFilters({
           <SheetHeader>
             <SheetTitle className="text-lg font-bold">Filters</SheetTitle>
             <SheetDescription>
-              Narrow down produce by where it’s sold, grade and price.
+              Narrow down produce by where it’s grown and its price.
             </SheetDescription>
           </SheetHeader>
           <div className="grid gap-4 px-4">
-            <FormField id="filter-zone" label="Sold in">
+            <FormField id="filter-region" label="Farm region">
               <NativeSelect
-                id="filter-zone"
-                name="zone"
-                defaultValue={values.zone}
+                id="filter-region"
+                name="region"
+                defaultValue={values.region}
               >
-                <option value="">Greater Accra and Kumasi</option>
-                <option value="ACCRA">Greater Accra</option>
-                <option value="KUMASI">Kumasi</option>
-              </NativeSelect>
-            </FormField>
-            <FormField id="filter-grade" label="DigiFarm grade">
-              <NativeSelect
-                id="filter-grade"
-                name="grade"
-                defaultValue={values.grade}
-              >
-                <option value="">Any grade</option>
-                <option value="A">Grade A</option>
-                <option value="B">Grade B</option>
-                <option value="C">Grade C</option>
+                <option value="">Anywhere in Ghana</option>
+                {Object.entries(GHANA_REGIONS).map(([code, name]) => (
+                  <option key={code} value={code}>
+                    {name}
+                  </option>
+                ))}
               </NativeSelect>
             </FormField>
             <div className="grid grid-cols-2 gap-3">

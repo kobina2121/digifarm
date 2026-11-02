@@ -21,6 +21,7 @@ import type { ReactNode } from "react";
 import { HarvestArt } from "@/components/home/harvest-art";
 import { ListingTile } from "@/components/market/listing-tile";
 import { ORDER_TONE, StatusBadge } from "@/components/status-badge";
+import { GHANA_REGIONS } from "@/lib/ghana";
 import { cn } from "@/lib/utils";
 import { getBuyerProfile, getMyAccount } from "@/modules/buyers";
 import { browseListings, listCategories } from "@/modules/catalog";
@@ -71,16 +72,11 @@ export default async function BuyerHomePage() {
     listCategories(),
   ]);
   const address = profile.addresses[0];
-  const zone = address?.zone;
-  const { items: inStock } = await browseListings(
-    { zone: zone?.code, inStock: "1" },
-    now,
-  );
+  const region = address ? GHANA_REGIONS[address.region] : null;
+  const { items: inStock } = await browseListings({ inStock: "1" }, now);
   const firstName = account.name.split(/\s+/)[0];
   const business = profile.tradingName ?? profile.legalName;
-  const marketHref = zone
-    ? `/market?zone=${zone.code}&inStock=1`
-    : "/market?inStock=1";
+  const marketHref = "/market?inStock=1";
 
   return (
     <div className="mx-auto grid w-full max-w-3xl grid-cols-[minmax(0,1fr)] gap-7">
@@ -96,7 +92,7 @@ export default async function BuyerHomePage() {
             <MapPin className="size-4 shrink-0 text-field-green" aria-hidden />
             <span className="truncate">
               {address
-                ? `Delivering to ${[address.town, zone?.name].filter(Boolean).join(", ")}`
+                ? `Delivering to ${[address.town, region].filter(Boolean).join(", ")}`
                 : "Add a delivery address"}
             </span>
             <ChevronRight className="size-4 shrink-0" aria-hidden />
@@ -113,7 +109,6 @@ export default async function BuyerHomePage() {
 
       {/* Search */}
       <form method="get" action="/market" role="search">
-        {zone ? <input type="hidden" name="zone" value={zone.code} /> : null}
         <label htmlFor="home-search" className="sr-only">
           Search produce
         </label>
@@ -143,14 +138,12 @@ export default async function BuyerHomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-field-green text-white">
         <div className="relative z-10 grid max-w-[66%] gap-3 p-6 sm:max-w-[55%] sm:p-8">
-          <p className="eyebrow text-white/75">
-            {zone ? zone.name : "Farm to buyer · Ghana"}
-          </p>
+          <p className="eyebrow text-white/75">Delivered anywhere in Ghana</p>
           <h2 className="text-2xl leading-tight font-bold sm:text-3xl">
             Fresh from farms we’ve visited
           </h2>
           <p className="text-sm text-white/80">
-            Every farm is checked in person and its produce graded A, B or C.
+            Fresh produce from farms across Ghana, delivered to your door.
           </p>
           <Link
             href={marketHref}
@@ -177,7 +170,7 @@ export default async function BuyerHomePage() {
             return (
               <li key={c.slug}>
                 <Link
-                  href={`/market?category=${c.slug}${zone ? `&zone=${zone.code}` : ""}`}
+                  href={`/market?category=${c.slug}`}
                   className="group flex h-full flex-col items-center gap-2 rounded-2xl bg-card p-3 text-center transition-colors hover:bg-sprout-soft"
                 >
                   <span className="flex size-12 items-center justify-center rounded-full bg-sprout-soft text-field-green-dark transition-colors group-hover:bg-card">
@@ -200,7 +193,7 @@ export default async function BuyerHomePage() {
       >
         <SectionHeading
           id="home-in-stock"
-          title={zone ? `In stock in ${zone.name}` : "In stock now"}
+          title="In stock now"
           href={marketHref}
           linkLabel="See all"
         />
@@ -221,9 +214,7 @@ export default async function BuyerHomePage() {
               <Sprout className="size-6" aria-hidden />
             </span>
             <div className="min-w-0 text-sm">
-              <p className="font-semibold">
-                Nothing in stock in {zone?.name ?? "your area"} today
-              </p>
+              <p className="font-semibold">Nothing in stock today</p>
               <p className="text-muted-foreground">
                 New harvests are added every week.{" "}
                 <Link

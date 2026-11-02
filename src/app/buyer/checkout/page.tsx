@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 
+import { GHANA_REGIONS } from "@/lib/ghana";
 import { getBuyerProfile } from "@/modules/buyers";
 import { getCart, PAYMENT_HOLD_MINUTES } from "@/modules/ordering";
 
@@ -18,7 +19,7 @@ export default async function CheckoutPage() {
     getCart(actor),
     getBuyerProfile(actor),
   ]);
-  if (!cart.canCheckout || cart.zoneCodes.length !== 1) redirect("/buyer/cart");
+  if (!cart.canCheckout) redirect("/buyer/cart");
 
   return (
     <div className="grid gap-6">
@@ -70,12 +71,10 @@ export default async function CheckoutPage() {
         addresses={profile.addresses.map((a) => ({
           id: a.id,
           label: a.label,
-          detail: [a.street, a.town, a.zone?.name].filter(Boolean).join(", "),
-          zoneCode: a.zone?.code ?? null,
-          zoneName: a.zone?.name ?? null,
+          detail: [a.street, a.town, GHANA_REGIONS[a.region]]
+            .filter(Boolean)
+            .join(", "),
         }))}
-        zoneCode={cart.zoneCodes[0]}
-        zoneName={cart.groups[0].zoneName}
         total={cart.total}
         holdMinutes={PAYMENT_HOLD_MINUTES}
       />

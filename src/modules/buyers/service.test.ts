@@ -26,7 +26,7 @@ const input = {
   phone: "024 123 4567",
   address: {
     label: "Main kitchen",
-    zoneCode: "ACCRA" as const,
+    region: "GREATER_ACCRA" as const,
     town: "Osu",
     digitalAddress: "ga-123-4567",
   },
@@ -51,7 +51,7 @@ describe.runIf(hasTestDatabase)("personal accounts (integration)", () => {
     const actor = await createUser({ name: "Abena Owusu" });
     const org = await createBuyerOrganization(actor, {
       phone: "024 765 4321",
-      address: { label: "Home", zoneCode: "KUMASI", town: "Adum" },
+      address: { label: "Home", region: "ASHANTI", town: "Adum" },
     });
     expect(org.buyerKind).toBe("INDIVIDUAL");
     expect(org.legalName).toBe("Abena Owusu");
@@ -64,7 +64,7 @@ describe.runIf(hasTestDatabase)("personal accounts (integration)", () => {
       createBuyerOrganization(actor, {
         accountType: "BUSINESS",
         phone: "024 765 4321",
-        address: { label: "Shop", zoneCode: "ACCRA", town: "Osu" },
+        address: { label: "Shop", region: "GREATER_ACCRA", town: "Osu" },
       }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
@@ -73,7 +73,7 @@ describe.runIf(hasTestDatabase)("personal accounts (integration)", () => {
     const user = await createUser({ name: "Yaw Mensah" });
     const org = await createBuyerOrganization(user, {
       phone: "024 765 4321",
-      address: { label: "Home", zoneCode: "ACCRA", town: "Osu" },
+      address: { label: "Home", region: "GREATER_ACCRA", town: "Osu" },
     });
     const actor: Actor = {
       ...user,
@@ -108,7 +108,7 @@ describe.runIf(hasTestDatabase)("buyer onboarding (integration)", () => {
       isDefault: true,
       digitalAddress: "GA-123-4567",
     });
-    expect(profile.addresses[0].zone?.code).toBe("ACCRA");
+    expect(profile.addresses[0].region).toBe("GREATER_ACCRA");
 
     const auditRow = await db.auditLog.findFirst({
       where: { entityId: profile.id, action: "buyer.onboarded" },
@@ -132,12 +132,12 @@ describe.runIf(hasTestDatabase)("buyer onboarding (integration)", () => {
     );
   });
 
-  it("rejects areas DigiFarm doesn't serve and invalid phone numbers", async () => {
+  it("rejects unknown regions and invalid phone numbers", async () => {
     const actor = await createUser();
     await expect(
       createBuyerOrganization(actor, {
         ...input,
-        address: { ...input.address, zoneCode: "TAMALE" as "ACCRA" },
+        address: { ...input.address, region: "LAGOS" as "VOLTA" },
       }),
     ).rejects.toBeInstanceOf(ValidationError);
     await expect(
@@ -165,7 +165,7 @@ describe.runIf(hasTestDatabase)("buyer addresses (integration)", () => {
     const aliceAddress = (await getBuyerProfile(alice)).addresses[0];
     await addDeliveryAddress(bob, {
       label: "Second",
-      zoneCode: "KUMASI",
+      region: "ASHANTI",
       town: "Adum",
     });
 
@@ -186,7 +186,7 @@ describe.runIf(hasTestDatabase)("buyer addresses (integration)", () => {
 
     await addDeliveryAddress(buyer, {
       label: "Branch",
-      zoneCode: "KUMASI",
+      region: "ASHANTI",
       town: "Adum",
     });
     await removeDeliveryAddress(buyer, first.id);
@@ -204,7 +204,7 @@ describe.runIf(hasTestDatabase)("buyer addresses (integration)", () => {
     await expect(
       addDeliveryAddress(member, {
         label: "X",
-        zoneCode: "ACCRA",
+        region: "GREATER_ACCRA",
         town: "Osu",
       }),
     ).rejects.toBeInstanceOf(ForbiddenError);

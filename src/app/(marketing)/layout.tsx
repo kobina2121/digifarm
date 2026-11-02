@@ -30,8 +30,8 @@ export default function MarketingLayout({ children }: LayoutProps<"/">) {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-end sm:justify-between">
           <Logo tone="on-dark" tagline />
           <p className="max-w-sm text-sm text-white/70">
-            Pilot service in Greater Accra and Kumasi. Produce comes from farms
-            DigiFarm has visited and approved.
+            Delivering anywhere in Ghana. Produce comes from farms DigiFarm has
+            visited and approved.
           </p>
         </div>
       </footer>

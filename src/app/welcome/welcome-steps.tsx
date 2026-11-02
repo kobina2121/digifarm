@@ -26,7 +26,7 @@ const STEPS: { title: string; body: string; Art: ComponentType }[] = [
   },
   {
     title: "Choose what you need",
-    body: "Compare price, unit, grade and minimum order. Items without confirmed stock are clearly marked.",
+    body: "Compare prices per kg, crate or bag. Items without confirmed stock are clearly marked.",
     Art: ChooseProduce,
   },
   {
@@ -41,7 +41,7 @@ const STEPS: { title: string; body: string; Art: ComponentType }[] = [
   },
   {
     title: "Track it to your door",
-    body: "Follow each step from confirmation to delivery in Greater Accra and Kumasi, and report any problem with what arrives.",
+    body: "Follow each step from confirmation to delivery anywhere in Ghana, and report any problem with what arrives.",
     Art: TrackDelivery,
   },
 ];

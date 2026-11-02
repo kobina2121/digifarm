@@ -27,7 +27,6 @@ type Purchase = {
   listingId: string;
   priceLabel: string;
   priceMinor: string;
-  minOrderQty: string;
   unitName: string;
   unitPlural: string;
   mode: PurchaseMode;
@@ -57,16 +56,17 @@ export function PurchaseProvider({
   children,
   ...purchase
 }: Purchase & { children: ReactNode }) {
-  const [quantity, setQuantity] = useState(purchase.minOrderQty);
+  const [quantity, setQuantity] = useState("1");
   return <Ctx value={{ ...purchase, quantity, setQuantity }}>{children}</Ctx>;
 }
 
-/** − 5 crates + : round green buttons beside the product name. */
+/** − 1 crate + : round green buttons beside the product name. */
 export function QuantityStepper() {
   const p = usePurchase();
   if (p.mode.kind !== "buyer") return null;
-  const min = Number(p.minOrderQty);
-  const step = min >= 1 ? 1 : min;
+  // No minimum orders for now: one unit at a time, starting from one.
+  const min = 1;
+  const step = 1;
   const current = Number(p.quantity) || min;
   const set = (n: number) =>
     p.setQuantity(String(Math.round(Math.max(min, n) * 1000) / 1000));

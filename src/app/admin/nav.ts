@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  Medal,
   Package,
   ReceiptText,
   Tractor,
@@ -13,5 +12,4 @@ export const STAFF_NAV: NavItem[] = [
   { href: "/admin/orders", label: "Orders", icon: ReceiptText },
   { href: "/admin/suppliers", label: "Suppliers", icon: Tractor },
   { href: "/admin/listings", label: "Listings", icon: Package },
-  { href: "/admin/grades", label: "Grades", icon: Medal },
 ];

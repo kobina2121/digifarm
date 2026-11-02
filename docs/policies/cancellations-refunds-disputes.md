@@ -11,7 +11,7 @@ This sets the rules Phase 3 (checkout and payments) and Phase 4 (fulfilment and 
 1. **Checkout.** The buyer pays by mobile money or card through Paystack. The stock is held for **30 minutes** while they approve the payment. If payment doesn't arrive in that time, the hold ends, the stock goes back on sale, and nothing is charged.
 2. **Paid = confirmed.** The stock is taken off sale and the order is confirmed straight away. The buyer gets a confirmation.
 3. **Preparation.** DigiFarm arranges pickup from each farm in the order.
-4. **Delivery** to the buyer's address in Greater Accra or Kumasi.
+4. **Delivery** to the buyer's address, anywhere in Ghana.
 5. **Complete** when the buyer confirms receipt, or automatically **48 hours** after delivery if no problem is reported.
 
 ## 2. Cancellations

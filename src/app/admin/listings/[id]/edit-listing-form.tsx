@@ -5,7 +5,6 @@ import { useState } from "react";
 import { type FieldPath, useForm } from "react-hook-form";
 
 import { FormError, FormField } from "@/components/forms/form-field";
-import { NativeSelect } from "@/components/forms/native-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,7 +60,7 @@ export function EditListingForm({
       className="grid gap-4"
     >
       <FormError message={formError} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3">
         <FormField
           id="edit-price"
           label={`Price per ${unit.name} (GH₵)`}
@@ -73,34 +72,6 @@ export function EditListingForm({
             aria-invalid={!!errors.price}
             {...register("price")}
           />
-        </FormField>
-        <FormField
-          id="edit-minOrderQty"
-          label={`Minimum order (${unit.plural})`}
-          error={errors.minOrderQty?.message}
-        >
-          <Input
-            id="edit-minOrderQty"
-            inputMode="decimal"
-            aria-invalid={!!errors.minOrderQty}
-            {...register("minOrderQty")}
-          />
-        </FormField>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <FormField id="edit-gradeCode" label="DigiFarm grade">
-          <NativeSelect id="edit-gradeCode" {...register("gradeCode")}>
-            <option value="">Not graded</option>
-            <option value="A">Grade A</option>
-            <option value="B">Grade B</option>
-            <option value="C">Grade C</option>
-          </NativeSelect>
-        </FormField>
-        <FormField id="edit-zoneCode" label="Sold in">
-          <NativeSelect id="edit-zoneCode" {...register("zoneCode")}>
-            <option value="ACCRA">Greater Accra</option>
-            <option value="KUMASI">Kumasi</option>
-          </NativeSelect>
         </FormField>
       </div>
       <FormField

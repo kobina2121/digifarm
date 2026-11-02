@@ -49,7 +49,7 @@ test("a new buyer signs up, confirms their email, sets up their business and add
   await page.getByLabel("Business name").fill("Efua's Chop Bar");
   await page.getByLabel("Type of business").selectOption("RESTAURANT");
   await page.getByLabel("Business phone").fill("024 555 0101");
-  await page.getByText("Kumasi", { exact: true }).click();
+  await page.getByLabel("Region").selectOption("ASHANTI");
   await page.getByLabel("Town or area").fill("Adum");
   await page.getByLabel("GhanaPost GPS address (optional)").fill("ak-039-1234");
   await page.getByRole("button", { name: "Finish setup" }).click();
@@ -66,7 +66,7 @@ test("a new buyer signs up, confirms their email, sets up their business and add
   await page.goto("/buyer/addresses");
   await page.waitForLoadState("networkidle");
   await page.getByLabel("Name for this address").fill("Second kitchen");
-  await page.getByLabel("Delivery area").selectOption("ACCRA");
+  await page.getByLabel("Region").selectOption("VOLTA");
   await page.getByLabel("Town or area").fill("Osu");
   await page.getByRole("button", { name: "Save address" }).click();
   await expect(page.getByText("Address saved.")).toBeVisible();
@@ -100,7 +100,7 @@ test("an individual signs up without any business details", async ({
   // "For myself" is the default: no business name or type is asked for.
   await expect(page.getByLabel("Business name")).toHaveCount(0);
   await page.getByLabel("Phone number").fill("024 555 0202");
-  await page.getByText("Greater Accra", { exact: true }).click();
+  await page.getByLabel("Region").selectOption("GREATER_ACCRA");
   await page.getByLabel("Town or area").fill("East Legon");
   await page.getByRole("button", { name: "Finish setup" }).click();
 

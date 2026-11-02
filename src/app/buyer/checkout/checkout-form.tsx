@@ -8,7 +8,6 @@ import { FormError } from "@/components/forms/form-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 import { placeOrderAndPay } from "./actions";
 
@@ -16,27 +15,20 @@ type AddressOption = {
   id: string;
   label: string;
   detail: string;
-  zoneCode: string | null;
-  zoneName: string | null;
 };
 
 export function CheckoutForm({
   addresses,
-  zoneCode,
-  zoneName,
   total,
   holdMinutes,
 }: {
   addresses: AddressOption[];
-  /** The delivery area every item in the cart is sold in. */
-  zoneCode: string;
-  zoneName: string;
   total: string;
   holdMinutes: number;
 }) {
   const router = useRouter();
-  const usable = addresses.filter((a) => a.zoneCode === zoneCode);
-  const [addressId, setAddressId] = useState(usable[0]?.id ?? "");
+  // DigiFarm delivers anywhere in Ghana, so any saved address will do.
+  const [addressId, setAddressId] = useState(addresses[0]?.id ?? "");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -76,23 +68,16 @@ export function CheckoutForm({
           Deliver to
         </legend>
         {addresses.map((a) => {
-          const fits = a.zoneCode === zoneCode;
           return (
             <label
               key={a.id}
-              className={cn(
-                "flex items-start gap-3 rounded-xl border border-border bg-card p-3",
-                fits
-                  ? "cursor-pointer has-checked:border-field-green has-checked:bg-sprout-soft/40"
-                  : "opacity-60",
-              )}
+              className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card p-3 has-checked:border-field-green has-checked:bg-sprout-soft/40"
             >
               <input
                 type="radio"
                 name="address"
                 value={a.id}
                 checked={addressId === a.id}
-                disabled={!fits}
                 onChange={() => setAddressId(a.id)}
                 className="mt-1 size-4 accent-field-green"
               />
@@ -101,18 +86,13 @@ export function CheckoutForm({
                 <span className="block text-sm text-muted-foreground">
                   {a.detail}
                 </span>
-                {!fits ? (
-                  <span className="block text-sm text-muted-foreground">
-                    Your order is delivered in {zoneName}.
-                  </span>
-                ) : null}
               </span>
             </label>
           );
         })}
-        {usable.length === 0 ? (
+        {addresses.length === 0 ? (
           <p className="text-sm">
-            None of your addresses are in {zoneName}.{" "}
+            You haven’t saved a delivery address yet.{" "}
             <Link
               href="/buyer/addresses"
               className="font-medium text-field-green underline-offset-4 hover:underline"

@@ -5,6 +5,7 @@ import Decimal from "decimal.js";
 import { type Actor, assertCan } from "@/lib/authz";
 import { db, type Tx } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { GHANA_REGIONS } from "@/lib/ghana";
 import { Money } from "@/lib/money";
 import { Quantity } from "@/lib/quantity";
 import { parseInput } from "@/lib/validation";
@@ -44,8 +45,6 @@ export function lineProblem(
   const a = listing.availability;
   if (!a.available) return UNAVAILABLE_LABELS[a.reason];
   const qty = new Decimal(quantity);
-  if (qty.lessThan(listing.minOrderQty))
-    return `The minimum order is ${listing.minOrderLabel}.`;
   if (qty.greaterThan(a.availableQty))
     return `Only ${unitLabel(listing.unit, a.availableQty)} left.`;
   return null;
@@ -66,7 +65,8 @@ export type CartLine = {
 export type CartGroup = {
   supplierId: string;
   supplierName: string;
-  zoneName: string;
+  /** Where the farm is: DigiFarm delivers anywhere in Ghana. */
+  farmRegion: string;
   lines: CartLine[];
 };
 
@@ -77,7 +77,6 @@ export type CartView = {
   subtotal: string;
   deliveryFee: string;
   total: string;
-  zoneCodes: string[];
   canCheckout: boolean;
 };
 
@@ -108,7 +107,6 @@ export async function getCart(
   const unavailable: CartLine[] = [];
   let subtotal = Money.zero();
   let ok = items.length > 0;
-  const zones = new Set<string>();
 
   for (const item of items) {
     const quantity = item.quantity.toFixed();
@@ -136,11 +134,10 @@ export async function getCart(
       continue;
     }
     if (total && !problem) subtotal = subtotal.add(total);
-    zones.add(listing.zone.code);
     const group = groups.get(listing.supplierId) ?? {
       supplierId: listing.supplierId,
       supplierName: listing.supplier.name,
-      zoneName: listing.zone.name,
+      farmRegion: GHANA_REGIONS[listing.supplier.region],
       lines: [],
     };
     group.lines.push(line);
@@ -155,7 +152,6 @@ export async function getCart(
     subtotal: subtotal.format(),
     deliveryFee: delivery.format(),
     total: subtotal.add(delivery).format(),
-    zoneCodes: [...zones],
     canCheckout: ok,
   };
 }
