@@ -75,6 +75,11 @@ test("an order goes from checkout to delivered, with the customer following alon
   await staff.goto(`/admin/orders/${orderId}`);
   await staff.waitForLoadState("networkidle");
 
+  const orderNumber = (await staff
+    .getByText(/^DF-\d{4}-\d{6}/)
+    .first()
+    .textContent())!.match(/DF-\d{4}-\d{6}/)![0];
+
   await staff.getByLabel("Rider or driver").fill("Kofi Rider");
   await staff.getByLabel("Their phone").fill("024 111 2222");
   await staff.getByLabel("Details (optional)").fill("VIP bus, waybill 1234");
@@ -105,5 +110,16 @@ test("an order goes from checkout to delivered, with the customer following alon
 
   await page.reload();
   await expect(page.getByText("received by Abena Ofori")).toBeVisible();
+
+  // The farm gets paid, once.
+  await staff.goto("/admin/payouts");
+  await staff.waitForLoadState("networkidle");
+  const row = staff.getByRole("listitem").filter({ hasText: orderNumber });
+  await row.getByRole("button", { name: "Record payment" }).click();
+  const reference = `MP${Date.now()}`;
+  await row.getByLabel("Transaction ID").fill(reference);
+  await row.getByRole("button", { name: /I’ve sent/ }).click();
+  await expect(staff.getByText(`Ref ${reference}`)).toBeVisible();
+
   await staffContext.close();
 });

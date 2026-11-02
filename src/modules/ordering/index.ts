@@ -47,12 +47,14 @@ export {
   retryRefund,
   startPayment,
 } from "./payment-flow";
+export { countPayoutsDue, listPayouts, recordPayout } from "./payouts";
 export { reconcilePayments, type ReconciliationIssue } from "./reconciliation";
 export {
   type AssignCarrierInput,
   type CancelOrderInput,
   type ConfirmDeliveryInput,
   type DeliveryFailedInput,
+  type RecordPayoutInput,
   type CartItemInput,
   type CheckoutInput,
 } from "./schemas";

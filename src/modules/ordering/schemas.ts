@@ -78,3 +78,18 @@ export const deliveryFailedSchema = z.object({
     .max(300, "Keep it under 300 characters"),
 });
 export type DeliveryFailedInput = z.input<typeof deliveryFailedSchema>;
+
+export const recordPayoutSchema = z.object({
+  method: z.enum(["MOBILE_MONEY", "BANK_TRANSFER", "CASH"]),
+  paidTo: z
+    .string()
+    .trim()
+    .min(3, "Enter the number or account it went to")
+    .max(100, "Keep this under 100 characters"),
+  reference: z
+    .string()
+    .trim()
+    .min(3, "Enter the transaction ID")
+    .max(100, "Keep this under 100 characters"),
+});
+export type RecordPayoutInput = z.input<typeof recordPayoutSchema>;

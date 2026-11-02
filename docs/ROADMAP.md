@@ -665,3 +665,25 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 
 **To review before launch:** the sign-in and sign-up limits (5 a minute) are per address. Mobile networks can put many customers behind one address, so real customers could hit them at busy times.
 
+
+---
+
+## 13. Phase 4 status (2026-11-02)
+
+**In progress: an order can go from paid to delivered with a trail, and the farm paid for it.** Phase 3's managed sourcing and real Paystack test are still open (section 12).
+
+| Item | What exists | Verified by |
+| --- | --- | --- |
+| Delivery fee (D5) | Per farm in the order, lower within a region, higher between regions; saved on each fulfilment. **Amounts are placeholders** | unit + integration tests, browser |
+| Delivery tracking | Staff record the rider or driver, then picked up; delivered with who received it and an optional private photo; or failed with a reason and sent out again | integration tests, browser |
+| Order status | Follows the farms: on its way, partly delivered, delivered. The buyer can't cancel after pickup | unit + integration tests |
+| Buyer view | Who has it and their phone, what happened, the delivery photo; an email at each step | browser (`e2e/delivery.spec.ts`) |
+| Farmer payouts (D9) | `/admin/payouts`: staff send the money themselves and record the method, destination and transaction ID. The amount comes from the order, and a delivery can only be paid once. Ledger entry `SUPPLIER_PAYOUT` | integration tests incl. two payments at the same moment, browser |
+
+**Still to do in Phase 4**
+- Problems after delivery: reports with photos, staff decisions, full or partial refunds (policy §4).
+- **Decide:** what happens when a problem is reported on a delivery already paid to the farm (D9). Payouts warn staff during the 24-hour report window but don't block them.
+- Shortages at pickup: refund the missing items and adjust the farm's payout. Delivery fees on cancelled farms aren't split out yet.
+- Staff cancelling after pickup, for example when a delivery can never be completed.
+- Completing orders automatically some days after delivery, ratings and reviews, and quality inspections.
+- Delivery emails use the direct sender, not the outbox from §2.4.

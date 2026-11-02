@@ -42,6 +42,7 @@ export type Permission =
   | "order.cancel"
   | "order.manage"
   | "payment.reconcile"
+  | "payout.record"
   | "audit.read"
   | "staff.manage";
 
@@ -89,6 +90,7 @@ export function can(actor: Actor, permission: Permission): boolean {
     case "verification.decide":
     case "listing.manage":
     case "stock.confirm":
+    case "payout.record":
     case "order.manage":
       return isStaff(actor);
     case "grade.manage":

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { FormError, FormField } from "@/components/forms/form-field";
@@ -272,6 +273,20 @@ export function DeliveryPanel({ fulfilment: f }: { fulfilment: Fulfilment }) {
             </Button>
           </div>
         </form>
+      ) : null}
+
+      {f.payout ? (
+        <p className="rounded-lg bg-sprout-soft px-3 py-2 text-sm">
+          Farm paid {f.payout.amount} on {dateTime.format(f.payout.at)} · ref{" "}
+          {f.payout.reference}
+        </p>
+      ) : f.status === "DELIVERED" ? (
+        <p className="text-sm text-muted-foreground">
+          Farm not paid yet.{" "}
+          <Link href="/admin/payouts" className="underline underline-offset-4">
+            Go to payouts
+          </Link>
+        </p>
       ) : null}
 
       {f.status === "DELIVERED" ? (

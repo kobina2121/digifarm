@@ -20,5 +20,8 @@ export const COMMISSION_BPS = 0;
 export const DELIVERY_FEE_SAME_REGION_MINOR = BigInt(3000); // GH₵ 30
 export const DELIVERY_FEE_OTHER_REGION_MINOR = BigInt(8000); // GH₵ 80
 
+/** How long after delivery a customer can report a problem (policy §4). */
+export const PROBLEM_REPORT_HOURS = 24;
+
 /** Keeps carts and orders a sensible size for one delivery. */
 export const MAX_CART_LINES = 30;

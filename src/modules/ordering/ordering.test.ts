@@ -30,6 +30,7 @@ import { hasTestDatabase } from "@/test/setup";
 
 import { getCart, setCartItem } from "./cart";
 import { checkout } from "./checkout";
+import { listPayouts, recordPayout } from "./payouts";
 import {
   assignCarrier,
   markDelivered,
@@ -833,5 +834,91 @@ describe.runIf(hasTestDatabase)("delivery (integration)", () => {
         select: { status: true },
       }),
     ).toEqual({ status: "DELIVERED" });
+  });
+});
+
+describe.runIf(hasTestDatabase)("farmer payouts (integration)", () => {
+  async function deliveredOrder() {
+    const l = await listing({ supplier: "Paid Farm" });
+    const b = await buyer();
+    await setCartItem(b.actor, { listingId: l.id, quantity: "2" });
+    const order = await checkout(b.actor, {
+      addressId: b.addressId,
+      idempotencyKey: randomUUID(),
+    });
+    await pay(b.actor, order.id);
+    const staff = await createUser({ platformRole: "OPS" });
+    const id = (await getOrderForBuyer(b.actor, order.id)).fulfilments[0].id;
+    await assignCarrier(staff, id, {
+      carrierName: "Kofi",
+      carrierPhone: "0241112222",
+    });
+    return { b, order, staff, id };
+  }
+  const momo = {
+    method: "MOBILE_MONEY" as const,
+    paidTo: "0551234567",
+    reference: "MP2611020001",
+  };
+
+  it("pays a farm once its delivery arrives, and settles what it's owed", async () => {
+    const { b, order, staff, id } = await deliveredOrder();
+
+    // Not before it has arrived.
+    await expect(recordPayout(staff, id, momo)).rejects.toThrow(
+      /once its delivery has arrived/,
+    );
+    await markPickedUp(staff, id);
+    await markDelivered(staff, id, { receiverName: "Ama" });
+
+    const before = await listPayouts(staff);
+    const row = before.due.find((d) => d.fulfilmentId === id);
+    // 2 × 450, and the delivery fee isn't the farm's money.
+    expect(row?.amount).toBe("GH₵ 900.00");
+    expect(row?.canStillReportProblem).toBe(true);
+
+    await recordPayout(staff, id, momo);
+
+    const books = await ledger(order.id);
+    expect(books.SUPPLIER_PAYOUT).toBe(BigInt(-90000));
+    expect(books.SUPPLIER_PAYABLE! + books.SUPPLIER_PAYOUT!).toBe(BigInt(0));
+
+    const after = await listPayouts(staff);
+    expect(after.due.some((d) => d.fulfilmentId === id)).toBe(false);
+    expect(after.paid[0]).toMatchObject({
+      amount: "GH₵ 900.00",
+      reference: "MP2611020001",
+    });
+    const detail = await getOrderForBuyer(b.actor, order.id);
+    expect(detail.fulfilments[0].payout?.reference).toBe("MP2611020001");
+  });
+
+  it("can't pay a farm twice, even at the same moment", async () => {
+    const { order, staff, id } = await deliveredOrder();
+    await markPickedUp(staff, id);
+    await markDelivered(staff, id, { receiverName: "Ama" });
+
+    const results = await Promise.allSettled([
+      recordPayout(staff, id, momo),
+      recordPayout(staff, id, momo),
+    ]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const refused = results.find((r) => r.status === "rejected");
+    expect(String((refused as PromiseRejectedResult).reason)).toMatch(
+      /already been paid/,
+    );
+    expect((await ledger(order.id)).SUPPLIER_PAYOUT).toBe(BigInt(-90000));
+  });
+
+  it("is staff only and needs a transaction ID", async () => {
+    const { b, staff, id } = await deliveredOrder();
+    await markPickedUp(staff, id);
+    await markDelivered(staff, id, { receiverName: "Ama" });
+    await expect(recordPayout(b.actor, id, momo)).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+    await expect(
+      recordPayout(staff, id, { ...momo, reference: "" }),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 });

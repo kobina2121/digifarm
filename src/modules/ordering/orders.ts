@@ -444,6 +444,9 @@ const orderDetailSelect = {
       proofStorageKey: true,
       deliveryFailedAt: true,
       deliveryFailReason: true,
+      payout: {
+        select: { amountMinor: true, reference: true, createdAt: true },
+      },
       items: {
         orderBy: { productName: "asc" },
         select: {
@@ -565,6 +568,13 @@ function toDetail(o: OrderRow, now: Date) {
       hasProofPhoto: Boolean(f.proofStorageKey),
       deliveryFailedAt: f.deliveryFailedAt,
       deliveryFailReason: f.deliveryFailReason,
+      payout: f.payout
+        ? {
+            amount: fmt(f.payout.amountMinor),
+            reference: f.payout.reference,
+            at: f.payout.createdAt,
+          }
+        : null,
       items: f.items.map((i) => {
         const qty = i.quantity.toFixed();
         return {

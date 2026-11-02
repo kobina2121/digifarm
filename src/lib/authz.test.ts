@@ -49,6 +49,7 @@ const ALLOWED: Record<Permission, Who[]> = {
   "order.cancel": ["buyerOwner", "buyerManager", "buyerMember"],
   "order.manage": ["ops", "admin"],
   "payment.reconcile": ["admin"],
+  "payout.record": ["ops", "admin"],
   "audit.read": ["admin"],
   "staff.manage": ["admin"],
 };

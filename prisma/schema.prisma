@@ -56,6 +56,7 @@ model User {
   orderStatusChanges    OrderStatusHistory[]
   refundsRequested      Refund[]               @relation("RefundRequestedBy")
   refundsApproved       Refund[]               @relation("RefundApprovedBy")
+  payoutsRecorded       SupplierPayout[]       @relation("PayoutRecordedBy")
 
   @@map("user")
 }
@@ -188,6 +189,7 @@ model Organization {
   orders       Order[]
   fulfilments  Fulfilment[]
   ledger       LedgerEntry[]
+  payouts      SupplierPayout[]
 
   @@index([type, status])
   @@map("organization")
@@ -681,6 +683,7 @@ model Fulfilment {
 
   items  OrderItem[]
   ledger LedgerEntry[]
+  payout SupplierPayout?
 
   @@unique([orderId, supplierOrgId])
   @@index([supplierOrgId, status])
@@ -869,6 +872,34 @@ enum LedgerEntryType {
   COMMISSION // + DigiFarm's commission (D2); negative to reverse
   DELIVERY_FEE // + delivery charged to the buyer
   REFUND // - money returned to the buyer
+  SUPPLIER_PAYOUT // - money sent to a farm; settles SUPPLIER_PAYABLE
+}
+
+enum PayoutMethod {
+  MOBILE_MONEY
+  BANK_TRANSFER
+  CASH
+}
+
+// Money DigiFarm sent to a farm for one delivery (D9). Staff send it themselves
+// and record it here; one per delivery, so a farm can't be paid twice by mistake.
+model SupplierPayout {
+  id            String       @id @default(uuid(7)) @db.Uuid
+  fulfilmentId  String       @unique @db.Uuid
+  fulfilment    Fulfilment   @relation(fields: [fulfilmentId], references: [id])
+  supplierOrgId String       @db.Uuid
+  supplier      Organization @relation(fields: [supplierOrgId], references: [id])
+  amountMinor   BigInt
+  method        PayoutMethod
+  paidTo        String // the MoMo number or account the money went to
+  reference     String // the transaction ID, so it can be traced
+  recordedById  String
+  recordedBy    User         @relation("PayoutRecordedBy", fields: [recordedById], references: [id])
+  createdAt     DateTime     @default(now())
+
+  @@index([supplierOrgId, createdAt])
+  @@index([createdAt])
+  @@map("supplier_payout")
 }
 
 // Append-only financial journal (enforced by a database trigger). Corrections
