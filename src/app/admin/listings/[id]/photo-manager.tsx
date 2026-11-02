@@ -1,15 +1,15 @@
 "use client";
 
-import { Camera, Trash2 } from "lucide-react";
-import { useRef, useState, useTransition } from "react";
+import { Trash2 } from "lucide-react";
+import { useState, useTransition } from "react";
 
 import { FormError } from "@/components/forms/form-field";
+import { PhotoPicker, photosForm } from "@/components/forms/photo-picker";
 import { Button } from "@/components/ui/button";
 
 import { removeListingPhotoAction, uploadListingPhotos } from "../actions";
 
 const MAX_PHOTOS = 6;
-const MAX_BYTES = 8 * 1024 * 1024;
 
 export function PhotoManager({
   listingId,
@@ -20,34 +20,20 @@ export function PhotoManager({
   photos: { id: string; src: string }[];
   canAdd: boolean;
 }) {
-  const formRef = useRef<HTMLFormElement>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [chosen, setChosen] = useState(0);
+  const [chosen, setChosen] = useState<File[]>([]);
   const room = MAX_PHOTOS - photos.length;
 
-  function onChoose(files: FileList | null) {
-    const list = Array.from(files ?? []);
-    setChosen(list.length);
-    if (list.length > room)
-      setError(`You can add ${room} more photo${room === 1 ? "" : "s"}.`);
-    else if (list.some((f) => f.size > MAX_BYTES))
-      setError("Each photo must be 8 MB or smaller.");
-    else setError(null);
-  }
-
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  function upload() {
     setError(null);
     startTransition(async () => {
-      const result = await uploadListingPhotos(listingId, form);
+      const result = await uploadListingPhotos(listingId, photosForm(chosen));
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      formRef.current?.reset();
-      setChosen(0);
+      setChosen([]);
     });
   }
 
@@ -86,29 +72,27 @@ export function PhotoManager({
         </ul>
       ) : null}
       {canAdd && room > 0 ? (
-        <form
-          ref={formRef}
-          method="post"
-          encType="multipart/form-data"
-          onSubmit={onSubmit}
-          className="flex flex-wrap items-center gap-3"
-        >
-          <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-border px-4 font-medium hover:border-field-green">
-            <Camera className="size-4 text-field-green" aria-hidden />
-            {chosen ? `${chosen} chosen` : "Choose photos"}
-            <input
-              type="file"
-              name="photos"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              className="sr-only"
-              onChange={(e) => onChoose(e.target.files)}
-            />
-          </label>
-          <Button type="submit" disabled={pending || chosen === 0}>
-            {pending ? "Uploading…" : "Upload"}
-          </Button>
-        </form>
+        <div className="grid gap-3">
+          <PhotoPicker
+            files={chosen}
+            onChange={setChosen}
+            onError={setError}
+            room={room}
+            disabled={pending}
+          />
+          {chosen.length ? (
+            <Button
+              type="button"
+              onClick={upload}
+              disabled={pending}
+              className="justify-self-start"
+            >
+              {pending
+                ? "Uploading…"
+                : `Upload ${chosen.length} photo${chosen.length === 1 ? "" : "s"}`}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

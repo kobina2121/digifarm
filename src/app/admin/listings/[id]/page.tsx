@@ -2,9 +2,7 @@ import { ExternalLink, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import {
-  AvailabilityBadge,
-} from "@/components/market/listing-bits";
+import { AvailabilityBadge } from "@/components/market/listing-bits";
 import {
   LISTING_STATUS_LABELS,
   LISTING_TONE,
@@ -40,9 +38,11 @@ const MOVEMENT_LABELS = {
 
 export default async function ListingPage({
   params,
+  searchParams,
 }: PageProps<"/admin/listings/[id]">) {
   const actor = await requireStaff();
   const { id } = await params;
+  const photosFailed = (await searchParams).photos === "failed";
   const listing = await orNotFound(getListingForStaff(actor, id));
   const now = new Date();
   const archived = listing.status === "ARCHIVED";
@@ -145,6 +145,15 @@ export default async function ListingPage({
             the first one is shown in the market.
           </p>
         </div>
+        {photosFailed && listing.photoItems.length === 0 ? (
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            The listing was saved, but its photos didn’t upload. Add them again
+            below.
+          </p>
+        ) : null}
         <PhotoManager
           listingId={listing.id}
           photos={listing.photoItems}

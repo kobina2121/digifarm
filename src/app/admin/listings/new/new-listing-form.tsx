@@ -7,6 +7,7 @@ import { type FieldPath, useForm, useWatch } from "react-hook-form";
 
 import { FormError, FormField } from "@/components/forms/form-field";
 import { NativeSelect } from "@/components/forms/native-select";
+import { PhotoPicker, photosForm } from "@/components/forms/photo-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +16,7 @@ import {
   createListingSchema,
 } from "@/modules/catalog/schemas";
 
-import { createListingAction } from "../actions";
+import { createListingAction, uploadListingPhotos } from "../actions";
 
 type Options = {
   suppliers: { id: string; name: string; region: string }[];
@@ -40,6 +41,8 @@ export function NewListingForm({
 }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -69,7 +72,16 @@ export function NewListingForm({
       }
       return;
     }
-    router.push(`/admin/listings/${result.data.id}`);
+    const id = result.data.id;
+    // The listing exists now; if its photos fail, they can be added on its page.
+    if (photos.length) {
+      const uploaded = await uploadListingPhotos(id, photosForm(photos));
+      if (!uploaded.ok) {
+        router.push(`/admin/listings/${id}?photos=failed`);
+        return;
+      }
+    }
+    router.push(`/admin/listings/${id}`);
   }
 
   return (
@@ -217,6 +229,18 @@ export function NewListingForm({
       >
         <Input id="harvestDate" type="date" {...register("harvestDate")} />
       </FormField>
+
+      <div className="grid gap-2">
+        <p className="text-sm font-medium">Photos (optional)</p>
+        <FormError message={photoError} />
+        <PhotoPicker
+          files={photos}
+          onChange={setPhotos}
+          onError={setPhotoError}
+          room={6}
+          disabled={isSubmitting}
+        />
+      </div>
 
       <FormField
         id="description"
