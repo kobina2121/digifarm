@@ -195,3 +195,64 @@ export function DeliveryArt({ className }: ArtProps) {
     </Svg>
   );
 }
+
+/** A crate of produce wearing a heart tag, with a sparkle: for saved items. */
+export function SavedArt({ className }: ArtProps) {
+  return (
+    <Svg viewBox="0 0 200 150" className={className}>
+      <ellipse cx="96" cy="138" rx="70" ry="8" fill={SOIL} opacity="0.08" />
+      {/* Produce */}
+      <path d="M44 72 C34 48 58 38 68 58 C72 42 92 40 92 60 Z" fill={SPROUT} />
+      <path
+        d="M56 68 C52 54 60 48 66 58"
+        stroke={G}
+        strokeWidth="3"
+        fill="none"
+      />
+      <ellipse
+        cx="128"
+        cy="60"
+        rx="9"
+        ry="22"
+        transform="rotate(35 128 60)"
+        fill={GOLD}
+      />
+      <Tomato x={78} y={68} r={14} />
+      <Tomato x={104} y={66} r={15} />
+      {/* Crate */}
+      <rect x="30" y="76" width="132" height="56" rx="6" fill={WOOD} />
+      <rect x="30" y="76" width="132" height="10" rx="5" fill={WOOD_DARK} />
+      {[100, 118].map((y) => (
+        <path
+          key={y}
+          d={`M38 ${y} H154`}
+          stroke={WOOD_DARK}
+          strokeWidth="3"
+          opacity="0.6"
+        />
+      ))}
+      {/* Heart tag on a string */}
+      <path
+        d="M150 82 C160 72 164 64 164 56"
+        stroke={WHITE}
+        strokeWidth="2.5"
+        fill="none"
+        opacity="0.9"
+      />
+      <g transform="rotate(10 168 40)">
+        <circle cx="168" cy="40" r="22" fill={WHITE} />
+        <path
+          d="M168 52 C152 42 154 28 162 28 C165 28 167 30 168 33 C169 30 171 28 174 28 C182 28 184 42 168 52 Z"
+          fill={TOMATO}
+        />
+      </g>
+      {/* Sparkle */}
+      <path
+        d="M24 30 v12 M18 36 h12"
+        stroke={GOLD}
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
