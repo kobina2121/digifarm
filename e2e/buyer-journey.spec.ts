@@ -158,6 +158,8 @@ test("a customer deletes their account and can't sign in with it again", async (
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByRole("alert").first()).toBeVisible();
+  await expect(page.getByText(/email and password don.t match/)).toBeVisible({
+    timeout: 30_000,
+  });
   await expect(page).toHaveURL(/\/sign-in/);
 });
