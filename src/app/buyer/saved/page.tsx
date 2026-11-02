@@ -45,7 +45,7 @@ export default async function SavedPage() {
             ? `${items.length} ${items.length === 1 ? "product" : "products"} · ${ready.length} ready to order`
             : "Keep the produce you buy often in one place."}
         </p>
-        <SavedArt className="pointer-events-none absolute -right-2 -bottom-2 h-auto w-40 sm:w-52" />
+        <SavedArt className="pointer-events-none absolute right-2 -bottom-2 h-auto w-36 sm:w-48" />
       </section>
 
       {items.length === 0 ? (

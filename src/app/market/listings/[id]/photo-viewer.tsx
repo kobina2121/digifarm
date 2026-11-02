@@ -62,7 +62,7 @@ export function PhotoViewer({
           type="button"
           onClick={onClose}
           aria-label="Close photos"
-          className="flex size-11 items-center justify-center rounded-full bg-white/15"
+          className="flex size-11 items-center justify-center rounded-full bg-white/15 outline-none focus-visible:ring-2 focus-visible:ring-white/60"
         >
           <X className="size-5" aria-hidden />
         </button>
