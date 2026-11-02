@@ -653,7 +653,12 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 - Paystack test keys from the founder (§6), then a test-mode run including the webhook, and checkout inside the **installed** PWA on iPhone and Android.
 - Paystack field names for refund webhooks are from documentation and need confirming against a test-mode refund.
 
-**Known issue (2026-11-02):** requests against the development database occasionally stall for more than 15 seconds (seen in 2 of 3 browser test runs, on sign-up and the filtered market page; the same requests normally take 0.3 to 1.2 seconds). The cause isn't established. Check it again against the production database setup before launch.
+**Database stalls, investigated 2026-11-02.** Requests from a laptop to the development database occasionally took far longer than normal: over 15 seconds twice (sign-up, filtered market), 6.8 and 3.9 seconds once each. They were not caught in the act, and three later full browser test runs were clean (66 of 66).
+- **Measured:** opening a new connection is the slow, variable step. It typically takes 0.8 s and reached 5.2 s, against 0.15 s for a query on an open connection. The first network handshake alone spiked to 4.6 s at the same moments. The pool closes connections idle for 60 s, so the first page after a pause takes 1 to 1.8 s instead of 0.3 s (seen in all 5 tries).
+- **Ruled out by measurement:** the database restarting, idle connections going dead, running out of connections (5 in use of 112), and slow queries. No sleep or Wi-Fi events were found in the Mac's logs at the stall times, though those logs may not record everything.
+- **Most likely but unproven:** packets lost between the laptop and the database in London, so a new connection has to retry its handshake.
+- **Before launch:** repeat these timings on the production setup. With hosting and database in the same region, this path should be much shorter, but that hasn't been measured. Note that the database client has no time limit on connecting or on queries.
+- **Development only:** Next.js helper processes create their own database pool without opening connections. In production mode there was one pool across 60 requests.
 
 **To review before launch:** the sign-in and sign-up limits (5 a minute) are per address. Mobile networks can put many customers behind one address, so real customers could hit them at busy times.
 
