@@ -16,6 +16,7 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { Logo } from "@/components/brand/logo";
 import type { ReactNode } from "react";
 
 import { HarvestArt } from "@/components/home/harvest-art";
@@ -80,6 +81,11 @@ export default async function BuyerHomePage() {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl grid-cols-[minmax(0,1fr)] gap-7">
+      {/* Phones: the logo lives here only; it scrolls away with the page. */}
+      <div className="-mx-4 -mt-6 -mb-2 flex h-14 items-center justify-center border-b border-border md:hidden">
+        <Logo />
+      </div>
+
       {/* Greeting */}
       <header className="flex items-start justify-between gap-4">
         <div className="min-w-0">

@@ -25,6 +25,7 @@ export function AppShell({
   areaLabel,
   tone = "light",
   showSignOut = true,
+  phoneLogoBar = true,
   children,
 }: {
   nav: NavItem[];
@@ -32,6 +33,8 @@ export function AppShell({
   tone?: "light" | "dark";
   /** Buyers sign out from their Profile page instead. */
   showSignOut?: boolean;
+  /** Buyers see the logo on Home only (the page draws it), so no bar on phones. */
+  phoneLogoBar?: boolean;
   children: ReactNode;
 }) {
   const dark = tone === "dark";
@@ -71,24 +74,40 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Phones: logo centred. The logo row (3.5rem + border) scrolls away,
-            while the part behind the status bar stays pinned and solid. */}
-        <header
-          className={cn(
-            "sticky top-[calc(-3.5rem-1px)] z-30 border-b pt-safe md:hidden",
-            dark ? "border-sidebar-border bg-sidebar" : "border-border bg-paper",
-          )}
-        >
-          <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-4">
-            <span />
-            <Link href="/home" aria-label="DigiFarm home">
-              <Logo tone={dark ? "on-dark" : "brand"} />
-            </Link>
-            {showSignOut ? (
-              <SignOutButton onDark={dark} className="justify-self-end px-2" />
-            ) : null}
-          </div>
-        </header>
+        {phoneLogoBar ? (
+          <>
+            {/* Phones: logo centred. The logo row (3.5rem + border) scrolls away,
+              while the part behind the status bar stays pinned and solid. */}
+            <header
+              className={cn(
+                "sticky top-[calc(-3.5rem-1px)] z-30 border-b pt-safe md:hidden",
+                dark
+                  ? "border-sidebar-border bg-sidebar"
+                  : "border-border bg-paper",
+              )}
+            >
+              <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-4">
+                <span />
+                <Link href="/home" aria-label="DigiFarm home">
+                  <Logo tone={dark ? "on-dark" : "brand"} />
+                </Link>
+                {showSignOut ? (
+                  <SignOutButton
+                    onDark={dark}
+                    className="justify-self-end px-2"
+                  />
+                ) : null}
+              </div>
+            </header>
+          </>
+        ) : (
+          // A thin strip in the page's colour pinned to the top: nothing to see,
+          // but iOS then keeps the status bar area solid over scrolled pages.
+          <div
+            aria-hidden
+            className="sticky top-0 z-30 -mb-2 box-content h-2 bg-paper pt-safe md:hidden"
+          />
+        )}
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-32 md:px-8 md:pt-10 md:pb-12">
           {children}

@@ -45,7 +45,12 @@ async function MarketFrame({ children }: { children: ReactNode }) {
   }
   if (actor?.emailVerified && actor.membership?.organizationType === "BUYER") {
     return (
-      <AppShell nav={BUYER_NAV} areaLabel="Buyer" showSignOut={false}>
+      <AppShell
+        nav={BUYER_NAV}
+        areaLabel="Buyer"
+        showSignOut={false}
+        phoneLogoBar={false}
+      >
         {children}
       </AppShell>
     );
