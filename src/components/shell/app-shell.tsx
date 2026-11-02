@@ -71,18 +71,11 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Keeps the status bar area solid once the top bar has scrolled away. */}
-        <div
-          aria-hidden
-          className={cn(
-            "fixed inset-x-0 top-0 z-30 h-[env(safe-area-inset-top)] md:hidden",
-            dark ? "bg-sidebar" : "bg-paper",
-          )}
-        />
-        {/* Phones: logo centred; the bar scrolls away with the page. */}
+        {/* Phones: logo centred. The logo row (3.5rem + border) scrolls away,
+            while the part behind the status bar stays pinned and solid. */}
         <header
           className={cn(
-            "border-b pt-safe md:hidden",
+            "sticky top-[calc(-3.5rem-1px)] z-30 border-b pt-safe md:hidden",
             dark ? "border-sidebar-border bg-sidebar" : "border-border bg-paper",
           )}
         >
