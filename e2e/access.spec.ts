@@ -54,7 +54,9 @@ test.describe("signed-out visitors", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Market" }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+    await expect(
+      page.getByRole("banner").getByRole("link", { name: "Sign in" }),
+    ).toBeVisible();
 
     await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: "Filters" }).click();

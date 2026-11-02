@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 const OUTBOX = path.resolve(".storage/outbox");
 
@@ -31,4 +31,23 @@ export async function linkFromLatestEmail(to: string): Promise<string> {
 
 export function uniqueEmail(prefix: string) {
   return `${prefix}.${Date.now()}.${Math.floor(Math.random() * 1e6)}@e2e.digifarm.test`;
+}
+
+/**
+ * Submit the sign-up form and wait for "Check your email". Sign-ups are limited
+ * to 5 a minute per address and all the browser projects share one, so when the
+ * limit is reached wait it out, as a person would, rather than switching it off.
+ */
+export async function submitSignUp(page: Page) {
+  const submit = page.getByRole("button", { name: "Create account" });
+  const sent = page.getByRole("heading", { name: "Check your email" });
+  const limited = page.getByText("Too many attempts");
+  await submit.click();
+  // Longer than the default: it writes to a remote database and can hit a slow moment.
+  await expect(sent.or(limited)).toBeVisible({ timeout: 30_000 });
+  if (await limited.isVisible()) {
+    await page.waitForTimeout(61_000);
+    await submit.click();
+    await expect(sent).toBeVisible({ timeout: 30_000 });
+  }
 }

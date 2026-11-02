@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { linkFromLatestEmail, uniqueEmail } from "./helpers";
+import { linkFromLatestEmail, submitSignUp, uniqueEmail } from "./helpers";
 
 test("a new buyer signs up, confirms their email, sets up their business and adds an address", async ({
   page,
@@ -22,10 +22,7 @@ test("a new buyer signs up, confirms their email, sets up their business and add
   await page.getByLabel("Your full name").fill("Efua Boateng");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Check your email" }),
-  ).toBeVisible();
+  await submitSignUp(page);
 
   // Unverified users can't get into the app.
   await page.goto("/sign-in");
@@ -88,10 +85,7 @@ test("an individual signs up without any business details", async ({
   await page.getByLabel("Your full name").fill("Kwame Asante");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Check your email" }),
-  ).toBeVisible();
+  await submitSignUp(page);
 
   await page.goto(await linkFromLatestEmail(email));
   await expect(page).toHaveURL(/\/onboarding$/);

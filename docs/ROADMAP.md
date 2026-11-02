@@ -621,15 +621,15 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 
 ---
 
-## 12. Phase 3 status (2026-10-31)
+## 12. Phase 3 status (updated 2026-11-02)
 
 **In progress — a buyer can order from several farms, pay (test stand-in or Paystack test mode) and cancel for a refund; overselling is impossible under concurrent checkouts.** Managed sourcing and the installed-PWA payment check are still to do.
 
 | Item | What exists | Verified by |
 | --- | --- | --- |
 | Schema | Cart, CartItem, Order (numbers `DF-2026-000123` from a sequence), Fulfilment (one per farm, commission snapshot), OrderItem (snapshots), OrderStatusHistory, StockReservation, Payment, PaymentAttempt, ProviderEvent, Refund, LedgerEntry; CHECK constraints on amounts and quantities; ledger append-only by trigger | migrations; integration test (ledger UPDATE/DELETE refused) |
-| Cart | Server-side, one per buyer business; minimum order and stock checked on add; re-priced on every view; lines that stop being sold are flagged | integration tests |
-| Checkout | Re-checks price, stock, minimum order, dates and delivery area in one transaction; holds stock with a conditional update in listing order; all-or-nothing; idempotency key; same-zone orders only (D4) | integration tests, incl. **12 simultaneous checkouts on 25 crates ⇒ exactly 5 orders, 25 held** |
+| Cart | Server-side, one per buyer account; stock checked on add (no minimum orders, D19); re-priced on every view; lines that stop being sold are flagged | integration tests |
+| Checkout | Re-checks price, stock and dates in one transaction; holds stock with a conditional update in listing order; all-or-nothing; delivers anywhere in Ghana (D4). Idempotency key: a repeat submission returns the order already placed, even if it reached an emptied cart | integration tests, incl. **12 simultaneous checkouts on 25 crates ⇒ exactly 5 orders, 25 held** and repeat submissions spread over a few seconds |
 | Holds | 30 minutes (`PAYMENT_HOLD_MINUTES`); expired holds released at the start of every checkout on the same listings and by `/api/cron/expire-orders`; before expiring, the provider is asked once more | integration tests (expire, last-moment payment) |
 | Order states | `PENDING_PAYMENT → PAID` (paid = confirmed, D1) / `EXPIRED` / `CANCELLED`; history row + audit for every change; Phase 4 states defined | unit + integration tests |
 | Payments | Provider interface; Paystack adapter (initialize, verify, refund, list, HMAC-SHA512 webhook signature); development stand-in with a clearly labelled `/dev/pay` page. An order is paid only after DigiFarm asks the provider; amount or currency mismatches are never confirmed; late or duplicate payments are refunded automatically | unit tests (adapter with mocked HTTP), integration tests |
@@ -645,9 +645,15 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 - **No job table yet.** Expiry runs at checkout and from a cron route; reconciliation from a cron route. `vercel.json` schedules are added once the Vercel plan is known (Hobby allows daily cron only). Both routes need `CRON_SECRET`.
 - **Commission is 0% and delivery is free** until the rate (D2) and delivery model (D5) are set: `COMMISSION_BPS` and `DELIVERY_FEE_MINOR` in `src/modules/ordering/config.ts`.
 - **Notifications are a direct email after payment**, not the outbox described in §2.4. The outbox comes with the notification work in Phase 4.
+- **Added since the plan:** buyers can save products with a heart (`saved_listing` table, Saved page); staff add several photos at once, including on the new-listing form; buyers can view product photos full screen.
+- **Browser tests (`pnpm test:e2e`) don't run in CI.** Run them by hand before a release. All three browser projects share one address, so they wait out the sign-up limit (5 a minute) and take about 4 minutes.
 
 **Still to do in Phase 3**
 - Managed sourcing (request form, quotation builder, accept ⇒ order).
 - Paystack test keys from the founder (§6), then a test-mode run including the webhook, and checkout inside the **installed** PWA on iPhone and Android.
 - Paystack field names for refund webhooks are from documentation and need confirming against a test-mode refund.
+
+**Known issue (2026-11-02):** requests against the development database occasionally stall for more than 15 seconds (seen in 2 of 3 browser test runs, on sign-up and the filtered market page; the same requests normally take 0.3 to 1.2 seconds). The cause isn't established. Check it again against the production database setup before launch.
+
+**To review before launch:** the sign-in and sign-up limits (5 a minute) are per address. Mobile networks can put many customers behind one address, so real customers could hit them at busy times.
 
