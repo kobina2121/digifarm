@@ -8,9 +8,11 @@ export {
   setCartItem,
 } from "./cart";
 export { checkout } from "./checkout";
+export { deliveryFeeForFarms } from "./delivery-fee";
 export {
   COMMISSION_BPS,
-  DELIVERY_FEE_MINOR,
+  DELIVERY_FEE_OTHER_REGION_MINOR,
+  DELIVERY_FEE_SAME_REGION_MINOR,
   MAX_CART_LINES,
   PAYMENT_HOLD_MINUTES,
 } from "./config";

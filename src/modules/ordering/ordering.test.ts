@@ -160,7 +160,8 @@ describe.runIf(hasTestDatabase)("cart (integration)", () => {
     await setCartItem(b.actor, { listingId: l.id, quantity: "5", mode: "add" });
     const cart = await getCart(b.actor);
     expect(cart.groups[0].lines[0].quantity).toBe("10");
-    expect(cart.total).toBe("GH₵ 4,500.00");
+    // 10 × 450, plus delivery within Ashanti.
+    expect(cart.total).toBe("GH₵ 4,530.00");
     expect(cart.canCheckout).toBe(true);
   });
 
@@ -198,8 +199,9 @@ describe.runIf(hasTestDatabase)("checkout (integration)", () => {
     const detail = await getOrderForBuyer(b.actor, order.id);
     expect(detail.status).toBe("PENDING_PAYMENT");
     expect(detail.fulfilments).toHaveLength(2);
-    // 10 × 450 + 5.5 × 300
-    expect(detail.total).toBe("GH₵ 6,150.00");
+    // 10 × 450 + 5.5 × 300, plus delivery within Ashanti from each of two farms.
+    expect(detail.total).toBe("GH₵ 6,210.00");
+    expect(detail.deliveryFee).toBe("GH₵ 60.00");
     expect(detail.holdExpiresAt.getTime() - now.getTime()).toBe(30 * 60_000);
     expect(detail.canPay).toBe(true);
 
@@ -242,6 +244,9 @@ describe.runIf(hasTestDatabase)("checkout (integration)", () => {
     });
     const detail = await getOrderForBuyer(b.actor, order.id);
     expect(detail.address.regionName).toBe("Volta");
+    // Crossing regions costs more: 450 + 80.
+    expect(detail.deliveryFee).toBe("GH₵ 80.00");
+    expect(detail.total).toBe("GH₵ 530.00");
     expect(await stockOf(l.id)).toEqual({ onHand: "40", reserved: "1" });
   });
 
@@ -322,7 +327,8 @@ describe.runIf(hasTestDatabase)("payment (integration)", () => {
     expect(await stockOf(l.id)).toEqual({ onHand: "30", reserved: "0" });
 
     const books = await ledger(order.id);
-    expect(books.PAYMENT_CAPTURED).toBe(BigInt(450000));
+    expect(books.PAYMENT_CAPTURED).toBe(BigInt(453000));
+    expect(books.DELIVERY_FEE).toBe(BigInt(3000));
     expect(books.SUPPLIER_PAYABLE).toBe(BigInt(450000)); // commission rate is 0 for now
     expect(books.PROVIDER_FEE).toBeLessThan(BigInt(0));
     const sold = await db.inventoryMovement.findFirstOrThrow({
@@ -443,7 +449,7 @@ describe.runIf(hasTestDatabase)(
 
       const books = await ledger(order.id);
       expect(books.SUPPLIER_PAYABLE).toBe(BigInt(0));
-      expect(books.REFUND).toBe(BigInt(-450000));
+      expect(books.REFUND).toBe(BigInt(-453000));
 
       await expect(cancelOrder(b.actor, order.id)).rejects.toBeInstanceOf(
         ConflictError,
@@ -511,7 +517,7 @@ describe.runIf(hasTestDatabase)("webhooks (integration)", () => {
     });
     let verifies = 0;
     setPaymentProviderForTests({
-      ...scripted({ status: "success", amountMinor: BigInt(450000) }, () => {
+      ...scripted({ status: "success", amountMinor: BigInt(453000) }, () => {
         verifies++;
       }),
       parseWebhook(raw, headers) {

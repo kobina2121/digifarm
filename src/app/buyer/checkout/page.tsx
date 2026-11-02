@@ -56,14 +56,6 @@ export default async function CheckoutPage() {
             <dt>Produce</dt>
             <dd>{cart.subtotal}</dd>
           </div>
-          <div className="flex justify-between">
-            <dt>Delivery</dt>
-            <dd>{cart.deliveryFee}</dd>
-          </div>
-          <div className="mt-1 flex justify-between border-t-2 border-dashed border-border pt-2 text-lg font-bold">
-            <dt>Total</dt>
-            <dd>{cart.total}</dd>
-          </div>
         </dl>
       </section>
 
@@ -74,8 +66,8 @@ export default async function CheckoutPage() {
           detail: [a.street, a.town, GHANA_REGIONS[a.region]]
             .filter(Boolean)
             .join(", "),
+          ...cart.quote(a.region),
         }))}
-        total={cart.total}
         holdMinutes={PAYMENT_HOLD_MINUTES}
       />
     </div>

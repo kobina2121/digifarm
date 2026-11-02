@@ -652,17 +652,18 @@ enum FulfilmentStatus {
 
 // One per (order, supplier): how a multi-farm order is split.
 model Fulfilment {
-  id            String           @id @default(uuid(7)) @db.Uuid
-  orderId       String           @db.Uuid
-  order         Order            @relation(fields: [orderId], references: [id])
-  supplierOrgId String           @db.Uuid
-  supplier      Organization     @relation(fields: [supplierOrgId], references: [id])
-  supplierName  String // snapshot
-  status        FulfilmentStatus @default(PENDING)
-  subtotalMinor BigInt
-  commissionBps Int // snapshot of DigiFarm's commission (D2)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id               String           @id @default(uuid(7)) @db.Uuid
+  orderId          String           @db.Uuid
+  order            Order            @relation(fields: [orderId], references: [id])
+  supplierOrgId    String           @db.Uuid
+  supplier         Organization     @relation(fields: [supplierOrgId], references: [id])
+  supplierName     String // snapshot
+  status           FulfilmentStatus @default(PENDING)
+  subtotalMinor    BigInt
+  commissionBps    Int // snapshot of DigiFarm's commission (D2)
+  deliveryFeeMinor BigInt           @default(0) // this farm's share of Order.deliveryFeeMinor (D5)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   items  OrderItem[]
   ledger LedgerEntry[]

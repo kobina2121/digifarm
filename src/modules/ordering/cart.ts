@@ -2,6 +2,7 @@ import "server-only";
 
 import Decimal from "decimal.js";
 
+import type { GhanaRegion } from "@/generated/prisma/enums";
 import { type Actor, assertCan } from "@/lib/authz";
 import { db, type Tx } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors";
@@ -15,7 +16,8 @@ import {
   UNAVAILABLE_LABELS,
 } from "@/modules/catalog";
 
-import { DELIVERY_FEE_MINOR, MAX_CART_LINES } from "./config";
+import { MAX_CART_LINES } from "./config";
+import { deliveryFeeForFarms } from "./delivery-fee";
 import { type CartItemInput, cartItemSchema } from "./schemas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -67,6 +69,7 @@ export type CartGroup = {
   supplierName: string;
   /** Where the farm is: DigiFarm delivers anywhere in Ghana. */
   farmRegion: string;
+  farmRegionCode: GhanaRegion;
   lines: CartLine[];
 };
 
@@ -75,8 +78,13 @@ export type CartView = {
   unavailable: CartLine[];
   lineCount: number;
   subtotal: string;
+  /** To the buyer's default address; checkout recalculates for the one chosen. */
   deliveryFee: string;
+  /** Region the fee is for; null until the buyer has an address. */
+  deliveryRegion: string | null;
   total: string;
+  /** Delivery fee and total if the order goes to this region. */
+  quote: (region: GhanaRegion) => { deliveryFee: string; total: string };
   canCheckout: boolean;
 };
 
@@ -138,20 +146,33 @@ export async function getCart(
       supplierId: listing.supplierId,
       supplierName: listing.supplier.name,
       farmRegion: GHANA_REGIONS[listing.supplier.region],
+      farmRegionCode: listing.supplier.region,
       lines: [],
     };
     group.lines.push(line);
     groups.set(listing.supplierId, group);
   }
 
-  const delivery = Money.ofMinor(items.length ? DELIVERY_FEE_MINOR : 0);
+  const farmRegions = [...groups.values()].map((g) => g.farmRegionCode);
+  const quote = (region: GhanaRegion) => {
+    const fee = Money.ofMinor(deliveryFeeForFarms(farmRegions, region));
+    return { deliveryFee: fee.format(), total: subtotal.add(fee).format() };
+  };
+  const address = await db.address.findFirst({
+    where: { organizationId: orgId, kind: "DELIVERY", deletedAt: null },
+    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+    select: { region: true },
+  });
   return {
     groups: [...groups.values()],
     unavailable,
     lineCount: items.length,
     subtotal: subtotal.format(),
-    deliveryFee: delivery.format(),
-    total: subtotal.add(delivery).format(),
+    deliveryRegion: address ? GHANA_REGIONS[address.region] : null,
+    ...(address
+      ? quote(address.region)
+      : { deliveryFee: "Added at checkout", total: subtotal.format() }),
+    quote,
     canCheckout: ok,
   };
 }

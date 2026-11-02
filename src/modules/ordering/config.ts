@@ -13,8 +13,12 @@ export const PAYMENT_HOLD_MINUTES = 30;
  */
 export const COMMISSION_BPS = 0;
 
-/** Delivery is charged per order. The delivery model (D5) isn't decided yet. */
-export const DELIVERY_FEE_MINOR = BigInt(0);
+/**
+ * Delivery is charged per farm in the order (D5). PLACEHOLDER AMOUNTS until
+ * the founder sets them; only ever charged in test mode so far.
+ */
+export const DELIVERY_FEE_SAME_REGION_MINOR = BigInt(3000); // GH₵ 30
+export const DELIVERY_FEE_OTHER_REGION_MINOR = BigInt(8000); // GH₵ 80
 
 /** Keeps carts and orders a sensible size for one delivery. */
 export const MAX_CART_LINES = 30;

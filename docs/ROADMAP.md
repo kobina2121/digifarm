@@ -500,11 +500,11 @@ Recorded 2026-10-27 with the founder.
 | **D2** | Revenue model | **Decided** | Supplier commission only (basis points, snapshotted per fulfilment). No buyer service fee in the MVP. Managed-sourcing quotations show product cost and delivery; commission is deducted on the supplier side. |
 | **D3** | Credit terms | **Decided** | Prepaid only in the MVP. |
 | **D4** | Geography | **Revised (2026-11-01)** | Delivery anywhere in Ghana, from farms anywhere in Ghana. Addresses and farms carry one of the 16 regions; listings and orders no longer belong to an operating zone, and there is no same-area rule at checkout. The market filters by the farm's region. `OperatingZone` stays in the schema for older orders only. (Was: Greater Accra and Kumasi as two zones, same-zone orders only.) |
-| **D5** | Delivery model | **Deferred** | Needed before Phase 4. The delivery schema stays minimal and provider-agnostic until then. |
+| **D5** | Delivery model | **Decided (2026-11-02)** | DigiFarm arranges each delivery: staff book a rider, driver or bus parcel and record who has it in the app. No courier integration. The buyer pays a fee per farm in the order, lower within a region and higher between regions. **The amounts are placeholders** (GH₵ 30 and GH₵ 80 in `src/modules/ordering/config.ts`) until the founder sets them. |
 | **D6** | Supplier onboarding | **Decided** | DigiFarm manages suppliers. Staff phone farmers to check availability and update listings and stock in the app. Supplier logins and a self-service portal are deferred. |
 | **D7** | Supplier verification | **Decided** | DigiFarm recruits farms through site visits. Verification = a recorded farm visit plus approval by a second staff member. No supplier ID-document uploads in the MVP. |
 | **D8** | Grading | **Paused (2026-11-01)** | Grades are not shown to buyers or set on new listings for now. The A/B/C wording, the grades page and the data stay so grading can come back later. (Was: DigiFarm A/B/C grades per category, assigned by staff.) |
-| **D9** | Farmer payouts | **Deferred** | Needed before Phase 4. The ledger tracks supplier payables from Phase 3 regardless. |
+| **D9** | Farmer payouts | **Decided (2026-11-02)** | Each farm is paid after each delivery; staff send the money and record the reference in the app. **Consequence:** the policy lets buyers report problems for 24 hours after delivery and holds payment for disputed items, but a farm paid straight away has already got the money. How to handle that is to be settled with the dispute work. |
 | **D10** | Cancellation/refund/dispute policy | **Draft v2 in use (2026-10-31) — six questions still open** | Draft: [`docs/policies/cancellations-refunds-disputes.md`](policies/cancellations-refunds-disputes.md). Phase 3 was started with the draft's proposals as defaults (30-minute hold, free cancellation until pickup, full refunds). The numbers live in `src/modules/ordering/config.ts`, so the answers to its §6 change configuration, not code. |
 | **D11** | Tax & invoicing | **Deferred** | Must be resolved with an accountant before live payments. Invoices are designed so tax lines can be added. |
 | **D12** | Handling customer funds (Act 987) | **Deferred** | Must be resolved before live payments. The MVP collects through a licensed provider and makes no escrow claims. |
@@ -517,7 +517,7 @@ Recorded 2026-10-27 with the founder.
 | **D19** | Minimum orders | **Decided (2026-11-01)** | None for now: any listing can be ordered one unit at a time, up to the stock left. Every listing's minimum is 1 and staff no longer set it. |
 | **D20** | Deleting an account | **Decided (2026-11-02), to be reviewed under D14** | Customers delete their own account from Profile, confirming with the typed word DELETE and their password if they have one. Refused while an order or refund is in progress. Erased: sign-in, name, email, phone, business details, addresses, cart, saved products, and street-level details, notes and cancel reasons on past orders. Kept for accounting: orders and payments with town and region only. **Not erased:** the append-only audit log (can hold a name, business details, IP addresses and typed cancel reasons), stock history and ledger, and payment provider event records (can hold an email). How long to keep these must be settled under D14 with legal advice before launch. Staff accounts are closed by an administrator. |
 
-**Gates:** Phase 3 starts with the D10 draft · live payments need D11, D12, D14 · Phase 4 needs D5 and D9.
+**Gates:** Phase 3 starts with the D10 draft · live payments need D11, D12, D14 · Phase 4 is under way (D5 and D9 decided).
 
 ---
 
@@ -644,7 +644,7 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 **Deviations from the plan above, and why**
 - **Holds don't write stock-history rows.** A hold only changes `reserved`; the history records changes to stock on hand (sold, returned), so it isn't flooded by unpaid checkouts. `StockReservation` is the log of holds.
 - **No job table yet.** Expiry runs at checkout and from a cron route; reconciliation from a cron route. `vercel.json` schedules are added once the Vercel plan is known (Hobby allows daily cron only). Both routes need `CRON_SECRET`.
-- **Commission is 0% and delivery is free** until the rate (D2) and delivery model (D5) are set: `COMMISSION_BPS` and `DELIVERY_FEE_MINOR` in `src/modules/ordering/config.ts`.
+- **Commission is 0%** until the rate (D2) is set: `COMMISSION_BPS` in `src/modules/ordering/config.ts`.
 - **Notifications are a direct email after payment**, not the outbox described in §2.4. The outbox comes with the notification work in Phase 4.
 - **Added since the plan:** buyers can save products with a heart (`saved_listing` table, Saved page); staff add several photos at once, including on the new-listing form; buyers can view product photos full screen.
 - **Browser tests (`pnpm test:e2e`) don't run in CI.** Run them by hand before a release. All three browser projects share one address, so they wait out the sign-up limit (5 a minute) and take about 4 minutes.

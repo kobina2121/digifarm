@@ -14,11 +14,8 @@ import { orderableListings } from "@/modules/catalog";
 import { reserveStock } from "@/modules/inventory";
 
 import { buyerOrgOf, clearCart, lineProblem, unitLabel } from "./cart";
-import {
-  COMMISSION_BPS,
-  DELIVERY_FEE_MINOR,
-  PAYMENT_HOLD_MINUTES,
-} from "./config";
+import { COMMISSION_BPS, PAYMENT_HOLD_MINUTES } from "./config";
+import { deliveryFeeMinor } from "./delivery-fee";
 import { expireUnpaidOrders } from "./expiry";
 import { type CheckoutInput, checkoutSchema } from "./schemas";
 
@@ -152,7 +149,12 @@ async function placeOrder(
     bySupplier.set(line.listing.supplierId, group);
   }
   const subtotal = lines.reduce((sum, l) => sum.add(l.lineTotal), Money.zero());
-  const deliveryFee = Money.ofMinor(DELIVERY_FEE_MINOR);
+  const feeFrom = (group: typeof lines) =>
+    deliveryFeeMinor(group[0].listing.supplier.region, address.region);
+  const deliveryFee = [...bySupplier.values()].reduce(
+    (sum, group) => sum.add(Money.ofMinor(feeFrom(group))),
+    Money.zero(),
+  );
   const holdExpiresAt = new Date(now.getTime() + PAYMENT_HOLD_MINUTES * 60_000);
 
   const order = await tx.order.create({
@@ -192,6 +194,7 @@ async function placeOrder(
         subtotalMinor: group.reduce((s, l) => s.add(l.lineTotal), Money.zero())
           .amountMinor,
         commissionBps: COMMISSION_BPS,
+        deliveryFeeMinor: feeFrom(group),
       },
       select: { id: true },
     });

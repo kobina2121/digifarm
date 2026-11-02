@@ -130,7 +130,10 @@ export default async function CartPage() {
                 <dd className="font-semibold text-soil">{cart.subtotal}</dd>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <dt>Delivery</dt>
+                <dt>
+                  Delivery
+                  {cart.deliveryRegion ? ` to ${cart.deliveryRegion}` : ""}
+                </dt>
                 <dd className="font-semibold text-soil">{cart.deliveryFee}</dd>
               </div>
               <div className="flex justify-between border-t-2 border-dashed border-border pt-3 text-lg">

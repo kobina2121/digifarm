@@ -15,20 +15,21 @@ type AddressOption = {
   id: string;
   label: string;
   detail: string;
+  deliveryFee: string;
+  total: string;
 };
 
 export function CheckoutForm({
   addresses,
-  total,
   holdMinutes,
 }: {
   addresses: AddressOption[];
-  total: string;
   holdMinutes: number;
 }) {
   const router = useRouter();
   // DigiFarm delivers anywhere in Ghana, so any saved address will do.
   const [addressId, setAddressId] = useState(addresses[0]?.id ?? "");
+  const chosen = addresses.find((a) => a.id === addressId);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -86,6 +87,9 @@ export function CheckoutForm({
                 <span className="block text-sm text-muted-foreground">
                   {a.detail}
                 </span>
+                <span className="mt-0.5 block text-sm">
+                  Delivery {a.deliveryFee}
+                </span>
               </span>
             </label>
           );
@@ -120,6 +124,19 @@ export function CheckoutForm({
 
       <FormError message={error} />
 
+      {chosen ? (
+        <dl className="grid gap-1 rounded-2xl bg-card p-4 text-sm">
+          <div className="flex justify-between">
+            <dt>Delivery</dt>
+            <dd>{chosen.deliveryFee}</dd>
+          </div>
+          <div className="flex justify-between text-lg font-bold">
+            <dt>Total</dt>
+            <dd>{chosen.total}</dd>
+          </div>
+        </dl>
+      ) : null}
+
       <div className="grid gap-2">
         <Button
           type="submit"
@@ -127,7 +144,7 @@ export function CheckoutForm({
           disabled={pending || !addressId}
           className="h-14 w-full rounded-full text-base font-semibold"
         >
-          {pending ? "Placing your order…" : `Pay ${total}`}
+          {pending ? "Placing your order…" : `Pay ${chosen?.total ?? ""}`}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
           Mobile money or card. We hold your produce for {holdMinutes} minutes
