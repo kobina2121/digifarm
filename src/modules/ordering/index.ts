@@ -8,6 +8,13 @@ export {
   setCartItem,
 } from "./cart";
 export { checkout } from "./checkout";
+export {
+  assignCarrier,
+  markDelivered,
+  markDeliveryFailed,
+  markPickedUp,
+  readDeliveryProof,
+} from "./delivery";
 export { deliveryFeeForFarms } from "./delivery-fee";
 export {
   COMMISSION_BPS,
@@ -42,7 +49,10 @@ export {
 } from "./payment-flow";
 export { reconcilePayments, type ReconciliationIssue } from "./reconciliation";
 export {
+  type AssignCarrierInput,
   type CancelOrderInput,
+  type ConfirmDeliveryInput,
+  type DeliveryFailedInput,
   type CartItemInput,
   type CheckoutInput,
 } from "./schemas";

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { buyerCanCancel, canPay, canTransition } from "./state-machine";
+import {
+  buyerCanCancel,
+  canMoveFulfilment,
+  canPay,
+  canTransition,
+  orderStatusFromDeliveries,
+} from "./state-machine";
 
 describe("order state machine", () => {
   it("confirms an order by payment, with no farm step in between", () => {
@@ -39,5 +45,39 @@ describe("order state machine", () => {
     expect(canPay("PENDING_PAYMENT", later, now)).toBe(true);
     expect(canPay("PENDING_PAYMENT", earlier, now)).toBe(false);
     expect(canPay("PAID", later, now)).toBe(false);
+  });
+});
+
+describe("delivery states", () => {
+  it("goes from pickup to delivered, and can be sent out again after a failure", () => {
+    expect(canMoveFulfilment("CONFIRMED", "PICKED_UP")).toBe(true);
+    expect(canMoveFulfilment("PICKED_UP", "DELIVERED")).toBe(true);
+    expect(canMoveFulfilment("PICKED_UP", "DELIVERY_FAILED")).toBe(true);
+    expect(canMoveFulfilment("DELIVERY_FAILED", "PICKED_UP")).toBe(true);
+  });
+
+  it("can't skip pickup or undo a delivery", () => {
+    expect(canMoveFulfilment("CONFIRMED", "DELIVERED")).toBe(false);
+    expect(canMoveFulfilment("DELIVERY_FAILED", "DELIVERED")).toBe(false);
+    expect(canMoveFulfilment("DELIVERED", "PICKED_UP")).toBe(false);
+    expect(canMoveFulfilment("CANCELLED", "PICKED_UP")).toBe(false);
+  });
+
+  it("works out the order's status from its farms, ignoring cancelled ones", () => {
+    expect(orderStatusFromDeliveries([{ status: "PICKED_UP" }])).toBe(
+      "IN_FULFILMENT",
+    );
+    expect(
+      orderStatusFromDeliveries([
+        { status: "DELIVERED" },
+        { status: "DELIVERY_FAILED" },
+      ]),
+    ).toBe("PARTIALLY_DELIVERED");
+    expect(
+      orderStatusFromDeliveries([
+        { status: "DELIVERED" },
+        { status: "CANCELLED" },
+      ]),
+    ).toBe("DELIVERED");
   });
 });

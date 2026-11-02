@@ -11,6 +11,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/lib/errors";
+import { privateStorage } from "@/lib/storage";
 import { createBuyerOrganization, deleteAccount } from "@/modules/buyers";
 import { createListing } from "@/modules/catalog";
 import {
@@ -29,6 +30,13 @@ import { hasTestDatabase } from "@/test/setup";
 
 import { getCart, setCartItem } from "./cart";
 import { checkout } from "./checkout";
+import {
+  assignCarrier,
+  markDelivered,
+  markDeliveryFailed,
+  markPickedUp,
+  readDeliveryProof,
+} from "./delivery";
 import { expireUnpaidOrders } from "./expiry";
 import { cancelOrder, getOrderForBuyer, reorder } from "./orders";
 import {
@@ -662,5 +670,168 @@ describe.runIf(hasTestDatabase)("deleting an account (integration)", () => {
     );
     expect(everything).not.toMatch(/Ama|Adum Kitchen|0241234567|Main kitchen/);
     expect(kept.deliveryAddressSnapshot).toMatchObject({ town: "Adum" });
+  });
+});
+
+describe.runIf(hasTestDatabase)("delivery (integration)", () => {
+  const carrier = { carrierName: "Kofi Rider", carrierPhone: "0241112222" };
+  // A tiny real PNG: the type is checked from the bytes.
+  const png = Uint8Array.from(
+    Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+      "base64",
+    ),
+  );
+
+  async function paidOrder(farms = ["Farm A"]) {
+    const b = await buyer();
+    for (const supplier of farms) {
+      const l = await listing({ supplier });
+      await setCartItem(b.actor, { listingId: l.id, quantity: "2" });
+    }
+    const order = await checkout(b.actor, {
+      addressId: b.addressId,
+      idempotencyKey: randomUUID(),
+    });
+    await pay(b.actor, order.id);
+    const staff = await createUser({ platformRole: "OPS" });
+    const detail = await getOrderForBuyer(b.actor, order.id);
+    return { b, order, staff, fulfilments: detail.fulfilments };
+  }
+
+  it("follows an order from the farm to the customer", async () => {
+    const { b, order, staff, fulfilments } = await paidOrder();
+    const id = fulfilments[0].id;
+
+    // Needs someone carrying it before it can leave the farm.
+    await expect(markPickedUp(staff, id)).rejects.toThrow(/who is carrying/);
+    await expect(
+      assignCarrier(staff, id, { ...carrier, carrierPhone: "123" }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    await assignCarrier(staff, id, carrier);
+
+    // Can't be delivered before it's picked up.
+    await expect(
+      markDelivered(staff, id, { receiverName: "Ama" }),
+    ).rejects.toBeInstanceOf(ConflictError);
+
+    await markPickedUp(staff, id);
+    let detail = await getOrderForBuyer(b.actor, order.id);
+    expect(detail.status).toBe("IN_FULFILMENT");
+    expect(detail.fulfilments[0].carrier?.name).toBe("Kofi Rider");
+    // Once it has left the farm the buyer can't cancel for free.
+    expect(detail.canCancel).toBe(false);
+
+    await markDelivered(
+      staff,
+      id,
+      { receiverName: "Ama Mensah" },
+      { bytes: png, size: png.length },
+    );
+    detail = await getOrderForBuyer(b.actor, order.id);
+    expect(detail.status).toBe("DELIVERED");
+    expect(detail.fulfilments[0]).toMatchObject({
+      status: "DELIVERED",
+      receiverName: "Ama Mensah",
+      hasProofPhoto: true,
+    });
+    expect((await readDeliveryProof(b.actor, id)).mimeType).toBe("image/png");
+    expect((await readDeliveryProof(staff, id)).mimeType).toBe("image/png");
+
+    // Nobody else's business.
+    const stranger = await buyer();
+    await expect(readDeliveryProof(stranger.actor, id)).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
+
+    // Finished means finished.
+    await expect(markPickedUp(staff, id)).rejects.toBeInstanceOf(ConflictError);
+    await expect(assignCarrier(staff, id, carrier)).rejects.toBeInstanceOf(
+      ConflictError,
+    );
+  });
+
+  it("can send a failed delivery out again", async () => {
+    const { b, order, staff, fulfilments } = await paidOrder();
+    const id = fulfilments[0].id;
+    await assignCarrier(staff, id, carrier);
+    await markPickedUp(staff, id);
+
+    await markDeliveryFailed(staff, id, { reason: "Gate locked, no answer" });
+    let detail = await getOrderForBuyer(b.actor, order.id);
+    expect(detail.status).toBe("IN_FULFILMENT");
+    expect(detail.fulfilments[0].status).toBe("DELIVERY_FAILED");
+
+    await markPickedUp(staff, id);
+    await markDelivered(staff, id, { receiverName: "Ama" });
+    detail = await getOrderForBuyer(b.actor, order.id);
+    expect(detail.status).toBe("DELIVERED");
+  });
+
+  it("shows an order as partly delivered until every farm has arrived", async () => {
+    const { b, order, staff, fulfilments } = await paidOrder([
+      "Farm A",
+      "Farm B",
+    ]);
+    for (const f of fulfilments) {
+      await assignCarrier(staff, f.id, carrier);
+      await markPickedUp(staff, f.id);
+    }
+    await markDelivered(staff, fulfilments[0].id, { receiverName: "Ama" });
+    expect((await getOrderForBuyer(b.actor, order.id)).status).toBe(
+      "PARTIALLY_DELIVERED",
+    );
+    await markDelivered(staff, fulfilments[1].id, { receiverName: "Ama" });
+    expect((await getOrderForBuyer(b.actor, order.id)).status).toBe(
+      "DELIVERED",
+    );
+  });
+
+  it("is staff only, and refuses a file that isn't an image", async () => {
+    const { b, staff, fulfilments } = await paidOrder();
+    const id = fulfilments[0].id;
+    await expect(assignCarrier(b.actor, id, carrier)).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+    await assignCarrier(staff, id, carrier);
+    await markPickedUp(staff, id);
+    const notAnImage = new TextEncoder().encode("<script>alert(1)</script>");
+    await expect(
+      markDelivered(
+        staff,
+        id,
+        { receiverName: "Ama" },
+        { bytes: notAnImage, size: notAnImage.length },
+      ),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("erases who received it and the photo if the customer deletes their account", async () => {
+    const { b, order, staff, fulfilments } = await paidOrder();
+    const id = fulfilments[0].id;
+    await assignCarrier(staff, id, carrier);
+    await markPickedUp(staff, id);
+    await markDelivered(
+      staff,
+      id,
+      { receiverName: "Ama Mensah" },
+      { bytes: png, size: png.length },
+    );
+    const { proofStorageKey } = await db.fulfilment.findUniqueOrThrow({
+      where: { id },
+    });
+
+    await deleteAccount(b.actor, { confirmation: "DELETE" });
+
+    const row = await db.fulfilment.findUniqueOrThrow({ where: { id } });
+    expect(row.receiverName).toBeNull();
+    expect(row.proofStorageKey).toBeNull();
+    await expect(privateStorage().get(proofStorageKey!)).rejects.toThrow();
+    expect(
+      await db.order.findUniqueOrThrow({
+        where: { id: order.id },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "DELIVERED" });
   });
 });

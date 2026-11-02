@@ -22,7 +22,12 @@ import { buyerOrgOf, setCartItem } from "./cart";
 import { lockOrder, releaseHolds, transitionOrder } from "./internal";
 import { fulfilmentShares, processRefund } from "./payment-flow";
 import { type CancelOrderInput, cancelOrderSchema } from "./schemas";
-import { buyerCanCancel, canPay, ORDER_STATUS_LABELS } from "./state-machine";
+import {
+  buyerCanCancel,
+  canPay,
+  FULFILMENT_STATUS_LABELS,
+  ORDER_STATUS_LABELS,
+} from "./state-machine";
 
 const PAGE_SIZE = 20;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -358,6 +363,9 @@ export async function countOrdersForBuyer(actor: Actor) {
 export const STAFF_ORDER_VIEWS = [
   "PENDING_PAYMENT",
   "PAID",
+  "IN_FULFILMENT",
+  "PARTIALLY_DELIVERED",
+  "DELIVERED",
   "CANCELLED",
   "EXPIRED",
 ] as const satisfies OrderStatus[];
@@ -425,7 +433,17 @@ const orderDetailSelect = {
       supplierName: true,
       status: true,
       subtotalMinor: true,
+      deliveryFeeMinor: true,
       commissionBps: true,
+      carrierName: true,
+      carrierPhone: true,
+      carrierDetails: true,
+      pickedUpAt: true,
+      deliveredAt: true,
+      receiverName: true,
+      proofStorageKey: true,
+      deliveryFailedAt: true,
+      deliveryFailReason: true,
       items: {
         orderBy: { productName: "asc" },
         select: {
@@ -530,8 +548,23 @@ function toDetail(o: OrderRow, now: Date) {
       supplierId: f.supplierOrgId,
       supplierName: f.supplierName,
       status: f.status,
+      statusLabel: FULFILMENT_STATUS_LABELS[f.status],
       subtotal: fmt(f.subtotalMinor),
+      deliveryFee: fmt(f.deliveryFeeMinor),
       commissionBps: f.commissionBps,
+      carrier: f.carrierName
+        ? {
+            name: f.carrierName,
+            phone: f.carrierPhone,
+            details: f.carrierDetails,
+          }
+        : null,
+      pickedUpAt: f.pickedUpAt,
+      deliveredAt: f.deliveredAt,
+      receiverName: f.receiverName,
+      hasProofPhoto: Boolean(f.proofStorageKey),
+      deliveryFailedAt: f.deliveryFailedAt,
+      deliveryFailReason: f.deliveryFailReason,
       items: f.items.map((i) => {
         const qty = i.quantity.toFixed();
         return {

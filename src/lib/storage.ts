@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
 import path from "node:path";
 
 import { env } from "./env";
@@ -14,6 +14,8 @@ import { env } from "./env";
 export interface PrivateStorage {
   put(prefix: string, bytes: Uint8Array, extension: string): Promise<string>;
   get(key: string): Promise<Uint8Array>;
+  /** Permanently removes a file. Removing one that's already gone is fine. */
+  remove(key: string): Promise<void>;
 }
 
 const KEY_PATTERN = /^[a-z0-9-]+\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
@@ -36,6 +38,10 @@ function localStorage(root: string): PrivateStorage {
     async get(key) {
       assertSafeKey(key);
       return readFile(path.join(base, key));
+    },
+    async remove(key) {
+      assertSafeKey(key);
+      await rm(path.join(base, key), { force: true });
     },
   };
 }

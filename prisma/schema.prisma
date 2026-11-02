@@ -647,6 +647,7 @@ enum FulfilmentStatus {
   CONFIRMED // paid; DigiFarm's stock is the truth, so no farm confirmation step
   PICKED_UP
   DELIVERED
+  DELIVERY_FAILED // couldn't be delivered this time; can be sent out again
   CANCELLED
 }
 
@@ -662,8 +663,21 @@ model Fulfilment {
   subtotalMinor    BigInt
   commissionBps    Int // snapshot of DigiFarm's commission (D2)
   deliveryFeeMinor BigInt           @default(0) // this farm's share of Order.deliveryFeeMinor (D5)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+
+  // Delivery (D5): DigiFarm books a rider, driver or bus parcel and records it here.
+  carrierName        String?
+  carrierPhone       String?
+  carrierDetails     String? // e.g. "VIP bus, waybill 1234"
+  pickedUpAt         DateTime?
+  deliveredAt        DateTime?
+  receiverName       String?
+  proofStorageKey    String? // private photo
+  proofMimeType      String?
+  deliveryFailedAt   DateTime?
+  deliveryFailReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   items  OrderItem[]
   ledger LedgerEntry[]

@@ -7,6 +7,7 @@ import { db, type Tx } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { ConflictError, ValidationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { privateStorage } from "@/lib/storage";
 import { parseInput } from "@/lib/validation";
 
 import { type DeleteAccountInput, deleteAccountSchema } from "./schemas";
@@ -93,7 +94,16 @@ export async function deleteAccount(actor: Actor, input: DeleteAccountInput) {
     select: { email: true, name: true },
   });
 
-  await db.$transaction(async (tx) => {
+  const proofKeys = await db.$transaction(async (tx) => {
+    const proofs = organizationId
+      ? await tx.fulfilment.findMany({
+          where: {
+            order: { buyerOrgId: organizationId },
+            proofStorageKey: { not: null },
+          },
+          select: { proofStorageKey: true },
+        })
+      : [];
     if (organizationId) {
       const work = await openWork(tx, organizationId);
       if (work.activeOrders || work.openRefunds) {
@@ -137,6 +147,14 @@ export async function deleteAccount(actor: Actor, input: DeleteAccountInput) {
         where: { actorUserId: actor.userId, reason: { not: null } },
         data: { reason: CANCELLED_REASON },
       });
+      await tx.fulfilment.updateMany({
+        where: { order: { buyerOrgId: organizationId } },
+        data: {
+          receiverName: null,
+          proofStorageKey: null,
+          proofMimeType: null,
+        },
+      });
       await tx.membership.deleteMany({ where: { userId: actor.userId } });
       await tx.organization.update({
         where: { id: organizationId },
@@ -173,7 +191,19 @@ export async function deleteAccount(actor: Actor, input: DeleteAccountInput) {
       entityId: actor.userId,
       after: { organizationId: organizationId ?? null },
     });
+    return proofs.flatMap((p) => p.proofStorageKey ?? []);
   });
+
+  // Files can't roll back with the database, so they go once it has committed.
+  await Promise.all(
+    proofKeys.map((key) =>
+      privateStorage()
+        .remove(key)
+        .catch((err: unknown) => {
+          logger.error({ err, key }, "Couldn't remove a delivery photo");
+        }),
+    ),
+  );
 
   // The account is gone either way, so a failed email must not look like a failed delete.
   await sendEmail({

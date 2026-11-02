@@ -1,6 +1,7 @@
 import { Clock, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { formatGhanaPhone } from "@/lib/ghana";
 import { connection } from "next/server";
 
 import { VerifiedFarm } from "@/components/market/listing-bits";
@@ -140,6 +141,47 @@ export default async function OrderPage({
       {order.fulfilments.map((f) => (
         <section key={f.id} className="grid gap-3 rounded-3xl bg-card p-4">
           <VerifiedFarm name={f.supplierName} className="font-semibold" />
+          {f.carrier && f.status === "PICKED_UP" ? (
+            <p className="rounded-xl bg-sprout-soft px-3 py-2 text-sm">
+              On its way with{" "}
+              <span className="font-medium">{f.carrier.name}</span>
+              {f.carrier.phone ? (
+                <>
+                  {" · "}
+                  <a
+                    href={`tel:${f.carrier.phone}`}
+                    className="underline underline-offset-4"
+                  >
+                    {formatGhanaPhone(f.carrier.phone)}
+                  </a>
+                </>
+              ) : null}
+            </p>
+          ) : null}
+          {f.status === "DELIVERY_FAILED" ? (
+            <p className="rounded-xl bg-harvest-gold-soft px-3 py-2 text-sm">
+              We couldn’t deliver this one. We’ll be in touch to arrange another
+              try.
+            </p>
+          ) : null}
+          {f.status === "DELIVERED" ? (
+            <p className="rounded-xl bg-sprout-soft px-3 py-2 text-sm">
+              Delivered{f.receiverName ? `, received by ${f.receiverName}` : ""}
+              {f.hasProofPhoto ? (
+                <>
+                  {" · "}
+                  <a
+                    href={`/api/files/delivery-proofs/${f.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-4"
+                  >
+                    See photo
+                  </a>
+                </>
+              ) : null}
+            </p>
+          ) : null}
           <ul className="grid gap-2 text-sm">
             {f.items.map((item) => (
               <li key={item.id} className="flex justify-between gap-3">

@@ -1,5 +1,32 @@
 import type { FulfilmentStatus, OrderStatus } from "@/generated/prisma/enums";
 
+/** One farm's delivery: picked up, then delivered or sent out again. */
+const FULFILMENT_TRANSITIONS: Record<FulfilmentStatus, FulfilmentStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PICKED_UP", "CANCELLED"],
+  PICKED_UP: ["DELIVERED", "DELIVERY_FAILED"],
+  DELIVERY_FAILED: ["PICKED_UP"],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
+export function canMoveFulfilment(
+  from: FulfilmentStatus,
+  to: FulfilmentStatus,
+): boolean {
+  return FULFILMENT_TRANSITIONS[from].includes(to);
+}
+
+/** The order's status once its farms' deliveries have moved on. */
+export function orderStatusFromDeliveries(
+  fulfilments: { status: FulfilmentStatus }[],
+): "IN_FULFILMENT" | "PARTIALLY_DELIVERED" | "DELIVERED" {
+  const live = fulfilments.filter((f) => f.status !== "CANCELLED");
+  const delivered = live.filter((f) => f.status === "DELIVERED").length;
+  if (live.length > 0 && delivered === live.length) return "DELIVERED";
+  return delivered > 0 ? "PARTIALLY_DELIVERED" : "IN_FULFILMENT";
+}
+
 /**
  * Order lifecycle (ROADMAP §3.4, D1 revised). Payment confirms the order, so
  * there is no "waiting for the farm" state. Delivery states are used from
@@ -45,10 +72,19 @@ export function canPay(
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING_PAYMENT: "Waiting for payment",
   PAID: "Paid",
-  IN_FULFILMENT: "Being prepared",
+  IN_FULFILMENT: "On its way",
   PARTIALLY_DELIVERED: "Partly delivered",
   DELIVERED: "Delivered",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
   EXPIRED: "Payment time ran out",
+};
+
+export const FULFILMENT_STATUS_LABELS: Record<FulfilmentStatus, string> = {
+  PENDING: "Waiting for payment",
+  CONFIRMED: "Getting ready",
+  PICKED_UP: "On its way",
+  DELIVERED: "Delivered",
+  DELIVERY_FAILED: "Couldn’t be delivered",
+  CANCELLED: "Cancelled",
 };

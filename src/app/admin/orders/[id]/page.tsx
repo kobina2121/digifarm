@@ -13,6 +13,7 @@ import { orNotFound } from "@/lib/not-found";
 import { getOrderForStaff } from "@/modules/ordering";
 
 import { requireStaff } from "../../guard";
+import { DeliveryPanel } from "./delivery-panel";
 import { RetryRefundButton } from "./retry-refund-button";
 
 export const metadata: Metadata = { title: "Order" };
@@ -104,8 +105,7 @@ export default async function StaffOrderPage({
               {f.supplierName}
             </Link>
             <span className="text-sm text-muted-foreground">
-              {f.status.toLowerCase().replace("_", " ")} · {f.subtotal} ·
-              commission {f.commissionBps / 100}%
+              {f.subtotal} · commission {f.commissionBps / 100}%
             </span>
           </div>
           <ul className="grid gap-2 text-sm">
@@ -122,6 +122,7 @@ export default async function StaffOrderPage({
               </li>
             ))}
           </ul>
+          <DeliveryPanel fulfilment={f} />
         </section>
       ))}
 

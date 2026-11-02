@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { ghanaPhoneSchema } from "@/lib/ghana";
+
 const id = z.uuid("Something went wrong. Please reload and try again.");
 
 /** Up to three decimals, e.g. "2.5" tonnes. */
@@ -39,3 +41,40 @@ export const cancelOrderSchema = z.object({
     .optional(),
 });
 export type CancelOrderInput = z.input<typeof cancelOrderSchema>;
+
+const shortText = (max: number, tooLong: string) =>
+  z
+    .string()
+    .trim()
+    .max(max, tooLong)
+    .transform((v) => (v === "" ? undefined : v))
+    .optional();
+
+export const assignCarrierSchema = z.object({
+  carrierName: z
+    .string()
+    .trim()
+    .min(2, "Enter who is carrying it")
+    .max(100, "Keep the name under 100 characters"),
+  carrierPhone: ghanaPhoneSchema,
+  carrierDetails: shortText(200, "Keep this under 200 characters"),
+});
+export type AssignCarrierInput = z.input<typeof assignCarrierSchema>;
+
+export const confirmDeliverySchema = z.object({
+  receiverName: z
+    .string()
+    .trim()
+    .min(2, "Enter who received it")
+    .max(100, "Keep the name under 100 characters"),
+});
+export type ConfirmDeliveryInput = z.input<typeof confirmDeliverySchema>;
+
+export const deliveryFailedSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Say what went wrong")
+    .max(300, "Keep it under 300 characters"),
+});
+export type DeliveryFailedInput = z.input<typeof deliveryFailedSchema>;
