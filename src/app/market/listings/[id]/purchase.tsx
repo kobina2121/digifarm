@@ -131,7 +131,10 @@ export function BuyBar() {
   const qty = Number(p.quantity);
   const total =
     Number.isFinite(qty) && qty > 0
-      ? `GH₵ ${cedis.format(Math.round(Number(p.priceMinor) * qty) / 100)}`
+      ? `GH₵ ${cedis.format(Math.round(Number(p.priceMinor) * qty) / 100)}`.replace(
+          /\.00$/,
+          "",
+        )
       : null;
   const inCart =
     p.mode.kind === "buyer" && p.mode.inCart
@@ -219,19 +222,25 @@ export function BuyBar() {
           </p>
         ) : null}
         <div className="flex items-center justify-between gap-3 rounded-[1.75rem] bg-field-green py-3 pr-3 pl-5 text-white shadow-[0_12px_32px_rgb(31_42_31/0.28)] md:shadow-none">
+          {/* The unit price is already on the page, so buyers see just their total. */}
           <div className="min-w-0">
-            <p className="text-xs text-white/70">Price</p>
-            <p className="truncate text-xl leading-tight font-bold">
-              {p.priceLabel}
-              <span className="text-sm font-medium text-white/80">
-                /{p.unitName}
-              </span>
-            </p>
             {p.mode.kind === "buyer" && total ? (
-              <p className="truncate text-xs text-white/70">
-                {unitLabel(p, p.quantity)} · {total}
+              <>
+                <p className="text-xs text-white/70">
+                  Total for {unitLabel(p, p.quantity)}
+                </p>
+                <p className="truncate text-xl leading-tight font-bold">
+                  {total}
+                </p>
+              </>
+            ) : (
+              <p className="truncate text-xl leading-tight font-bold">
+                {p.priceLabel}
+                <span className="text-sm font-medium text-white/80">
+                  /{p.unitName}
+                </span>
               </p>
-            ) : null}
+            )}
           </div>
           {action}
         </div>
