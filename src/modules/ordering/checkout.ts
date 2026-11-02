@@ -2,7 +2,6 @@ import "server-only";
 
 import Decimal from "decimal.js";
 
-import { Prisma } from "@/generated/prisma/client";
 import { audit } from "@/lib/audit";
 import { type Actor, assertCan } from "@/lib/authz";
 import { db, type Tx } from "@/lib/db";
@@ -29,11 +28,15 @@ async function nextOrderNumber(tx: Tx, now: Date): Promise<string> {
   return `DF-${now.getUTCFullYear()}-${row.n.padStart(6, "0")}`;
 }
 
-function isUniqueViolation(error: unknown) {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2002"
-  );
+/** The order this idempotency key already placed for this buyer, if any. */
+async function orderForKey(idempotencyKey: string, orgId: string) {
+  const order = await db.order.findUnique({
+    where: { idempotencyKey },
+    select: { id: true, number: true, buyerOrgId: true },
+  });
+  if (!order) return null;
+  if (order.buyerOrgId !== orgId) throw new ConflictError("Please try again.");
+  return { id: order.id, number: order.number };
 }
 
 /**
@@ -51,15 +54,8 @@ export async function checkout(
   const orgId = buyerOrgOf(actor);
   const data = parseInput(checkoutSchema, input);
 
-  const existing = await db.order.findUnique({
-    where: { idempotencyKey: data.idempotencyKey },
-    select: { id: true, number: true, buyerOrgId: true },
-  });
-  if (existing) {
-    if (existing.buyerOrgId !== orgId)
-      throw new ConflictError("Please try again.");
-    return { id: existing.id, number: existing.number };
-  }
+  const existing = await orderForKey(data.idempotencyKey, orgId);
+  if (existing) return existing;
 
   // Holds that ran out on these listings go back on sale before we try.
   const cartListingIds = (
@@ -76,13 +72,11 @@ export async function checkout(
       { maxWait: 15_000, timeout: 30_000 },
     );
   } catch (error) {
-    if (isUniqueViolation(error)) {
-      const order = await db.order.findUnique({
-        where: { idempotencyKey: data.idempotencyKey },
-        select: { id: true, number: true },
-      });
-      if (order) return order;
-    }
+    // A repeat that lost the race fails in several ways: the same key is taken,
+    // the cart has just been emptied, or the first order took the last stock.
+    // If the first one got through, this one succeeded too.
+    const order = await orderForKey(data.idempotencyKey, orgId);
+    if (order) return order;
     throw error;
   }
 }

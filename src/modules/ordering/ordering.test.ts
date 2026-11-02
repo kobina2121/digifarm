@@ -216,11 +216,18 @@ describe.runIf(hasTestDatabase)("checkout (integration)", () => {
     const b = await buyer();
     await setCartItem(b.actor, { listingId: l.id, quantity: "10" });
     const key = randomUUID();
-    const [first, second] = await Promise.all([
-      checkout(b.actor, { addressId: b.addressId, idempotencyKey: key }),
-      checkout(b.actor, { addressId: b.addressId, idempotencyKey: key }),
-    ]);
-    expect(second.id).toBe(first.id);
+    // Double taps land at any moment, including just after the first order has
+    // emptied the cart, so spread the repeats out from a few ms to a few seconds.
+    const orders = await Promise.all(
+      [0, 0, 5, 10, 20, 40, 80, 160, 320, 640, 1280, 2560].map(async (wait) => {
+        await new Promise((resolve) => setTimeout(resolve, wait));
+        return checkout(b.actor, {
+          addressId: b.addressId,
+          idempotencyKey: key,
+        });
+      }),
+    );
+    expect(new Set(orders.map((o) => o.id)).size).toBe(1);
     expect(await stockOf(l.id)).toEqual({ onHand: "40", reserved: "10" });
   });
 
@@ -269,8 +276,12 @@ describe.runIf(hasTestDatabase)("checkout (integration)", () => {
     const placed = results.filter((r) => r.status === "fulfilled");
     const refused = results.filter((r) => r.status === "rejected");
     expect(placed).toHaveLength(5);
+    // Late buyers are told plainly: either the stock went while they were
+    // checking out, or it had already gone. Anything else (a crash) fails here.
     for (const r of refused) {
-      expect((r as PromiseRejectedResult).reason).toBeInstanceOf(ConflictError);
+      expect(String((r as PromiseRejectedResult).reason)).toMatch(
+        /someone else just ordered|Out of stock/,
+      );
     }
     expect(await stockOf(l.id)).toEqual({ onHand: "25", reserved: "25" });
     const holds = await db.stockReservation.aggregate({
