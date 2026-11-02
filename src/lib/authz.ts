@@ -27,6 +27,7 @@ export type Permission =
   | "buyer.profile.update"
   | "buyer.address.manage"
   | "supplier.create"
+  | "account.delete"
   | "supplier.read"
   | "supplier.update"
   | "farmVisit.record"
@@ -65,6 +66,12 @@ export function can(actor: Actor, permission: Permission): boolean {
   switch (permission) {
     case "buyer.onboard":
       return actor.platformRole === "USER" && actor.membership === null;
+    case "account.delete":
+      // Customers only. Staff accounts are closed by an administrator.
+      return (
+        actor.platformRole === "USER" &&
+        (actor.membership === null || isBuyerMember(actor))
+      );
     case "buyer.profile.read":
     case "cart.manage":
     case "order.place":

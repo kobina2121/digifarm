@@ -102,3 +102,9 @@ export const buyerOnboardingSchema = z
 export type BusinessDetailsInput = z.input<typeof businessDetailsSchema>;
 export type BuyerOnboardingInput = z.input<typeof buyerOnboardingSchema>;
 export type DeliveryAddressInput = z.input<typeof deliveryAddressSchema>;
+
+export const deleteAccountSchema = z.object({
+  confirmation: z.literal("DELETE", { error: "Type DELETE to confirm" }),
+  password: z.string().optional(),
+});
+export type DeleteAccountInput = z.input<typeof deleteAccountSchema>;

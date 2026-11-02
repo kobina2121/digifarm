@@ -489,11 +489,12 @@ const orderDetailSelect = {
 type OrderRow = Prisma.OrderGetPayload<{ select: typeof orderDetailSelect }>;
 
 export type DeliveryAddressSnapshot = {
-  label: string;
+  /** Street-level details are removed if the customer deletes their account. */
+  label?: string;
   town: string;
-  street: string | null;
-  landmark: string | null;
-  digitalAddress: string | null;
+  street?: string | null;
+  landmark?: string | null;
+  digitalAddress?: string | null;
   /** Orders placed since D4 was revised. */
   regionName?: string;
   /** Older orders were delivered to an Accra or Kumasi area. */

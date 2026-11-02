@@ -29,6 +29,7 @@ type Who = keyof typeof ACTORS;
 
 // The full permission matrix: who may do what. Anything not listed is denied.
 const ALLOWED: Record<Permission, Who[]> = {
+  "account.delete": ["newUser", "buyerOwner", "buyerManager", "buyerMember"],
   "buyer.onboard": ["newUser"],
   "buyer.profile.read": ["buyerOwner", "buyerManager", "buyerMember"],
   "buyer.profile.update": ["buyerOwner", "buyerManager"],

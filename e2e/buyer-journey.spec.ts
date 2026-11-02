@@ -105,3 +105,59 @@ test("an individual signs up without any business details", async ({
   await expect(page.getByText("Personal", { exact: true })).toBeVisible();
   await expect(page.getByText("Add your business details")).toBeVisible();
 });
+
+test("a customer deletes their account and can't sign in with it again", async ({
+  page,
+}) => {
+  const email = uniqueEmail("leaving");
+  const password = `e2e-${Date.now()}-pass`;
+
+  await page.goto("/sign-up");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("Your full name").fill("Yaw Mensah");
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Password").fill(password);
+  await submitSignUp(page);
+  await page.goto(await linkFromLatestEmail(email));
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("Phone number").fill("024 555 0303");
+  await page.getByLabel("Region").selectOption("NORTHERN");
+  await page.getByLabel("Town or area").fill("Tamale");
+  await page.getByRole("button", { name: "Finish setup" }).click();
+  await expect(page).toHaveURL(/\/buyer$/);
+
+  await page.goto("/buyer/profile");
+  await page.getByRole("link", { name: "Delete my account" }).click();
+  await expect(page).toHaveURL(/\/account\/delete$/);
+  await page.waitForLoadState("networkidle");
+
+  // The button stays off until the word is typed.
+  const remove = page.getByRole("button", { name: "Delete my account" });
+  await expect(remove).toBeDisabled();
+  await page.getByLabel("Type DELETE to confirm").fill("DELETE");
+
+  // A wrong password changes nothing.
+  await page.getByLabel("Your password").fill("not-my-password");
+  await remove.click();
+  await expect(
+    page.getByText("That password isn’t right.").first(),
+  ).toBeVisible();
+
+  await page.getByLabel("Your password").fill(password);
+  await remove.click();
+  await expect(page).toHaveURL(/\/account\/deleted$/, { timeout: 30_000 });
+  await expect(
+    page.getByRole("heading", { name: "Your account has been deleted" }),
+  ).toBeVisible();
+
+  // Signed out, and the old details no longer work.
+  await page.goto("/buyer");
+  await expect(page).toHaveURL(/\/sign-in/);
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("alert").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/sign-in/);
+});

@@ -67,8 +67,9 @@ export default async function StaffOrderPage({
         <div>
           <p className="font-semibold">{order.buyer.name}</p>
           <p className="text-sm text-muted-foreground">
-            Placed by {order.placedBy} · deliver to {order.address.label},{" "}
+            Placed by {order.placedBy} · deliver to{" "}
             {[
+              order.address.label,
               order.address.street,
               order.address.town,
               order.address.regionName ?? order.address.zone?.name,

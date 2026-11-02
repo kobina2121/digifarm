@@ -11,7 +11,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/lib/errors";
-import { createBuyerOrganization } from "@/modules/buyers";
+import { createBuyerOrganization, deleteAccount } from "@/modules/buyers";
 import { createListing } from "@/modules/catalog";
 import {
   completeFakeTransaction,
@@ -604,3 +604,57 @@ function scripted(
     },
   };
 }
+
+describe.runIf(hasTestDatabase)("deleting an account (integration)", () => {
+  const confirm = { confirmation: "DELETE" as const };
+
+  it("waits for orders in progress, then keeps past orders without personal details", async () => {
+    const l = await listing();
+    const b = await buyer();
+    await setCartItem(b.actor, { listingId: l.id, quantity: "5" });
+    const order = await checkout(b.actor, {
+      addressId: b.addressId,
+      idempotencyKey: randomUUID(),
+      notes: "Call Ama on 0241234567",
+    });
+
+    await expect(deleteAccount(b.actor, confirm)).rejects.toThrow(
+      /order or refund in progress/,
+    );
+    expect(
+      await db.user.findUniqueOrThrow({
+        where: { id: b.actor.userId },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "ACTIVE" });
+
+    await cancelOrder(b.actor, order.id, {
+      reason: "Ama found a cheaper farm",
+    });
+    await deleteAccount(b.actor, confirm);
+
+    const kept = await db.order.findUniqueOrThrow({
+      where: { id: order.id },
+      select: {
+        number: true,
+        totalMinor: true,
+        buyerNotes: true,
+        cancelReason: true,
+        history: { select: { reason: true } },
+        deliveryAddressSnapshot: true,
+        placedBy: { select: { name: true, email: true } },
+        buyer: { select: { legalName: true, phone: true } },
+      },
+    });
+    expect(kept.number).toBe(order.number);
+    expect(Number(kept.totalMinor)).toBeGreaterThan(0);
+    expect(kept.buyerNotes).toBeNull();
+    expect(kept.placedBy.name).toBe("Deleted user");
+    expect(kept.buyer).toEqual({ legalName: "Deleted account", phone: "" });
+    const everything = JSON.stringify(kept, (_, v: unknown) =>
+      typeof v === "bigint" ? String(v) : v,
+    );
+    expect(everything).not.toMatch(/Ama|Adum Kitchen|0241234567|Main kitchen/);
+    expect(kept.deliveryAddressSnapshot).toMatchObject({ town: "Adum" });
+  });
+});

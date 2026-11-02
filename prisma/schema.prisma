@@ -25,6 +25,7 @@ enum PlatformRole {
 enum UserStatus {
   ACTIVE
   SUSPENDED
+  DELETED // erased at their request; the row stays because orders point to it
 }
 
 model User {

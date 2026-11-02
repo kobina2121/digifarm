@@ -177,6 +177,13 @@ export default async function ProfilePage() {
 
       <SignOutButton className="h-12 justify-center rounded-full border border-border bg-card text-destructive hover:bg-destructive/5 hover:text-destructive" />
 
+      <Link
+        href="/account/delete"
+        className="justify-self-center py-2 text-sm text-muted-foreground underline-offset-4 hover:text-destructive hover:underline"
+      >
+        Delete my account
+      </Link>
+
       <footer className="grid justify-items-center gap-1 pb-2 text-center opacity-80">
         <Logo />
         <p className="text-xs text-muted-foreground">

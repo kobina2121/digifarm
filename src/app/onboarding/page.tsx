@@ -39,6 +39,15 @@ export default function OnboardingPage() {
             <OnboardingGate />
           </Suspense>
         </div>
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Changed your mind?{" "}
+          <Link
+            href="/account/delete"
+            className="underline underline-offset-4 hover:text-destructive"
+          >
+            Delete my account
+          </Link>
+        </p>
       </main>
     </div>
   );

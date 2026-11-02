@@ -1,3 +1,4 @@
+export { deleteAccount, getAccountDeletionInfo } from "./account";
 export {
   addDeliveryAddress,
   createBuyerOrganization,
