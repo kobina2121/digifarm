@@ -3,7 +3,7 @@ import { reconcilePayments } from "@/modules/ordering";
 
 import { cronAuthorized } from "../authorize";
 
-/** Daily: compares yesterday's payments at the provider with DigiFarm's records. */
+/** Daily: compares yesterday's payments at the provider with Akuafo's records. */
 export async function GET(request: Request) {
   if (!cronAuthorized(request)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

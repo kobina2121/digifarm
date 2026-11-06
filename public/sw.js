@@ -1,5 +1,5 @@
 /*
- * DigiFarm service worker (ROADMAP §2.2, step 1.10).
+ * Akuafo service worker (ROADMAP §2.2, step 1.10).
  *
  * Caches ONLY the app shell: hashed static assets, icons and the offline page.
  * Pages, prices, stock, orders and API responses always come from the network,

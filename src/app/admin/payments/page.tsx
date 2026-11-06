@@ -12,8 +12,8 @@ import { requireStaff } from "../guard";
 export const metadata: Metadata = { title: "Payment reconciliation" };
 
 const PROBLEMS = {
-  PAID_AT_PROVIDER_ONLY: "Paid at the provider, not recorded in DigiFarm",
-  PAID_IN_DIGIFARM_ONLY: "Recorded as paid in DigiFarm, not at the provider",
+  PAID_AT_PROVIDER_ONLY: "Paid at the provider, not recorded in Akuafo",
+  PAID_IN_DIGIFARM_ONLY: "Recorded as paid in Akuafo, not at the provider",
   AMOUNT_DIFFERS: "Amounts differ",
 } as const;
 
@@ -58,7 +58,7 @@ export default async function PaymentsPage({
         </Link>
         <h1 className="mt-2 text-3xl font-bold">Payment reconciliation</h1>
         <p className="mt-1 text-muted-foreground">
-          Successful payments at the provider compared with DigiFarm’s records,
+          Successful payments at the provider compared with Akuafo’s records,
           for one day (Accra time is UTC). Also runs daily as a scheduled job.
         </p>
       </div>
@@ -101,7 +101,7 @@ export default async function PaymentsPage({
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-5">
-              <p className="eyebrow text-muted-foreground">DigiFarm</p>
+              <p className="eyebrow text-muted-foreground">Akuafo</p>
               <p className="mt-1 text-2xl font-bold">{report.digifarmTotal}</p>
               <p className="text-sm text-muted-foreground">
                 {report.digifarmCount}{" "}
@@ -125,7 +125,7 @@ export default async function PaymentsPage({
                   </p>
                   <p className="font-mono text-xs">{i.reference}</p>
                   <p className="text-muted-foreground">
-                    Provider: {i.providerAmount ?? "–"} · DigiFarm:{" "}
+                    Provider: {i.providerAmount ?? "–"} · Akuafo:{" "}
                     {i.digifarmAmount ?? "–"}
                   </p>
                   {i.orderId ? (

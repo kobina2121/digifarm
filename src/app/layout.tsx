@@ -8,15 +8,15 @@ import { splashStartupImages } from "@/components/pwa/splash-screens";
 
 export const metadata: Metadata = {
   title: {
-    default: "DigiFarm — Farm to buyer, Ghana",
-    template: "%s · DigiFarm",
+    default: "Akuafo — Farm to buyer, Ghana",
+    template: "%s · Akuafo",
   },
   description:
     "Source fresh produce from verified Ghanaian farms for your restaurant, hotel, shop or business.",
-  applicationName: "DigiFarm",
+  applicationName: "Akuafo",
   appleWebApp: {
     capable: true,
-    title: "DigiFarm",
+    title: "Akuafo",
     statusBarStyle: "default",
     startupImage: splashStartupImages(),
   },

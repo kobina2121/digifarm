@@ -31,7 +31,7 @@ export const deliveryAddressSchema = z.object({
     .trim()
     .min(2, "Give this address a name, e.g. Main kitchen")
     .max(60),
-  // DigiFarm delivers anywhere in Ghana (D4 revised).
+  // Akuafo delivers anywhere in Ghana (D4 revised).
   region: z.enum(
     Object.keys(GHANA_REGIONS) as [GhanaRegion, ...GhanaRegion[]],
     { error: "Choose the region" },

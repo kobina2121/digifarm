@@ -60,7 +60,7 @@ export default async function CartPage() {
           </div>
           <p className="mt-2 text-xl font-bold">Your basket is empty</p>
           <p className="max-w-xs text-sm text-muted-foreground">
-            Fill it with fresh produce from farms DigiFarm has visited and
+            Fill it with fresh produce from farms Akuafo has visited and
             approved.
           </p>
           <Link

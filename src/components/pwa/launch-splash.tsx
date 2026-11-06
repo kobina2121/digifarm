@@ -24,25 +24,23 @@ export function LaunchSplash() {
         aria-hidden="true"
         className="launch-splash fixed inset-0 z-[100] flex-col items-center justify-center bg-field-green"
       >
-        <svg viewBox="0 0 124 122" className="h-auto w-[26vw]">
-          <rect x="104" y="0" width="18" height="18" rx="3" fill="#f2a900" />
-          <path d="M2 16 H60 A53 53 0 0 1 60 122 H2 Z" fill="#ffffff" />
+        <svg viewBox="13 4 54 70" className="h-auto w-[20vw]">
           <path
-            d="M22 104 C22 68 46 46 86 44 C84 82 60 104 22 104 Z"
-            fill="#17663a"
-          />
-          <line
-            x1="30"
-            y1="96"
-            x2="72"
-            y2="58"
+            d="M18 68 L40 22 L62 68"
+            fill="none"
             stroke="#ffffff"
-            strokeWidth="6"
+            strokeWidth="9"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
+          <path
+            d="M26 51 C32 42 46 41 54 47 C47 57 33 57 26 51 Z"
+            fill="#8fd16a"
+          />
+          <circle cx="40" cy="11" r="6" fill="#f2a900" />
         </svg>
         <p className="mt-[7vw] text-[13vw] leading-none font-bold tracking-[-0.45vw] text-white">
-          Digi<span className="text-sprout">Farm</span>
+          Akuafo
         </p>
         <p className="mt-[2.5vw] text-[3.4vw] font-medium tracking-[0.9vw] text-white/75">
           FARM TO BUYER · GHANA

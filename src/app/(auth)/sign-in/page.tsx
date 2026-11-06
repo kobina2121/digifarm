@@ -13,7 +13,7 @@ export default function SignInPage() {
   return (
     <>
       <h1 className="text-3xl font-bold">Sign in</h1>
-      <p className="mt-2 text-muted-foreground">Welcome back to DigiFarm.</p>
+      <p className="mt-2 text-muted-foreground">Welcome back to Akuafo.</p>
       <div className="mt-8 grid gap-6">
         <GoogleButton available={googleSignInEnabled()} />
         <OrDivider />
@@ -25,7 +25,7 @@ export default function SignInPage() {
         </Suspense>
       </div>
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        New to DigiFarm?{" "}
+        New to Akuafo?{" "}
         <Link
           href="/sign-up"
           className="font-medium text-field-green underline-offset-4 hover:underline"

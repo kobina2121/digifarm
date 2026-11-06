@@ -25,12 +25,12 @@ import { canPay } from "./state-machine";
 
 /**
  * Paying for an order (ROADMAP §2.4 "Idempotency", policy §1). An order is
- * only marked paid after DigiFarm asks the provider directly, never on the
+ * only marked paid after Akuafo asks the provider directly, never on the
  * strength of a redirect or webhook body alone. Every step can safely run
  * more than once.
  */
 
-/** A farm's share of a fulfilment and DigiFarm's commission on it (D2). */
+/** A farm's share of a fulfilment and Akuafo's commission on it (D2). */
 export function fulfilmentShares(f: {
   subtotalMinor: bigint;
   commissionBps: number;
@@ -409,7 +409,7 @@ async function notifyOrderPaid(orderId: string) {
         "",
         "You can cancel for a full refund until the produce is picked up from the farm.",
         "",
-        "DigiFarm",
+        "Akuafo",
       ].join("\n"),
     });
   } catch (error) {

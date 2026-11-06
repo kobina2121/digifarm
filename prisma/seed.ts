@@ -107,7 +107,7 @@ const CATEGORIES: {
   },
 ];
 
-// Starting wording for DigiFarm's A/B/C grades (ROADMAP D8). Admins refine it per category.
+// Starting wording for Akuafo's A/B/C grades (ROADMAP D8). Admins refine it per category.
 const GRADES = [
   {
     code: "A",

@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * DigiFarm brand tokens — source: docs/brand/primary-logo.pdf (ROADMAP §2.5).
+ * Akuafo brand tokens — source: docs/brand/primary-logo.pdf (ROADMAP §2.5).
  * Sprout and Harvest Gold are ~2:1 on white: use them as fills/accents only,
  * never as text on light backgrounds.
  */

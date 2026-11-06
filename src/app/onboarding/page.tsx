@@ -23,7 +23,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-dvh pt-safe pb-safe">
       <header className="mx-auto flex h-16 max-w-xl items-center px-4">
-        <Link href="/home" aria-label="DigiFarm home">
+        <Link href="/home" aria-label="Akuafo home">
           <Logo />
         </Link>
       </header>

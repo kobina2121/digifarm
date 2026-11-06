@@ -38,7 +38,7 @@ async function MarketFrame({ children }: { children: ReactNode }) {
   const actor = await getActor();
   if (actor?.emailVerified && isStaff(actor)) {
     return (
-      <AppShell nav={STAFF_NAV} areaLabel="DigiFarm staff" tone="dark">
+      <AppShell nav={STAFF_NAV} areaLabel="Akuafo staff" tone="dark">
         {children}
       </AppShell>
     );
@@ -59,7 +59,7 @@ async function MarketFrame({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col pb-safe">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-paper/95 pt-safe backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4">
-          <Link href="/market" aria-label="DigiFarm market">
+          <Link href="/market" aria-label="Akuafo market">
             <Logo />
           </Link>
           {actor ? (

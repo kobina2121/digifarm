@@ -4,11 +4,12 @@ import { appIconSvg } from "@/components/brand/app-icon-svg";
 
 // PNG icons for the web app manifest and iOS home screen, generated at build time.
 const VARIANTS = {
-  "192.png": { size: 192, inset: 0.16, rounded: true },
-  "512.png": { size: 512, inset: 0.16, rounded: true },
-  // Maskable: full-bleed background, mark kept inside Android's safe zone.
-  "maskable-512.png": { size: 512, inset: 0.26, rounded: false },
-  "apple-touch-180.png": { size: 180, inset: 0.16, rounded: false },
+  "192.png": { size: 192, inset: 0, rounded: true },
+  "512.png": { size: 512, inset: 0, rounded: true },
+  // Maskable: full-bleed background, glyph kept inside Android's safe zone.
+  "maskable-512.png": { size: 512, inset: 0.14, rounded: false },
+  // iOS rounds the corners itself.
+  "apple-touch-180.png": { size: 180, inset: 0, rounded: false },
 } as const;
 
 type Variant = keyof typeof VARIANTS;

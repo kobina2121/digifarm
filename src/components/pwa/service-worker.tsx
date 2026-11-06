@@ -67,7 +67,7 @@ export function ServiceWorker() {
     >
       <div className="flex w-full max-w-md items-center gap-3 rounded-2xl bg-ink p-3 pl-4 text-white shadow-lg">
         <span className="flex-1 text-sm">
-          A new version of DigiFarm is ready.
+          A new version of Akuafo is ready.
         </span>
         <Button
           size="sm"

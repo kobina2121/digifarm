@@ -17,7 +17,7 @@ describe("Resend email transport", () => {
     const send = fakeFetch(Response.json({ id: "email_1" }));
     const transport = createResendTransport({
       apiKey: "re_test_key",
-      from: "DigiFarm <no-reply@digifarm.example>",
+      from: "Akuafo <no-reply@digifarm.example>",
       fetch: send,
     });
 
@@ -30,7 +30,7 @@ describe("Resend email transport", () => {
       "Bearer re_test_key",
     );
     expect(JSON.parse(String(init?.body))).toEqual({
-      from: "DigiFarm <no-reply@digifarm.example>",
+      from: "Akuafo <no-reply@digifarm.example>",
       to: ["ama@example.com"],
       subject: "Your order is on its way",
       text: "Hello Ama",
@@ -40,7 +40,7 @@ describe("Resend email transport", () => {
   it("fails with Resend's reason, without the key", async () => {
     const transport = createResendTransport({
       apiKey: "re_secret_key",
-      from: "DigiFarm <no-reply@digifarm.example>",
+      from: "Akuafo <no-reply@digifarm.example>",
       fetch: fakeFetch(
         Response.json(
           { message: "The digifarm.example domain is not verified." },

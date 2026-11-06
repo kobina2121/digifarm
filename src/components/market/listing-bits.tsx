@@ -14,7 +14,7 @@ const GRADE_STYLES: Record<string, string> = {
   C: "bg-muted text-soil",
 };
 
-/** DigiFarm grade as a labelled pill ("Grade A"), never colour alone. */
+/** Akuafo grade as a labelled pill ("Grade A"), never colour alone. */
 export function GradeBadge({
   grade,
   className,

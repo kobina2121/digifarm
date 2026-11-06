@@ -44,7 +44,7 @@ function Check({ x, y, r = 18 }: { x: number; y: number; r?: number }) {
   );
 }
 
-/** Step 1 — a farm DigiFarm has visited and approved. */
+/** Step 1 — a farm Akuafo has visited and approved. */
 export function VerifiedFarm() {
   return (
     <Frame>
@@ -238,7 +238,7 @@ export function PaySecurely() {
   );
 }
 
-/** Step 4 — DigiFarm phones the farmer to confirm the order. */
+/** Step 4 — Akuafo phones the farmer to confirm the order. */
 export function ConfirmWithFarm() {
   return (
     <Frame>

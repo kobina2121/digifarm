@@ -37,7 +37,7 @@ export default async function SuppliersPage({
         <div>
           <h1 className="text-3xl font-bold">Suppliers</h1>
           <p className="mt-1 text-muted-foreground">
-            Farms DigiFarm manages, from first contact to approval.
+            Farms Akuafo manages, from first contact to approval.
           </p>
         </div>
         <Link href="/admin/suppliers/new" className={buttonVariants()}>

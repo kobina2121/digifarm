@@ -21,7 +21,7 @@ import { WELCOME_SEEN_COOKIE } from "./constants";
 const STEPS: { title: string; body: string; Art: ComponentType }[] = [
   {
     title: "Produce from farms we’ve visited",
-    body: "Every farm on DigiFarm is visited by our team and approved before it can sell to you.",
+    body: "Every farm on Akuafo is visited by our team and approved before it can sell to you.",
     Art: VerifiedFarm,
   },
   {
@@ -36,7 +36,7 @@ const STEPS: { title: string; body: string; Art: ComponentType }[] = [
   },
   {
     title: "What you see is in stock",
-    body: "DigiFarm keeps every farm’s stock up to date. If you can order it, it’s available, and anything sold out says so.",
+    body: "Akuafo keeps every farm’s stock up to date. If you can order it, it’s available, and anything sold out says so.",
     Art: ConfirmWithFarm,
   },
   {
@@ -95,7 +95,7 @@ export function WelcomeSteps() {
         onScroll={onScroll}
         className="flex flex-1 snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:hidden"
         aria-roledescription="carousel"
-        aria-label="How DigiFarm works"
+        aria-label="How Akuafo works"
       >
         {STEPS.map(({ title, body, Art }, i) => (
           <section

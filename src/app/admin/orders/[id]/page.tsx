@@ -30,7 +30,7 @@ const LEDGER_LABELS: Record<string, string> = {
   PAYMENT_CAPTURED: "Payment received",
   PROVIDER_FEE: "Payment provider fee",
   SUPPLIER_PAYABLE: "Owed to farm",
-  COMMISSION: "DigiFarm commission",
+  COMMISSION: "Akuafo commission",
   DELIVERY_FEE: "Delivery fee",
   REFUND: "Refunded to buyer",
 };

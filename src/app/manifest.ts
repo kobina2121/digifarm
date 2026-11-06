@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "DigiFarm",
-    short_name: "DigiFarm",
+    name: "Akuafo",
+    short_name: "Akuafo",
     description:
       "Fresh produce for your home or business, from verified Ghanaian farms.",
     start_url: "/home",

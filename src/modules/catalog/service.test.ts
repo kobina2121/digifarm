@@ -141,7 +141,7 @@ describe.runIf(hasTestDatabase)("catalogue (integration)", () => {
       where: { id: created.id },
       data: { stockConfirmedAt: new Date("2026-01-01") },
     });
-    // Old stock is still for sale (DigiFarm's stock is the truth); it only
+    // Old stock is still for sale (Akuafo's stock is the truth); it only
     // shows up on the staff reminder list.
     const { listing: market } = await getMarketListing(created.id);
     expect(market.availability.available).toBe(true);

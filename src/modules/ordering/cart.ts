@@ -67,7 +67,7 @@ export type CartLine = {
 export type CartGroup = {
   supplierId: string;
   supplierName: string;
-  /** Where the farm is: DigiFarm delivers anywhere in Ghana. */
+  /** Where the farm is: Akuafo delivers anywhere in Ghana. */
   farmRegion: string;
   farmRegionCode: GhanaRegion;
   lines: CartLine[];

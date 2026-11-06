@@ -1,4 +1,4 @@
-// DigiFarm database schema (docs/ROADMAP.md §3).
+// Akuafo database schema (docs/ROADMAP.md §3).
 // Change it only through migrations: `pnpm db:migrate`.
 
 generator client {
@@ -17,7 +17,7 @@ datasource db {
 
 enum PlatformRole {
   USER // buyers (and later self-service suppliers); access comes from org membership
-  OPS // DigiFarm operations staff
+  OPS // Akuafo operations staff
   ADMIN
   DELIVERY_PARTNER // reserved, inactive in MVP
 }
@@ -173,7 +173,7 @@ model Organization {
   buyerKind    BuyerKind? // buyers only
   buyerSegment BuyerSegment? // businesses only
   supplierKind SupplierKind?
-  // Suppliers are managed by DigiFarm staff (ROADMAP D6) and may have no members.
+  // Suppliers are managed by Akuafo staff (ROADMAP D6) and may have no members.
   createdById  String?
   createdBy    User?              @relation("OrganizationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt    DateTime           @default(now())
@@ -231,7 +231,7 @@ enum GhanaRegion {
 }
 
 // Former delivery areas (Accra, Kumasi). Kept for history: since D4 was
-// revised, DigiFarm delivers anywhere in Ghana and addresses use regions.
+// revised, Akuafo delivers anywhere in Ghana and addresses use regions.
 model OperatingZone {
   id        String      @id @default(uuid(7)) @db.Uuid
   code      String      @unique
@@ -401,7 +401,7 @@ model ProductCategory {
   @@map("product_category")
 }
 
-// DigiFarm's own A/B/C grades per category (ROADMAP D8).
+// Akuafo's own A/B/C grades per category (ROADMAP D8).
 model GradeDefinition {
   id          String          @id @default(uuid(7)) @db.Uuid
   categoryId  String          @db.Uuid
@@ -454,7 +454,7 @@ model Listing {
   unit               UnitOfMeasure    @relation(fields: [unitId], references: [id])
   gradeId            String?          @db.Uuid
   grade              GradeDefinition? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
-  // No longer used: DigiFarm delivers anywhere in Ghana (D4 revised).
+  // No longer used: Akuafo delivers anywhere in Ghana (D4 revised).
   zoneId             String?          @db.Uuid
   zone               OperatingZone?   @relation(fields: [zoneId], references: [id])
   pickupAddressId    String?          @db.Uuid
@@ -646,7 +646,7 @@ model Order {
 
 enum FulfilmentStatus {
   PENDING // waiting for payment
-  CONFIRMED // paid; DigiFarm's stock is the truth, so no farm confirmation step
+  CONFIRMED // paid; Akuafo's stock is the truth, so no farm confirmation step
   PICKED_UP
   DELIVERED
   DELIVERY_FAILED // couldn't be delivered this time; can be sent out again
@@ -663,10 +663,10 @@ model Fulfilment {
   supplierName     String // snapshot
   status           FulfilmentStatus @default(PENDING)
   subtotalMinor    BigInt
-  commissionBps    Int // snapshot of DigiFarm's commission (D2)
+  commissionBps    Int // snapshot of Akuafo's commission (D2)
   deliveryFeeMinor BigInt           @default(0) // this farm's share of Order.deliveryFeeMinor (D5)
 
-  // Delivery (D5): DigiFarm books a rider, driver or bus parcel and records it here.
+  // Delivery (D5): Akuafo books a rider, driver or bus parcel and records it here.
   carrierName        String?
   carrierPhone       String?
   carrierDetails     String? // e.g. "VIP bus, waybill 1234"
@@ -869,7 +869,7 @@ enum LedgerEntryType {
   PAYMENT_CAPTURED // + money received from the buyer
   PROVIDER_FEE // - the payment provider's fee
   SUPPLIER_PAYABLE // + owed to a farm (its share after commission); negative to reverse
-  COMMISSION // + DigiFarm's commission (D2); negative to reverse
+  COMMISSION // + Akuafo's commission (D2); negative to reverse
   DELIVERY_FEE // + delivery charged to the buyer
   REFUND // - money returned to the buyer
   SUPPLIER_PAYOUT // - money sent to a farm; settles SUPPLIER_PAYABLE
@@ -881,7 +881,7 @@ enum PayoutMethod {
   CASH
 }
 
-// Money DigiFarm sent to a farm for one delivery (D9). Staff send it themselves
+// Money Akuafo sent to a farm for one delivery (D9). Staff send it themselves
 // and record it here; one per delivery, so a farm can't be paid twice by mistake.
 model SupplierPayout {
   id            String       @id @default(uuid(7)) @db.Uuid

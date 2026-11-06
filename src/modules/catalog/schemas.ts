@@ -130,7 +130,7 @@ export const gradeUpdateSchema = z.object({
 export const browseSchema = z.object({
   q: optionalText(80),
   category: optionalText(40),
-  /** Where the farm is (DigiFarm delivers anywhere in Ghana). */
+  /** Where the farm is (Akuafo delivers anywhere in Ghana). */
   region: ghanaRegionSchema.optional().catch(undefined),
   grade: z.enum(GRADE_CODES).optional().catch(undefined),
   minPrice: priceSchema.optional().catch(undefined),

@@ -47,7 +47,7 @@ export function InstallButton() {
   if (installed) {
     return (
       <p className="mt-4 rounded-lg bg-sprout-soft px-3 py-2.5 text-sm">
-        DigiFarm is installed on this device.
+        Akuafo is installed on this device.
       </p>
     );
   }
@@ -63,7 +63,7 @@ export function InstallButton() {
       }}
     >
       <Download aria-hidden />
-      Install DigiFarm
+      Install Akuafo
     </Button>
   );
 }

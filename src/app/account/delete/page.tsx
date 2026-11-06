@@ -78,7 +78,7 @@ export default function DeleteAccountPage() {
   return (
     <div className="min-h-dvh pt-safe pb-safe">
       <header className="mx-auto flex h-16 max-w-xl items-center justify-between px-4">
-        <Link href="/home" aria-label="Back to DigiFarm" className="-ml-2 p-2">
+        <Link href="/home" aria-label="Back to Akuafo" className="-ml-2 p-2">
           <ArrowLeft className="size-5" aria-hidden />
         </Link>
         <Logo />

@@ -1,4 +1,4 @@
-# DigiFarm
+# Akuafo
 
 B2B agricultural sourcing marketplace for Ghana — an installable PWA built with Next.js.
 Plan, decisions and status: [docs/ROADMAP.md](docs/ROADMAP.md).

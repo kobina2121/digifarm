@@ -21,7 +21,7 @@ import { cardAction, cardSave, savedAmong } from "./card-action";
 export const metadata: Metadata = {
   title: "Market",
   description:
-    "Fresh produce from farms DigiFarm has visited and approved, delivered anywhere in Ghana.",
+    "Fresh produce from farms Akuafo has visited and approved, delivered anywhere in Ghana.",
 };
 
 /** Filters as URL parameters, without the page cursor. */
@@ -77,7 +77,7 @@ export default async function MarketPage({
       <div>
         <h1 className="text-3xl font-bold">Market</h1>
         <p className="mt-1 text-muted-foreground">
-          Produce from farms DigiFarm has visited and approved.
+          Produce from farms Akuafo has visited and approved.
         </p>
       </div>
 

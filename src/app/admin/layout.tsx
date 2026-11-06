@@ -7,7 +7,7 @@ import { STAFF_NAV } from "./nav";
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <AppShell nav={STAFF_NAV} areaLabel="DigiFarm staff" tone="dark">
+    <AppShell nav={STAFF_NAV} areaLabel="Akuafo staff" tone="dark">
       <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
     </AppShell>
   );

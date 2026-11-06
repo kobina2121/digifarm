@@ -11,7 +11,7 @@ import { env } from "./env";
 const config = env();
 
 export const auth = betterAuth({
-  appName: "DigiFarm",
+  appName: "Akuafo",
   baseURL: config.BETTER_AUTH_URL,
   // Requests from any other origin are refused (CSRF protection). In development
   // the installed app runs on a production build at :3001 next to `next dev` at :3000.
@@ -31,7 +31,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        subject: "Reset your DigiFarm password",
+        subject: "Reset your Akuafo password",
         text: `Hello ${user.name},\n\nUse this link to choose a new password. It expires in 1 hour.\n\n${url}\n\nIf you didn't ask for this, you can ignore this email.`,
       });
     },
@@ -45,8 +45,8 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        subject: "Confirm your email for DigiFarm",
-        text: `Hello ${user.name},\n\nConfirm your email address to start using DigiFarm:\n\n${url}\n\nIf you didn't create an account, you can ignore this email.`,
+        subject: "Confirm your email for Akuafo",
+        text: `Hello ${user.name},\n\nConfirm your email address to start using Akuafo:\n\n${url}\n\nIf you didn't create an account, you can ignore this email.`,
       });
     },
   },

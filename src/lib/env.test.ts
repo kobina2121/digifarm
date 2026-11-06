@@ -8,7 +8,7 @@ const valid = {
   DATABASE_URL: "postgresql://u:p@localhost:5432/db",
   BETTER_AUTH_SECRET: "x".repeat(32),
   BETTER_AUTH_URL: "http://localhost:3000",
-  EMAIL_FROM: "DigiFarm <no-reply@digifarm.local>",
+  EMAIL_FROM: "Akuafo <no-reply@digifarm.local>",
 };
 
 describe("parseEnv", () => {

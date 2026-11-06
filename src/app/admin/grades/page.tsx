@@ -25,7 +25,7 @@ export default async function GradesPage() {
       <div>
         <h1 className="text-3xl font-bold">Grades</h1>
         <p className="mt-1 text-muted-foreground">
-          What DigiFarm’s A, B and C grades mean for each category. Buyers see
+          What Akuafo’s A, B and C grades mean for each category. Buyers see
           this wording on every graded listing.
           {canEdit ? "" : " Only admins can change it."}
         </p>

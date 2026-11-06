@@ -3,17 +3,17 @@ import type { Metadata } from "next";
 
 import { InstallButton } from "./install-button";
 
-export const metadata: Metadata = { title: "Install DigiFarm on your phone" };
+export const metadata: Metadata = { title: "Install Akuafo on your phone" };
 
 export default function InstallPage() {
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
       <p className="eyebrow text-field-green">No app store needed</p>
       <h1 className="mt-2 text-4xl font-bold">
-        Put DigiFarm on your home screen
+        Put Akuafo on your home screen
       </h1>
       <p className="mt-3 text-muted-foreground">
-        DigiFarm opens full-screen like an app and loads quickly on mobile data.
+        Akuafo opens full-screen like an app and loads quickly on mobile data.
         It still needs a connection to show current prices and stock.
       </p>
 
@@ -40,7 +40,7 @@ export default function InstallPage() {
               1
             </span>
             <span>
-              Open DigiFarm in <strong>Safari</strong> and tap the Share button{" "}
+              Open Akuafo in <strong>Safari</strong> and tap the Share button{" "}
               <Share
                 className="inline size-4 align-text-bottom"
                 aria-label="Share"
@@ -66,7 +66,7 @@ export default function InstallPage() {
               3
             </span>
             <span>
-              Tap <strong>Add</strong>. DigiFarm appears on your home screen.
+              Tap <strong>Add</strong>. Akuafo appears on your home screen.
             </span>
           </li>
         </ol>

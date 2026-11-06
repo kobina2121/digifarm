@@ -32,7 +32,7 @@ export default async function FakePaymentPage({
           TEST PAYMENT: no real money
         </p>
         <p>
-          This page stands in for Paystack while DigiFarm runs without payment
+          This page stands in for Paystack while Akuafo runs without payment
           keys. Choose what the buyer does.
         </p>
       </div>
@@ -73,7 +73,7 @@ export default async function FakePaymentPage({
             value="success"
             variant="outline"
           >
-            Back to DigiFarm
+            Back to Akuafo
           </Button>
         </form>
       )}

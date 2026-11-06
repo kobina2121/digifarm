@@ -116,7 +116,7 @@ export async function deleteAccount(actor: Actor, input: DeleteAccountInput) {
       });
       if (others) {
         throw new ConflictError(
-          "Other people use this business account. Contact DigiFarm to close it.",
+          "Other people use this business account. Contact Akuafo to close it.",
         );
       }
 
@@ -208,8 +208,8 @@ export async function deleteAccount(actor: Actor, input: DeleteAccountInput) {
   // The account is gone either way, so a failed email must not look like a failed delete.
   await sendEmail({
     to: email,
-    subject: "Your DigiFarm account has been deleted",
-    text: `Hello ${name},\n\nYour DigiFarm account has been deleted, as you asked. You won't be able to sign in with it again.\n\nWe keep records of past orders and payments for accounting, without your name or contact details.\n\nIf you didn't ask for this, reply to this email straight away.`,
+    subject: "Your Akuafo account has been deleted",
+    text: `Hello ${name},\n\nYour Akuafo account has been deleted, as you asked. You won't be able to sign in with it again.\n\nWe keep records of past orders and payments for accounting, without your name or contact details.\n\nIf you didn't ask for this, reply to this email straight away.`,
   }).catch((err: unknown) => {
     logger.error({ err }, "Couldn't send the account deleted email");
   });

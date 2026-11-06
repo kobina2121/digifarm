@@ -48,7 +48,7 @@ export function AppShell({
             : "border-border bg-card",
         )}
       >
-        <Link href="/home" aria-label="DigiFarm home" className="px-2 py-2">
+        <Link href="/home" aria-label="Akuafo home" className="px-2 py-2">
           <Logo tone={dark ? "on-dark" : "brand"} />
         </Link>
         <p
@@ -88,7 +88,7 @@ export function AppShell({
             >
               <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-4">
                 <span />
-                <Link href="/home" aria-label="DigiFarm home">
+                <Link href="/home" aria-label="Akuafo home">
                   <Logo tone={dark ? "on-dark" : "brand"} />
                 </Link>
                 {showSignOut ? (

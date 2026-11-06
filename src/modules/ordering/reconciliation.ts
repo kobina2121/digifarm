@@ -8,8 +8,8 @@ import { paymentProvider } from "@/modules/payments";
 export type ReconciliationIssue = {
   reference: string;
   problem:
-    | "PAID_AT_PROVIDER_ONLY" // provider took money DigiFarm hasn't recorded
-    | "PAID_IN_DIGIFARM_ONLY" // DigiFarm thinks it's paid; the provider doesn't
+    | "PAID_AT_PROVIDER_ONLY" // provider took money Akuafo hasn't recorded
+    | "PAID_IN_DIGIFARM_ONLY" // Akuafo thinks it's paid; the provider doesn't
     | "AMOUNT_DIFFERS";
   providerAmount: string | null;
   digifarmAmount: string | null;
@@ -18,7 +18,7 @@ export type ReconciliationIssue = {
 };
 
 /**
- * Compare successful payments at the provider with DigiFarm's records for a
+ * Compare successful payments at the provider with Akuafo's records for a
  * period (ROADMAP Phase 3). Runs daily from the scheduled job and on demand
  * from the admin page. Read-only: it reports, staff decide.
  */
@@ -54,7 +54,7 @@ export async function reconcilePayments(
   const issues: ReconciliationIssue[] = [];
   const fmt = (m: bigint) => Money.ofMinor(m).format();
 
-  // References DigiFarm hasn't marked paid may still exist as unpaid attempts.
+  // References Akuafo hasn't marked paid may still exist as unpaid attempts.
   const unknownRefs = theirsPaid
     .map((t) => t.reference)
     .filter((r) => !oursByRef.has(r));

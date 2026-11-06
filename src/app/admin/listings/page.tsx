@@ -59,7 +59,7 @@ export default async function ListingsPage({
         <div>
           <h1 className="text-3xl font-bold">Listings</h1>
           <p className="mt-1 text-muted-foreground">
-            Produce on sale for the farms DigiFarm manages.
+            Produce on sale for the farms Akuafo manages.
           </p>
         </div>
         <Link href="/admin/listings/new" className={buttonVariants()}>

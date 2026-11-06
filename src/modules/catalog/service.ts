@@ -536,12 +536,9 @@ export async function createListing(actor: Actor, input: CreateListingInput) {
       },
     });
     if (!supplier) {
-      throw new ValidationError(
-        "Only approved suppliers can sell on DigiFarm.",
-        {
-          fieldErrors: { supplierId: "Choose an approved supplier" },
-        },
-      );
+      throw new ValidationError("Only approved suppliers can sell on Akuafo.", {
+        fieldErrors: { supplierId: "Choose an approved supplier" },
+      });
     }
     const product = await tx.product.findFirst({
       where: { id: data.productId, isActive: true },
@@ -1095,7 +1092,7 @@ export async function getListingForStaff(
 
 // ─── Grades ─────────────────────────────────────────────────────────────────
 
-/** DigiFarm's A/B/C grade wording per category. Staff read it; admins edit it. */
+/** Akuafo's A/B/C grade wording per category. Staff read it; admins edit it. */
 export async function listGrades(actor: Actor) {
   assertCan(actor, "listing.manage");
   return db.productCategory.findMany({

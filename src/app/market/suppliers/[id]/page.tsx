@@ -50,11 +50,11 @@ export default async function MarketSupplierPage({
         <BadgeCheck className="mt-0.5 size-5 shrink-0" aria-hidden />
         <p className="text-sm">
           <span className="font-semibold">Verified farm.</span> Our team visited
-          this farm and approved it to sell on DigiFarm
+          this farm and approved it to sell on Akuafo
           {supplier.verifiedSince
             ? ` in ${monthFormat.format(supplier.verifiedSince)}`
             : ""}
-          . DigiFarm manages this farm’s stock, so what you see is what you can
+          . Akuafo manages this farm’s stock, so what you see is what you can
           order.
         </p>
       </div>

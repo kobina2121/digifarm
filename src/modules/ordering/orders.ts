@@ -253,7 +253,7 @@ const REFUND_STATUS_LABELS: Record<RefundStatus, string> = {
   PENDING: "Refund being arranged",
   PROCESSING: "Refund on its way",
   SUCCEEDED: "Refunded",
-  FAILED: "Refund failed: DigiFarm will contact you",
+  FAILED: "Refund failed: Akuafo will contact you",
 };
 
 const orderSummarySelect = {
@@ -594,7 +594,7 @@ function toDetail(o: OrderRow, now: Date) {
       label: ORDER_STATUS_LABELS[h.to],
       reason: h.reason,
       at: h.createdAt,
-      by: h.actor?.name ?? "DigiFarm",
+      by: h.actor?.name ?? "Akuafo",
     })),
     payment: payment
       ? {

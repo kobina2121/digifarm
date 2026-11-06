@@ -16,7 +16,7 @@ import {
 /**
  * DEVELOPMENT STAND-IN for a payment provider. No money moves: "payments" are
  * JSON files under <STORAGE_LOCAL_DIR>/fake-payments/, and the "checkout" is
- * DigiFarm's own /dev/pay page where you choose what happens. Refused outside
+ * Akuafo's own /dev/pay page where you choose what happens. Refused outside
  * APP_ENV=development (env.ts).
  */
 
@@ -173,7 +173,7 @@ export const fakeProvider: PaymentProvider = {
   },
 
   parseWebhook() {
-    // The test page returns the buyer to DigiFarm, which verifies directly.
+    // The test page returns the buyer to Akuafo, which verifies directly.
     throw new InvalidWebhookError("The test provider sends no webhooks");
   },
 };

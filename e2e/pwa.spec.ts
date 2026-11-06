@@ -14,7 +14,7 @@ test.describe("installable PWA", () => {
   }) => {
     const manifest = await (await request.get("/manifest.webmanifest")).json();
     expect(manifest).toMatchObject({
-      name: "DigiFarm",
+      name: "Akuafo",
       display: "standalone",
       theme_color: "#17663a",
     });

@@ -1,5 +1,5 @@
 /**
- * What DigiFarm needs from a payment provider (ROADMAP §2.2). Adapters turn a
+ * What Akuafo needs from a payment provider (ROADMAP §2.2). Adapters turn a
  * provider's API into these shapes; nothing outside this module knows which
  * provider is in use. Amounts are always integer minor units (pesewas).
  */

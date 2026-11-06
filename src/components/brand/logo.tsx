@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /*
- * DigiFarm mark, redrawn as SVG from docs/brand/primary-logo.pdf (a raster sheet).
- * Replace these paths with the designer's vector export when it arrives (ROADMAP D15).
+ * Akuafo mark (concept 1, "Leaf A under the sun"): a white A with a leaf
+ * crossbar and a gold sun, on a Field Green tile. Drawn on an 80×80 grid.
+ * Replace with the designer's vector export when it arrives (ROADMAP D15).
  */
 
 type Tone = "brand" | "on-dark" | "mono";
@@ -10,36 +11,36 @@ type Tone = "brand" | "on-dark" | "mono";
 const TONES: Record<
   Tone,
   {
-    mark: string;
-    cutout: string;
-    pixel: string;
-    digi: string;
-    farm: string;
+    tile: string;
+    letter: string;
+    leaf: string;
+    sun: string;
+    word: string;
     tagline: string;
   }
 > = {
   brand: {
-    mark: "var(--color-field-green)",
-    cutout: "#ffffff",
-    pixel: "var(--color-harvest-gold)",
-    digi: "text-soil",
-    farm: "text-field-green",
+    tile: "var(--color-field-green)",
+    letter: "#ffffff",
+    leaf: "var(--color-sprout)",
+    sun: "var(--color-harvest-gold)",
+    word: "text-soil",
     tagline: "text-muted-foreground",
   },
   "on-dark": {
-    mark: "var(--color-sprout)",
-    cutout: "var(--color-soil)",
-    pixel: "var(--color-harvest-gold)",
-    digi: "text-white",
-    farm: "text-sprout",
+    tile: "var(--color-field-green)",
+    letter: "#ffffff",
+    leaf: "var(--color-sprout)",
+    sun: "var(--color-harvest-gold)",
+    word: "text-white",
     tagline: "text-white/70",
   },
   mono: {
-    mark: "var(--color-soil)",
-    cutout: "#ffffff",
-    pixel: "var(--color-soil)",
-    digi: "text-soil",
-    farm: "text-soil",
+    tile: "var(--color-soil)",
+    letter: "#ffffff",
+    leaf: "#ffffff",
+    sun: "#ffffff",
+    word: "text-soil",
     tagline: "text-soil",
   },
 };
@@ -54,26 +55,22 @@ export function LogoMark({
   const t = TONES[tone];
   return (
     <svg
-      viewBox="0 0 124 122"
+      viewBox="0 0 80 80"
       className={cn("h-8 w-auto shrink-0", className)}
       aria-hidden="true"
       focusable="false"
     >
-      <rect x="104" y="0" width="18" height="18" rx="3" fill={t.pixel} />
-      <path d="M2 16 H60 A53 53 0 0 1 60 122 H2 Z" fill={t.mark} />
+      <rect width="80" height="80" rx="18" fill={t.tile} />
       <path
-        d="M22 104 C22 68 46 46 86 44 C84 82 60 104 22 104 Z"
-        fill={t.cutout}
-      />
-      <line
-        x1="30"
-        y1="96"
-        x2="72"
-        y2="58"
-        stroke={t.mark}
-        strokeWidth="6"
+        d="M18 68 L40 22 L62 68"
+        fill="none"
+        stroke={t.letter}
+        strokeWidth="9"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
+      <path d="M26 51 C32 42 46 41 54 47 C47 57 33 57 26 51 Z" fill={t.leaf} />
+      <circle cx="40" cy="11" r="6" fill={t.sun} />
     </svg>
   );
 }
@@ -96,10 +93,10 @@ export function Logo({
           className={cn(
             "font-sans font-bold tracking-[-0.03em]",
             tagline ? "text-4xl" : "text-2xl",
+            t.word,
           )}
         >
-          <span className={t.digi}>Digi</span>
-          <span className={t.farm}>Farm</span>
+          Akuafo
         </span>
         {tagline ? (
           <span

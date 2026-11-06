@@ -17,38 +17,38 @@ real money moves. Live payments wait for D11, D12 and D14 (ROADMAP §7).
 
 ## Accounts to create
 
-1. **Vercel** (vercel.com): sign up with GitHub, *Add New → Project*, import the
+1. **Vercel** (vercel.com): sign up with GitHub, _Add New → Project_, import the
    `digifarm` repository. Don't deploy yet.
-2. **Vercel Blob**: in the project, *Storage → Create → Blob*. Choose **Private**
+2. **Vercel Blob**: in the project, _Storage → Create → Blob_. Choose **Private**
    access and the **London (lhr1)** region, then connect it to the project. Vercel
    adds `BLOB_STORE_ID` to the project by itself.
-3. **Resend** (resend.com) → *API Keys* → create one with sending access.
-4. **Paystack** (paystack.com) → *Settings → API Keys & Webhooks* → copy the
+3. **Resend** (resend.com) → _API Keys_ → create one with sending access.
+4. **Paystack** (paystack.com) → _Settings → API Keys & Webhooks_ → copy the
    **test** secret key (`sk_test_…`).
 
 ## Settings in Vercel
 
 1. Open `.env.vercel`, fill in `RESEND_API_KEY` and `PAYSTACK_SECRET_KEY`.
-2. Vercel → the project → *Settings → Environment Variables* → paste the whole
-   file. Choose *Production* only.
+2. Vercel → the project → _Settings → Environment Variables_ → paste the whole
+   file. Choose _Production_ only.
 3. Deploy. Vercel shows the address (e.g. `https://digifarm-xxxx.vercel.app`).
 4. Set `APP_URL` and `BETTER_AUTH_URL` to that address in Vercel, then
-   *Deployments → … → Redeploy*. Sign-in refuses any other address.
+   _Deployments → … → Redeploy_. Sign-in refuses any other address.
 5. Delete `.env.vercel` from the Mac.
 
 ## After the first deploy
 
-- **Paystack** → *Settings → API Keys & Webhooks* → Test Webhook URL:
+- **Paystack** → _Settings → API Keys & Webhooks_ → Test Webhook URL:
   `<APP_URL>/api/webhooks/paystack`.
-- **Google sign-in** → Google Cloud Console → *Credentials* → the OAuth client:
-  add `<APP_URL>` to *Authorised JavaScript origins* and
-  `<APP_URL>/api/auth/callback/google` to *Authorised redirect URIs*.
+- **Google sign-in** → Google Cloud Console → _Credentials_ → the OAuth client:
+  add `<APP_URL>` to _Authorised JavaScript origins_ and
+  `<APP_URL>/api/auth/callback/google` to _Authorised redirect URIs_.
 - **Email from your own domain**: until a domain is verified in Resend,
   `onboarding@resend.dev` only delivers to the Resend account's own address, so
   other testers never get their sign-up confirmation and can't sign in. Add a
   domain in Resend (DNS records at your registrar), then set
-  `EMAIL_FROM="DigiFarm <no-reply@yourdomain>"`.
-- Sign in with your admin account and change its password (*Forgot password*).
+  `EMAIL_FROM="Akuafo <no-reply@yourdomain>"`.
+- Sign in with your admin account and change its password (_Forgot password_).
 
 ## Known limits of the test site
 

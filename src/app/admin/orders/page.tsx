@@ -54,7 +54,7 @@ export default async function StaffOrdersPage({
         <div>
           <h1 className="text-3xl font-bold">Orders</h1>
           <p className="mt-1 text-muted-foreground">
-            Paid orders are confirmed: DigiFarm’s stock is the truth.
+            Paid orders are confirmed: Akuafo’s stock is the truth.
           </p>
         </div>
         {actor.platformRole === "ADMIN" ? (

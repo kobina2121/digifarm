@@ -30,7 +30,7 @@ export async function GET(
   const height = spec.height * spec.ratio;
   const unit = width / 100; // sizes scale with the screen width
   const [medium, bold] = await fonts;
-  const mark = `data:image/svg+xml;base64,${Buffer.from(onGreenMarkSvg(Math.round(unit * 26))).toString("base64")}`;
+  const mark = `data:image/svg+xml;base64,${Buffer.from(onGreenMarkSvg(Math.round(unit * 20))).toString("base64")}`;
 
   return new ImageResponse(
     <div
@@ -48,8 +48,8 @@ export async function GET(
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={mark}
-        width={Math.round(unit * 26)}
-        height={Math.round((unit * 26 * 122) / 124)}
+        width={Math.round(unit * 20)}
+        height={Math.round((unit * 20 * 70) / 54)}
         alt=""
       />
       <div
@@ -62,7 +62,7 @@ export async function GET(
           color: "#ffffff",
         }}
       >
-        Digi<span style={{ color: "#8fd16a" }}>Farm</span>
+        Akuafo
       </div>
       <div
         style={{

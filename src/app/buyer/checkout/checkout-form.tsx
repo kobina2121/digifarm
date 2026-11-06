@@ -27,7 +27,7 @@ export function CheckoutForm({
   holdMinutes: number;
 }) {
   const router = useRouter();
-  // DigiFarm delivers anywhere in Ghana, so any saved address will do.
+  // Akuafo delivers anywhere in Ghana, so any saved address will do.
   const [addressId, setAddressId] = useState(addresses[0]?.id ?? "");
   const chosen = addresses.find((a) => a.id === addressId);
   const [notes, setNotes] = useState("");

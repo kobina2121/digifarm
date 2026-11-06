@@ -17,7 +17,7 @@ export default function OfflinePage() {
       </span>
       <h1 className="mt-6 text-3xl font-bold">You’re offline</h1>
       <p className="mt-3 text-muted-foreground">
-        DigiFarm needs a connection to show current prices, stock and orders.
+        Akuafo needs a connection to show current prices, stock and orders.
         Check your mobile data or Wi-Fi and try again.
       </p>
       <RetryButton />

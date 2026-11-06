@@ -8,7 +8,7 @@
 export const PAYMENT_HOLD_MINUTES = 30;
 
 /**
- * DigiFarm's commission on each farm's share, in basis points (100 = 1%).
+ * Akuafo's commission on each farm's share, in basis points (100 = 1%).
  * Commission-only revenue was decided in D2; the rate hasn't been set yet.
  */
 export const COMMISSION_BPS = 0;

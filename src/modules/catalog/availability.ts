@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import type { ListingStatus } from "@/generated/prisma/enums";
 
 /**
- * DigiFarm manages every farm's stock (ROADMAP D1/D6): whatever stock staff
+ * Akuafo manages every farm's stock (ROADMAP D1/D6): whatever stock staff
  * have entered is available to buy, however long ago it was entered. After
  * this long without an update, a listing only appears on the staff reminder
  * list ("not updated in 3 days"); buyers are unaffected.

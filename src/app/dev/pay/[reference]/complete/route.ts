@@ -8,7 +8,7 @@ const OUTCOMES: FakeOutcome[] = ["success", "failed", "abandoned"];
 
 /**
  * DEVELOPMENT ONLY: the test payment page's buttons post here. A full-page
- * redirect back to DigiFarm, as Paystack's checkout does.
+ * redirect back to Akuafo, as Paystack's checkout does.
  */
 export async function POST(
   request: Request,

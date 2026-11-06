@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Create a buyer account" };
 export default function SignUpPage() {
   return (
     <>
-      <p className="eyebrow text-field-green">Join DigiFarm</p>
+      <p className="eyebrow text-field-green">Join Akuafo</p>
       <h1 className="mt-2 text-3xl font-bold">Create your account</h1>
       <p className="mt-2 text-muted-foreground">
         Buy fresh produce straight from farms we’ve visited, for your home or
@@ -34,7 +34,7 @@ export default function SignUpPage() {
         </Link>
       </p>
       <p className="mt-6 text-center text-xs text-muted-foreground">
-        Farmers and suppliers: DigiFarm staff set up your account after a farm
+        Farmers and suppliers: Akuafo staff set up your account after a farm
         visit.
       </p>
     </>
