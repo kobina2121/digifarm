@@ -40,6 +40,23 @@ describe("parseEnv", () => {
     );
   });
 
+  it("needs every bucket setting to store files online", () => {
+    expect(() =>
+      parseEnv({ ...valid, STORAGE_DRIVER: "s3", S3_BUCKET: "digifarm" }),
+    ).toThrow(
+      "STORAGE_DRIVER=s3 needs S3_ENDPOINT, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY",
+    );
+    const env = parseEnv({
+      ...valid,
+      STORAGE_DRIVER: "s3",
+      S3_ENDPOINT: "https://account.r2.cloudflarestorage.com",
+      S3_BUCKET: "digifarm",
+      S3_ACCESS_KEY_ID: "id",
+      S3_SECRET_ACCESS_KEY: "secret",
+    });
+    expect(env.S3_REGION).toBe("auto");
+  });
+
   it("needs a Resend key to send real email", () => {
     expect(() => parseEnv({ ...valid, EMAIL_TRANSPORT: "resend" })).toThrow(
       /needs RESEND_API_KEY/,
