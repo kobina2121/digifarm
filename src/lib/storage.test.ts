@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { type S3Config, s3PrivateStorage, s3PublicStorage } from "./storage";
+import {
+  type BlobClient,
+  blobPrivateStorage,
+  blobPublicStorage,
+  type S3Config,
+  s3PrivateStorage,
+  s3PublicStorage,
+} from "./storage";
 
 const PHOTO_KEY = "listings/0b6a3c2e-6f1d-4c8e-9d9a-1f2e3d4c5b6a-480.webp";
 
@@ -107,5 +114,91 @@ describe("S3-compatible storage", () => {
     await expect(
       s3PublicStorage(bucket.config).put(PHOTO_KEY, new Uint8Array([1])),
     ).rejects.toThrow("Storage upload failed (403)");
+  });
+});
+
+/** A pretend Vercel Blob store with the SDK's put/get/del shapes. */
+function fakeBlobStore() {
+  const files = new Map<string, { bytes: Uint8Array; contentType: string }>();
+  const client = {
+    put: vi.fn(async (pathname: string, body: unknown, options) => {
+      expect(options).toMatchObject({
+        access: "private",
+        addRandomSuffix: false,
+      });
+      files.set(pathname, {
+        bytes: new Uint8Array(body as Buffer),
+        contentType: options.contentType,
+      });
+      return { pathname };
+    }),
+    get: vi.fn(async (pathname: string, options) => {
+      expect(options).toMatchObject({ access: "private" });
+      const file = files.get(pathname);
+      if (!file) return null;
+      return {
+        statusCode: 200,
+        stream: new Response(Buffer.from(file.bytes)).body,
+      };
+    }),
+    del: vi.fn(async (pathname: string) => {
+      files.delete(pathname);
+    }),
+  };
+  return { client: client as unknown as BlobClient, calls: client, files };
+}
+
+describe("Vercel Blob storage", () => {
+  it("keeps private files under private/ and reads them back", async () => {
+    const store = fakeBlobStore();
+    const storage = blobPrivateStorage(store.client);
+
+    const key = await storage.put(
+      "delivery-proofs",
+      new Uint8Array([4, 5]),
+      "jpg",
+    );
+
+    expect(store.files.get(`private/${key}`)?.contentType).toBe("image/jpeg");
+    expect(await storage.get(key)).toEqual(new Uint8Array([4, 5]));
+  });
+
+  it("removes private files, and a missing file reads as an error", async () => {
+    const store = fakeBlobStore();
+    const storage = blobPrivateStorage(store.client);
+    const key = await storage.put("farm-visits", new Uint8Array([1]), "webp");
+
+    await storage.remove(key);
+
+    expect(store.calls.del).toHaveBeenCalledWith(
+      `private/${key}`,
+      expect.anything(),
+    );
+    await expect(storage.get(key)).rejects.toThrow(/read failed/);
+  });
+
+  it("keeps public photos under public/, still in the private store", async () => {
+    const store = fakeBlobStore();
+    const storage = blobPublicStorage(store.client);
+
+    await storage.put(PHOTO_KEY, new Uint8Array([8]));
+
+    expect(store.files.get(`public/${PHOTO_KEY}`)?.contentType).toBe(
+      "image/webp",
+    );
+    expect(await storage.get(PHOTO_KEY)).toEqual(new Uint8Array([8]));
+  });
+
+  it("refuses unsafe keys before touching the store", async () => {
+    const store = fakeBlobStore();
+
+    await expect(
+      blobPrivateStorage(store.client).get("../x/0b6a3c2e.jpg"),
+    ).rejects.toThrow("Invalid storage key");
+    await expect(
+      blobPublicStorage(store.client).put("listings/x.webp", new Uint8Array()),
+    ).rejects.toThrow("Invalid storage key");
+    expect(store.calls.get).not.toHaveBeenCalled();
+    expect(store.calls.put).not.toHaveBeenCalled();
   });
 });

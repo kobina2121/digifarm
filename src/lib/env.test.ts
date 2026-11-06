@@ -57,6 +57,26 @@ describe("parseEnv", () => {
     expect(env.S3_REGION).toBe("auto");
   });
 
+  it("needs a connected Blob store or a token to use Vercel Blob", () => {
+    expect(() => parseEnv({ ...valid, STORAGE_DRIVER: "vercel-blob" })).toThrow(
+      /needs a connected Blob store/,
+    );
+    expect(() =>
+      parseEnv({
+        ...valid,
+        STORAGE_DRIVER: "vercel-blob",
+        BLOB_STORE_ID: "store_123",
+      }),
+    ).not.toThrow();
+    expect(() =>
+      parseEnv({
+        ...valid,
+        STORAGE_DRIVER: "vercel-blob",
+        BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_123",
+      }),
+    ).not.toThrow();
+  });
+
   it("needs a Resend key to send real email", () => {
     expect(() => parseEnv({ ...valid, EMAIL_TRANSPORT: "resend" })).toThrow(
       /needs RESEND_API_KEY/,

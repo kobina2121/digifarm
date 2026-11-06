@@ -43,7 +43,7 @@ export const envSchema = z.object({
   GOOGLE_CLIENT_ID: optionalSetting,
   GOOGLE_CLIENT_SECRET: optionalSetting,
 
-  STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+  STORAGE_DRIVER: z.enum(["local", "s3", "vercel-blob"]).default("local"),
   STORAGE_LOCAL_DIR: z.string().default(".storage"),
   // S3-compatible bucket (Cloudflare R2 or AWS S3) for STORAGE_DRIVER=s3.
   S3_ENDPOINT: optionalSetting.pipe(z.url().optional()),
@@ -52,6 +52,10 @@ export const envSchema = z.object({
   S3_SECRET_ACCESS_KEY: optionalSetting,
   // R2 uses "auto"; for AWS S3, the bucket's region (e.g. eu-west-2).
   S3_REGION: z.string().trim().min(1).default("auto"),
+  // Vercel Blob (STORAGE_DRIVER=vercel-blob): Vercel sets BLOB_STORE_ID when a
+  // store is connected; BLOB_READ_WRITE_TOKEN is for running elsewhere.
+  BLOB_STORE_ID: optionalSetting,
+  BLOB_READ_WRITE_TOKEN: optionalSetting,
 
   // "fake" is a development stand-in that never touches real money.
   PAYMENT_PROVIDER: z.enum(["fake", "paystack"]).default("fake"),
@@ -95,6 +99,15 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     if (missing.length) {
       throw new Error(`STORAGE_DRIVER=s3 needs ${missing.join(", ")}`);
     }
+  }
+  if (
+    result.data.STORAGE_DRIVER === "vercel-blob" &&
+    !result.data.BLOB_STORE_ID &&
+    !result.data.BLOB_READ_WRITE_TOKEN
+  ) {
+    throw new Error(
+      "STORAGE_DRIVER=vercel-blob needs a connected Blob store (BLOB_STORE_ID) or BLOB_READ_WRITE_TOKEN",
+    );
   }
   if (result.data.EMAIL_TRANSPORT === "resend" && !result.data.RESEND_API_KEY) {
     throw new Error("EMAIL_TRANSPORT=resend needs RESEND_API_KEY");

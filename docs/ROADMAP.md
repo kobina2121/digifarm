@@ -695,7 +695,7 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 | Item | What exists | Verified by |
 | --- | --- | --- |
 | Email | `EMAIL_TRANSPORT=resend` | unit tests (no real send yet) |
-| Files | `STORAGE_DRIVER=s3`, one private bucket (R2) with `public/` and `private/` | unit tests against a pretend bucket (no real bucket yet) |
+| Files | `STORAGE_DRIVER=vercel-blob` for the test site: one private Blob store with `public/` and `private/`. `STORAGE_DRIVER=s3` (R2) stays available for when the free Blob limits are too small | unit tests against a pretend store and bucket (no real store yet) |
 | Hosting | `vercel.json`: London region, both jobs daily | not deployed yet |
 | Live database | Neon main: all migrations, reference data, founder's admin | SQL check |
 | Sign-in on iPhone | Full page load after signing in or out; a stale prefetch of `/home` sent people back to sign-in | WebKit iPhone script against a production build, iOS Simulator |

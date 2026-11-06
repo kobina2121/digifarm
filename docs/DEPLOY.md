@@ -6,8 +6,8 @@ real money moves. Live payments wait for D11, D12 and D14 (ROADMAP §7).
 
 ## Already done
 
-- The code sends real email (Resend), stores files in an S3-compatible bucket
-  (Cloudflare R2), runs on Vercel in London (`lhr1`, beside the Neon database)
+- The code sends real email (Resend), stores files in a private Vercel Blob
+  store (Cloudflare R2 stays available: `STORAGE_DRIVER=s3`), runs on Vercel in London (`lhr1`, beside the Neon database)
   and has the two scheduled jobs in `vercel.json`.
 - The Neon **main** branch is the live database: every migration is applied, the
   reference data is seeded (regions, units, categories, 32 products) and the
@@ -19,18 +19,16 @@ real money moves. Live payments wait for D11, D12 and D14 (ROADMAP §7).
 
 1. **Vercel** (vercel.com): sign up with GitHub, *Add New → Project*, import the
    `digifarm` repository. Don't deploy yet.
-2. **Resend** (resend.com) → *API Keys* → create one with sending access.
-3. **Cloudflare** (cloudflare.com) → *R2* → create a bucket named `digifarm`
-   (location: Western Europe). Then *R2 → Manage API tokens → Create API token*:
-   *Object Read & Write*, only that bucket. Note the Access Key ID, the Secret
-   Access Key and your Account ID.
+2. **Vercel Blob**: in the project, *Storage → Create → Blob*. Choose **Private**
+   access and the **London (lhr1)** region, then connect it to the project. Vercel
+   adds `BLOB_STORE_ID` to the project by itself.
+3. **Resend** (resend.com) → *API Keys* → create one with sending access.
 4. **Paystack** (paystack.com) → *Settings → API Keys & Webhooks* → copy the
    **test** secret key (`sk_test_…`).
 
 ## Settings in Vercel
 
-1. Open `.env.vercel`, fill in `RESEND_API_KEY`, the `S3_…` values (replace
-   `ACCOUNT_ID` in `S3_ENDPOINT`) and `PAYSTACK_SECRET_KEY`.
+1. Open `.env.vercel`, fill in `RESEND_API_KEY` and `PAYSTACK_SECRET_KEY`.
 2. Vercel → the project → *Settings → Environment Variables* → paste the whole
    file. Choose *Production* only.
 3. Deploy. Vercel shows the address (e.g. `https://digifarm-xxxx.vercel.app`).
@@ -60,5 +58,9 @@ real money moves. Live payments wait for D11, D12 and D14 (ROADMAP §7).
   `expire-orders` every few minutes.
 - New migrations aren't applied by the deployment: run `prisma migrate deploy`
   against the main branch before deploying code that needs them.
+- Vercel Blob on the free plan includes 1 GB of storage, 10 GB of downloads,
+  10,000 reads and 2,000 uploads a month. **Going over switches Blob off for 30
+  days** (no photos load). Every product photo shown is a read, so before real
+  buyers arrive, move to Vercel Pro or to R2 (`STORAGE_DRIVER=s3`).
 - Not yet in place: error alerts (Sentry), tested backup restore, a security
   review, and a friendly error page.
