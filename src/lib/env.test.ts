@@ -40,6 +40,23 @@ describe("parseEnv", () => {
     );
   });
 
+  it("needs a Resend key to send real email", () => {
+    expect(() => parseEnv({ ...valid, EMAIL_TRANSPORT: "resend" })).toThrow(
+      /needs RESEND_API_KEY/,
+    );
+    expect(() =>
+      parseEnv({
+        ...valid,
+        EMAIL_TRANSPORT: "resend",
+        RESEND_API_KEY: "not-a-resend-key",
+      }),
+    ).toThrow(/should start with re_/);
+    expect(
+      parseEnv({ ...valid, EMAIL_TRANSPORT: "resend", RESEND_API_KEY: "re_1" })
+        .EMAIL_TRANSPORT,
+    ).toBe("resend");
+  });
+
   it("requires both Google credentials or neither", () => {
     expect(() => parseEnv({ ...valid, GOOGLE_CLIENT_ID: "id-only" })).toThrow(
       /both GOOGLE_CLIENT_ID/,

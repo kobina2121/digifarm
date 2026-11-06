@@ -37,10 +37,62 @@ const consoleTransport: EmailTransport = {
   },
 };
 
+const RESEND_URL = "https://api.resend.com/emails";
+const SEND_TIMEOUT_MS = 10_000;
+
+/**
+ * Sends through Resend's HTTP API. The sending domain in `from` must be
+ * verified in Resend (until then, only onboarding@resend.dev to the Resend
+ * account's own address works). Errors carry Resend's reason, never the key.
+ */
+export function createResendTransport({
+  apiKey,
+  from,
+  fetch: send = fetch,
+}: {
+  apiKey: string;
+  from: string;
+  fetch?: typeof fetch;
+}): EmailTransport {
+  return {
+    async send(message) {
+      const response = await send(RESEND_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to: [message.to],
+          subject: message.subject,
+          text: message.text,
+        }),
+        signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(
+          `Resend refused the email (${response.status}): ${body?.message ?? response.statusText}`,
+        );
+      }
+    },
+  };
+}
+
 export function emailTransport(): EmailTransport {
-  switch (env().EMAIL_TRANSPORT) {
+  const config = env();
+  switch (config.EMAIL_TRANSPORT) {
     case "console":
       return consoleTransport;
+    case "resend":
+      return createResendTransport({
+        // parseEnv refuses EMAIL_TRANSPORT=resend without a key.
+        apiKey: config.RESEND_API_KEY!,
+        from: config.EMAIL_FROM,
+      });
   }
 }
 

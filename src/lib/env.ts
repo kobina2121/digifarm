@@ -32,8 +32,12 @@ export const envSchema = z.object({
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
   BETTER_AUTH_URL: z.url(),
 
-  EMAIL_TRANSPORT: z.enum(["console"]).default("console"),
+  EMAIL_TRANSPORT: z.enum(["console", "resend"]).default("console"),
   EMAIL_FROM: z.string().min(3),
+  RESEND_API_KEY: optionalSetting.refine(
+    (v) => v === undefined || v.startsWith("re_"),
+    "RESEND_API_KEY should start with re_",
+  ),
 
   // Google sign-in is optional: set both to show "Continue with Google".
   GOOGLE_CLIENT_ID: optionalSetting,
@@ -71,6 +75,9 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     throw new Error(
       "Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither",
     );
+  }
+  if (result.data.EMAIL_TRANSPORT === "resend" && !result.data.RESEND_API_KEY) {
+    throw new Error("EMAIL_TRANSPORT=resend needs RESEND_API_KEY");
   }
   if (
     result.data.PAYMENT_PROVIDER === "paystack" &&
