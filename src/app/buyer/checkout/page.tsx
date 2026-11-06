@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { GHANA_REGIONS } from "@/lib/ghana";
 import { getBuyerProfile } from "@/modules/buyers";
 import { getCart, PAYMENT_HOLD_MINUTES } from "@/modules/ordering";
+import { paymentsEnabled } from "@/modules/payments";
 
 import { requireBuyer } from "../guard";
 import { CheckoutForm } from "./checkout-form";
@@ -69,6 +70,7 @@ export default async function CheckoutPage() {
           ...cart.quote(a.region),
         }))}
         holdMinutes={PAYMENT_HOLD_MINUTES}
+        paymentsOn={paymentsEnabled()}
       />
     </div>
   );

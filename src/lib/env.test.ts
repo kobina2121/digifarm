@@ -128,6 +128,20 @@ describe("parseEnv", () => {
     ).toBeUndefined();
   });
 
+  it("lets a deployed site run with payments off", () => {
+    expect(
+      parseEnv({
+        ...valid,
+        APP_ENV: "staging",
+        EMAIL_TRANSPORT: "resend",
+        RESEND_API_KEY: "re_1",
+        STORAGE_DRIVER: "vercel-blob",
+        BLOB_STORE_ID: "store_1",
+        PAYMENT_PROVIDER: "none",
+      }).PAYMENT_PROVIDER,
+    ).toBe("none");
+  });
+
   it("only accepts Paystack test keys, and keeps the fake provider local", () => {
     expect(parseEnv(valid).PAYMENT_PROVIDER).toBe("fake");
     expect(() => parseEnv({ ...valid, PAYMENT_PROVIDER: "paystack" })).toThrow(

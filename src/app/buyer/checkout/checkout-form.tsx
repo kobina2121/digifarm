@@ -22,9 +22,11 @@ type AddressOption = {
 export function CheckoutForm({
   addresses,
   holdMinutes,
+  paymentsOn,
 }: {
   addresses: AddressOption[];
   holdMinutes: number;
+  paymentsOn: boolean;
 }) {
   const router = useRouter();
   // Akuafo delivers anywhere in Ghana, so any saved address will do.
@@ -137,21 +139,41 @@ export function CheckoutForm({
         </dl>
       ) : null}
 
-      <div className="grid gap-2">
-        <Button
-          type="submit"
-          size="lg"
-          disabled={pending || !addressId}
-          className="h-14 w-full rounded-full text-base font-semibold"
-        >
-          {pending ? "Placing your order…" : `Pay ${chosen?.total ?? ""}`}
-        </Button>
-        <p className="text-center text-xs text-muted-foreground">
-          Mobile money or card. We hold your produce for {holdMinutes} minutes
-          while you pay; once payment goes through, your order is confirmed. You
-          can cancel for a full refund until it’s picked up from the farm.
-        </p>
-      </div>
+      {paymentsOn ? (
+        <div className="grid gap-2">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={pending || !addressId}
+            className="h-14 w-full rounded-full text-base font-semibold"
+          >
+            {pending ? "Placing your order…" : `Pay ${chosen?.total ?? ""}`}
+          </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            Mobile money or card. We hold your produce for {holdMinutes} minutes
+            while you pay; once payment goes through, your order is confirmed.
+            You can cancel for a full refund until it’s picked up from the farm.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-2">
+          <Button
+            type="button"
+            size="lg"
+            disabled
+            className="h-14 w-full rounded-full text-base font-semibold"
+          >
+            Ordering opens soon
+          </Button>
+          <p
+            role="status"
+            className="text-center text-sm text-muted-foreground"
+          >
+            We’re not taking payments yet, so orders can’t be placed. Your cart
+            is saved for when we open.
+          </p>
+        </div>
+      )}
     </form>
   );
 }

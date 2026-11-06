@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger";
 import { reconcilePayments } from "@/modules/ordering";
+import { paymentsEnabled } from "@/modules/payments";
 
 import { cronAuthorized } from "../authorize";
 
@@ -8,6 +9,7 @@ export async function GET(request: Request) {
   if (!cronAuthorized(request)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!paymentsEnabled()) return Response.json({ skipped: "payments off" });
   const to = new Date();
   to.setUTCHours(0, 0, 0, 0);
   const from = new Date(to.getTime() - 24 * 60 * 60 * 1000);

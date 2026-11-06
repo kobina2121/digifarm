@@ -57,8 +57,9 @@ export const envSchema = z.object({
   BLOB_STORE_ID: optionalSetting,
   BLOB_READ_WRITE_TOKEN: optionalSetting,
 
-  // "fake" is a development stand-in that never touches real money.
-  PAYMENT_PROVIDER: z.enum(["fake", "paystack"]).default("fake"),
+  // "fake" is a development stand-in that never touches real money; "none"
+  // runs the site with checkout closed until a provider is set up.
+  PAYMENT_PROVIDER: z.enum(["fake", "paystack", "none"]).default("fake"),
   // Test keys only until D11, D12 and D14 are resolved (ROADMAP §7).
   PAYSTACK_SECRET_KEY: optionalSetting.refine(
     (v) => v === undefined || v.startsWith("sk_test_"),

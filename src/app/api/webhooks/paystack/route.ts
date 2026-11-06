@@ -1,12 +1,15 @@
 import { logger } from "@/lib/logger";
 import { handlePaymentWebhook } from "@/modules/ordering";
-import { InvalidWebhookError } from "@/modules/payments";
+import { InvalidWebhookError, paymentsEnabled } from "@/modules/payments";
 
 /**
  * Paystack webhook. The signature is checked against the raw body before
  * anything else; events are deduplicated, and a 500 makes Paystack retry.
  */
 export async function POST(request: Request) {
+  if (!paymentsEnabled()) {
+    return Response.json({ error: "Payments are off" }, { status: 404 });
+  }
   const rawBody = await request.text();
   try {
     const { duplicate } = await handlePaymentWebhook(rawBody, request.headers);
