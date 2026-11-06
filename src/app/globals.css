@@ -180,6 +180,28 @@
   padding-top: env(safe-area-inset-top);
 }
 
+/* The installed iPhone app draws under the status bar, whose clock is then
+   always white: fill the area behind it with Field Green (the page colour in
+   dark mode). Above sticky headers, below the photo viewer and launch screen. */
+.status-bar-fill {
+  display: none;
+}
+@media (display-mode: standalone) {
+  .status-bar-fill {
+    display: block;
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 50;
+    height: env(safe-area-inset-top);
+    background: var(--color-field-green);
+    pointer-events: none;
+  }
+  .dark .status-bar-fill {
+    background: var(--background);
+  }
+}
+
 /* In-app launch screen (components/pwa/launch-splash.tsx): hidden unless the
    launch script adds .df-splash to <html>, then faded out with .df-splash-out. */
 .launch-splash {

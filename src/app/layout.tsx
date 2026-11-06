@@ -17,7 +17,9 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Akuafo",
-    statusBarStyle: "default",
+    // Draw under the status bar so the app fills the screen around the notch;
+    // .status-bar-fill keeps the clock (always white here) readable.
+    statusBarStyle: "black-translucent",
     startupImage: splashStartupImages(),
   },
   icons: { apple: [{ url: "/icons/apple-touch-180.png", sizes: "180x180" }] },
@@ -38,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <ThemeScript />
         <LaunchSplash />
+        <div aria-hidden className="status-bar-fill" />
         {children}
         <ServiceWorker />
       </body>

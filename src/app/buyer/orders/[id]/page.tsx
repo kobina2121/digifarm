@@ -1,4 +1,4 @@
-import { Clock, MapPin } from "lucide-react";
+import { ChevronLeft, Clock, MapPin, Package } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { formatGhanaPhone } from "@/lib/ghana";
@@ -77,18 +77,25 @@ export default async function OrderPage({
 
   return (
     <div className="grid gap-6">
-      <Link
-        href="/buyer/orders"
-        className="text-sm font-medium text-field-green-dark underline-offset-4 hover:underline"
-      >
-        ← Orders
-      </Link>
+      <header className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center">
+        <Link
+          href="/buyer/orders"
+          aria-label="Back to your orders"
+          className="flex size-11 items-center justify-center rounded-full hover:bg-muted"
+        >
+          <ChevronLeft className="size-6" aria-hidden />
+        </Link>
+        <h1 className="text-center text-xl font-semibold">Order details</h1>
+        <span className="flex size-11 items-center justify-center rounded-full bg-sprout-soft text-field-green">
+          <Package className="size-5" aria-hidden />
+        </span>
+      </header>
 
       <section className="grid gap-5 overflow-hidden rounded-3xl bg-card p-5">
         <div className="relative pr-28 sm:pr-40">
-          <h1 className="font-mono text-xl font-bold whitespace-nowrap sm:text-2xl">
+          <h2 className="font-mono text-xl font-bold whitespace-nowrap sm:text-2xl">
             {order.number}
-          </h1>
+          </h2>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge
               tone={ORDER_TONE[order.status]}
