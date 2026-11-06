@@ -7,11 +7,19 @@ real money moves. Live payments wait for D11, D12 and D14 (ROADMAP §7).
 ## Already done
 
 - The code sends real email (Resend), stores files in a private Vercel Blob
-  store (Cloudflare R2 stays available: `STORAGE_DRIVER=s3`), runs on Vercel in London (`lhr1`, beside the Neon database)
-  and has the two scheduled jobs in `vercel.json`.
-- The Neon **main** branch is the live database: every migration is applied, the
-  reference data is seeded (regions, units, categories, 32 products) and the
-  founder's admin account exists (`LIVE_ADMIN_*` in the local `.env`).
+  store (Cloudflare R2 stays available: `STORAGE_DRIVER=s3`), runs on Vercel in
+  Frankfurt (`fra1`, beside the Neon database) and has the two scheduled jobs in
+  `vercel.json`. Phones shrink photos before uploading them, because Vercel
+  accepts at most 4.5 MB per request.
+- One real database (2026-11-06): Neon project `digifarm` (Frankfurt), branch
+  `production`, used by both the live site and the founder's Mac. Every
+  migration is applied, the reference data is seeded (regions, units,
+  categories, 32 products) and the founder's admin account exists
+  (`LIVE_ADMIN_*` in the local `.env`). There are no test accounts and no test
+  database: integration tests skip locally (CI runs them on its own Postgres),
+  and the Playwright suites that create accounts must not be run against it.
+- Payments are off (`PAYMENT_PROVIDER=none`) until Paystack is set up: checkout
+  shows "Ordering opens soon".
 - `.env.vercel` (git-ignored, on the founder's Mac) holds every setting Vercel
   needs, with the database and new secrets filled in.
 
@@ -20,7 +28,7 @@ real money moves. Live payments wait for D11, D12 and D14 (ROADMAP §7).
 1. **Vercel** (vercel.com): sign up with GitHub, _Add New → Project_, import the
    `digifarm` repository. Don't deploy yet.
 2. **Vercel Blob**: in the project, _Storage → Create → Blob_. Choose **Private**
-   access and the **London (lhr1)** region, then connect it to the project. Vercel
+   access and the **Frankfurt (fra1)** region, then connect it to the project. Vercel
    adds `BLOB_STORE_ID` to the project by itself.
 3. **Resend** (resend.com) → _API Keys_ → create one with sending access.
 4. **Paystack** (paystack.com) → _Settings → API Keys & Webhooks_ → copy the
