@@ -3,9 +3,11 @@ import { config } from "dotenv";
 config({ quiet: true });
 
 // Point the app's database client at the test database for every test file.
-if (process.env.TEST_DATABASE_URL) {
-  process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
-}
+// Without one, point it nowhere: .env may hold the real database, and tests
+// must never write to it (integration tests skip; see hasTestDatabase).
+process.env.DATABASE_URL =
+  process.env.TEST_DATABASE_URL ??
+  "postgresql://no-test-database@127.0.0.1:1/none";
 process.env.APP_URL ??= "http://localhost:3000";
 process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
 process.env.BETTER_AUTH_SECRET ??= "test-secret-test-secret-test-secret-00";
