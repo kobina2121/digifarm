@@ -77,10 +77,14 @@ describe.runIf(hasTestDatabase)("slow database logging (integration)", () => {
 
   it("still reports a failed query to the caller, and logs it as failed", async () => {
     const warn = newWarn();
-    await withPool({ slowMs: 1, warn }, async (pool) => {
-      await expect(pool.query("select * from no_such_table")).rejects.toThrow(
-        /no_such_table/,
-      );
+    await withPool({ slowMs: 20, warn }, async (pool) => {
+      // Waits before failing, so it's slow even on a fast local database
+      // (an unknown table fails in under a millisecond there).
+      await expect(
+        pool.query(
+          "DO $$ BEGIN PERFORM pg_sleep(0.05); RAISE EXCEPTION 'planned failure'; END $$",
+        ),
+      ).rejects.toThrow(/planned failure/);
     });
     const failed = warn.mock.calls.find(
       ([, message]) => message === "Slow database query",
