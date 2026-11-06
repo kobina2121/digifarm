@@ -74,8 +74,23 @@ export const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+/**
+ * On Vercel's production deployment the site's address comes from Vercel
+ * itself (the project's main domain, custom or *.vercel.app), so renaming the
+ * domain can't leave sign-in pointing at an old address. APP_URL and
+ * BETTER_AUTH_URL still apply everywhere else.
+ */
+function withVercelAddress(
+  source: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  const host = source.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (source.VERCEL_ENV !== "production" || !host) return source;
+  const url = `https://${host}`;
+  return { ...source, APP_URL: url, BETTER_AUTH_URL: url };
+}
+
 export function parseEnv(source: Record<string, string | undefined>): Env {
-  const result = envSchema.safeParse(source);
+  const result = envSchema.safeParse(withVercelAddress(source));
   if (!result.success) {
     const problems = result.error.issues
       .map((issue) => `  - ${issue.path.join(".")}: ${issue.message}`)

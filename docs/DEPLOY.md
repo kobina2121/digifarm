@@ -32,8 +32,10 @@ real money moves. Live payments wait for D11, D12 and D14 (ROADMAP §7).
 2. Vercel → the project → _Settings → Environment Variables_ → paste the whole
    file. Choose _Production_ only.
 3. Deploy. Vercel shows the address (e.g. `https://digifarm-xxxx.vercel.app`).
-4. Set `APP_URL` and `BETTER_AUTH_URL` to that address in Vercel, then
-   _Deployments → … → Redeploy_. Sign-in refuses any other address.
+4. Nothing to do for the address: on the production deployment the app uses
+   Vercel's own main domain (`VERCEL_PROJECT_PRODUCTION_URL`), so `APP_URL` and
+   `BETTER_AUTH_URL` are ignored there and renaming the domain just works. Only
+   Google Console needs the new address.
 5. Delete `.env.vercel` from the Mac.
 
 ## After the first deploy

@@ -40,6 +40,23 @@ describe("parseEnv", () => {
     );
   });
 
+  it("takes the site's address from Vercel on the production deployment", () => {
+    const stale = {
+      ...valid,
+      APP_URL: "https://old-name.vercel.app",
+      BETTER_AUTH_URL: "https://old-name.vercel.app",
+      VERCEL_PROJECT_PRODUCTION_URL: "akuafo.vercel.app",
+    };
+    const live = parseEnv({ ...stale, VERCEL_ENV: "production" });
+    expect(live.APP_URL).toBe("https://akuafo.vercel.app");
+    expect(live.BETTER_AUTH_URL).toBe("https://akuafo.vercel.app");
+    // Preview deployments and local copies keep their own settings.
+    expect(parseEnv({ ...stale, VERCEL_ENV: "preview" }).APP_URL).toBe(
+      "https://old-name.vercel.app",
+    );
+    expect(parseEnv(stale).APP_URL).toBe("https://old-name.vercel.app");
+  });
+
   it("needs every bucket setting to store files online", () => {
     expect(() =>
       parseEnv({ ...valid, STORAGE_DRIVER: "s3", S3_BUCKET: "digifarm" }),
