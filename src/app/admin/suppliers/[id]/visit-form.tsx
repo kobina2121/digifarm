@@ -8,12 +8,12 @@ import { NativeSelect } from "@/components/forms/native-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { MAX_ORIGINAL_PHOTO_BYTES, shrinkFormPhotos } from "@/lib/shrink-photo";
 import { GRADES } from "@/modules/suppliers/schemas";
 
 import { recordVisit } from "../actions";
 
 const MAX_PHOTOS = 6;
-const MAX_BYTES = 8 * 1024 * 1024;
 
 function today() {
   const d = new Date();
@@ -58,8 +58,8 @@ export function VisitForm({ supplierId }: { supplierId: string }) {
     setPhotoCount(list.length);
     if (list.length > MAX_PHOTOS)
       setError(`Choose at most ${MAX_PHOTOS} photos.`);
-    else if (list.some((f) => f.size > MAX_BYTES))
-      setError("Each photo must be 8 MB or smaller.");
+    else if (list.some((f) => f.size > MAX_ORIGINAL_PHOTO_BYTES))
+      setError("Each photo must be 25 MB or smaller.");
     else setError(null);
   }
 
@@ -70,6 +70,7 @@ export function VisitForm({ supplierId }: { supplierId: string }) {
     setFieldErrors({});
     setSaved(false);
     startTransition(async () => {
+      await shrinkFormPhotos(form, "photos");
       const result = await recordVisit(supplierId, form);
       if (!result.ok) {
         setError(result.error);

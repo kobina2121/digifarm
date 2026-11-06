@@ -28,7 +28,10 @@ export function PhotoManager({
   function upload() {
     setError(null);
     startTransition(async () => {
-      const result = await uploadListingPhotos(listingId, photosForm(chosen));
+      const result = await uploadListingPhotos(
+        listingId,
+        await photosForm(chosen),
+      );
       if (!result.ok) {
         setError(result.error);
         return;

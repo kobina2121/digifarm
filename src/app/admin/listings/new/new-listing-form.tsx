@@ -75,7 +75,7 @@ export function NewListingForm({
     const id = result.data.id;
     // The listing exists now; if its photos fail, they can be added on its page.
     if (photos.length) {
-      const uploaded = await uploadListingPhotos(id, photosForm(photos));
+      const uploaded = await uploadListingPhotos(id, await photosForm(photos));
       if (!uploaded.ok) {
         router.push(`/admin/listings/${id}?photos=failed`);
         return;

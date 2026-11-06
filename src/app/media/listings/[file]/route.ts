@@ -2,7 +2,9 @@ import { PUBLIC_IMAGE_KEY, publicStorage } from "@/lib/storage";
 
 /**
  * Public product photos. Keys are random and files never change, so browsers
- * and CDNs may keep them for a year.
+ * and Vercel's CDN keep them for a year (`s-maxage` is what lets the CDN
+ * cache a function's response), and each photo is read from storage about
+ * once instead of on every view.
  */
 export async function GET(
   _request: Request,
@@ -22,7 +24,7 @@ export async function GET(
   return new Response(Buffer.from(bytes), {
     headers: {
       "Content-Type": "image/webp",
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
       "X-Content-Type-Options": "nosniff",
     },
   });

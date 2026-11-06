@@ -3,7 +3,8 @@
 import { Camera, X } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
-export const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+import { MAX_ORIGINAL_PHOTO_BYTES, shrinkPhotos } from "@/lib/shrink-photo";
+
 const ACCEPT = ["image/jpeg", "image/png", "image/webp"];
 
 /**
@@ -38,13 +39,13 @@ export function PhotoPicker({
     const picked = Array.from(list ?? []);
     if (input.current) input.current.value = "";
     const usable = picked.filter(
-      (f) => ACCEPT.includes(f.type) && f.size <= MAX_PHOTO_BYTES,
+      (f) => ACCEPT.includes(f.type) && f.size <= MAX_ORIGINAL_PHOTO_BYTES,
     );
     const space = room - files.length;
     const kept = usable.slice(0, Math.max(space, 0));
     onChange([...files, ...kept]);
     if (usable.length < picked.length)
-      onError("Photos must be JPEG, PNG or WebP, and 8 MB or smaller.");
+      onError("Photos must be JPEG, PNG or WebP, and 25 MB or smaller.");
     else if (kept.length < usable.length)
       onError(`That’s the limit: ${room} photo${room === 1 ? "" : "s"}.`);
     else onError(null);
@@ -95,16 +96,16 @@ export function PhotoPicker({
       </ul>
       <p className="text-xs text-muted-foreground">
         {room - files.length > 0
-          ? `You can add ${room - files.length} more, 8 MB each. Pick several at once or one at a time.`
+          ? `You can add ${room - files.length} more. Pick several at once or one at a time.`
           : "That’s as many photos as a listing can have."}
       </p>
     </div>
   );
 }
 
-/** Files as the `photos` field of a form, for the upload action. */
-export function photosForm(files: File[]): FormData {
+/** Files as the `photos` field of a form, for the upload action, shrunk to fit. */
+export async function photosForm(files: File[]): Promise<FormData> {
   const form = new FormData();
-  for (const f of files) form.append("photos", f);
+  for (const f of await shrinkPhotos(files)) form.append("photos", f);
   return form;
 }

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { ActionResult } from "@/lib/action-result";
 import { formatGhanaPhone } from "@/lib/ghana";
+import { shrinkFormPhotos } from "@/lib/shrink-photo";
 import type { OrderDetail } from "@/modules/ordering";
 
 import {
@@ -197,7 +198,10 @@ export function DeliveryPanel({ fulfilment: f }: { fulfilment: Fulfilment }) {
           onSubmit={(e) => {
             e.preventDefault();
             const form = new FormData(e.currentTarget);
-            run(() => markDeliveredAction(f.id, form));
+            run(async () => {
+              await shrinkFormPhotos(form, "photo");
+              return markDeliveredAction(f.id, form);
+            });
           }}
         >
           <p className="text-sm text-muted-foreground">
