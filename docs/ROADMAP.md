@@ -687,3 +687,15 @@ Decisions are recorded in §7, and Phase 1 has no open blockers. Implementation 
 - Staff cancelling after pickup, for example when a delivery can never be completed.
 - Completing orders automatically some days after delivery, ratings and reviews, and quality inspections.
 - Delivery emails use the direct sender, not the outbox from §2.4.
+
+## 14. Deployment (2026-11-06)
+
+**A test site is ready to deploy** on Vercel + Neon main, with Paystack in test mode. Steps and limits: [`docs/DEPLOY.md`](DEPLOY.md).
+
+| Item | What exists | Verified by |
+| --- | --- | --- |
+| Email | `EMAIL_TRANSPORT=resend` | unit tests (no real send yet) |
+| Files | `STORAGE_DRIVER=s3`, one private bucket (R2) with `public/` and `private/` | unit tests against a pretend bucket (no real bucket yet) |
+| Hosting | `vercel.json`: London region, both jobs daily | not deployed yet |
+| Live database | Neon main: all migrations, reference data, founder's admin | SQL check |
+| Sign-in on iPhone | Full page load after signing in or out; a stale prefetch of `/home` sent people back to sign-in | WebKit iPhone script against a production build, iOS Simulator |
