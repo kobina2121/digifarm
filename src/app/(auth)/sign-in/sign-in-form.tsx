@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -20,7 +20,6 @@ function safeNext(next: string | null): string {
 }
 
 export function SignInForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   // Google sends people back here with ?error= if sign-in failed or was cancelled.
   const [formError, setFormError] = useState<string | null>(
@@ -53,8 +52,9 @@ export function SignInForm() {
       }
       return;
     }
-    router.replace(safeNext(searchParams.get("next")));
-    router.refresh();
+    // A full page load, not router.replace: pages prefetched while signed out
+    // (e.g. /home from the logo link) would redirect back to sign-in.
+    window.location.replace(safeNext(searchParams.get("next")));
   }
 
   return (

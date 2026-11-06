@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { FormError, FormField } from "@/components/forms/form-field";
@@ -10,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { deleteMyAccount } from "./actions";
 
 export function DeleteForm({ hasPassword }: { hasPassword: boolean }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirmation, setConfirmation] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +34,8 @@ export function DeleteForm({ hasPassword }: { hasPassword: boolean }) {
             setFieldErrors(result.fieldErrors ?? {});
             return;
           }
-          router.replace("/account/deleted");
+          // A full page load drops pages cached while signed in.
+          window.location.replace("/account/deleted");
         });
       }}
     >

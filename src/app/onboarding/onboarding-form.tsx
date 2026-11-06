@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { type FieldPath, useForm, useWatch } from "react-hook-form";
 
@@ -21,7 +20,6 @@ import {
 import { onboardBuyer } from "./actions";
 
 export function OnboardingForm() {
-  const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
@@ -49,8 +47,9 @@ export function OnboardingForm() {
       }
       return;
     }
-    router.replace("/buyer");
-    router.refresh();
+    // A full page load: a /buyer page prefetched before onboarding finished
+    // would send them back here.
+    window.location.replace("/buyer");
   }
 
   return (

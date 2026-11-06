@@ -1,7 +1,6 @@
 "use client";
 
 import { LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ export function SignOutButton({
   className?: string;
   onDark?: boolean;
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -29,8 +27,9 @@ export function SignOutButton({
       onClick={() =>
         startTransition(async () => {
           await authClient.signOut();
-          router.replace("/sign-in");
-          router.refresh();
+          // A full page load drops pages cached while signed in, so Back
+          // can't show the last person's account on a shared phone.
+          window.location.replace("/sign-in");
         })
       }
     >
