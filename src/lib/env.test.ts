@@ -30,6 +30,30 @@ describe("parseEnv", () => {
     );
   });
 
+  it("reports every problem with a deploy in one error", () => {
+    let message = "";
+    try {
+      parseEnv({
+        ...valid,
+        APP_ENV: "staging",
+        EMAIL_FROM: undefined,
+        STORAGE_DRIVER: "vercel-blob",
+        PAYMENT_PROVIDER: "paystack",
+      });
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    // A missing setting, rules between settings and dev-only adapters, together.
+    expect(message).toContain("  - EMAIL_FROM:");
+    expect(message).toContain("  - STORAGE_DRIVER=vercel-blob needs");
+    expect(message).toContain(
+      "  - PAYMENT_PROVIDER=paystack needs PAYSTACK_SECRET_KEY",
+    );
+    expect(message).toContain(
+      "  - EMAIL_TRANSPORT=console is not allowed when APP_ENV=staging",
+    );
+  });
+
   it("allows a local production build but refuses dev-only adapters when deployed", () => {
     expect(() => parseEnv({ ...valid, NODE_ENV: "production" })).not.toThrow();
     expect(() => parseEnv({ ...valid, APP_ENV: "staging" })).toThrow(

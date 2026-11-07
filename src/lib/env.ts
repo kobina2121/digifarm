@@ -90,20 +90,22 @@ function withVercelAddress(
   return { ...source, APP_URL: url, BETTER_AUTH_URL: url };
 }
 
-export function parseEnv(source: Record<string, string | undefined>): Env {
-  const result = envSchema.safeParse(withVercelAddress(source));
-  if (!result.success) {
-    const problems = result.error.issues
-      .map((issue) => `  - ${issue.path.join(".")}: ${issue.message}`)
-      .join("\n");
-    throw new Error(`Invalid environment configuration:\n${problems}`);
-  }
-  if (!result.data.GOOGLE_CLIENT_ID !== !result.data.GOOGLE_CLIENT_SECRET) {
-    throw new Error(
+type SettingValue = <K extends keyof Env>(key: K) => Env[K] | undefined;
+
+/** Rules between settings. Each failure is one line of the error. */
+function settingProblems(value: SettingValue): string[] {
+  const problems: string[] = [];
+  const appEnv = value("APP_ENV") ?? "development";
+  const email = value("EMAIL_TRANSPORT");
+  const storage = value("STORAGE_DRIVER");
+  const payments = value("PAYMENT_PROVIDER");
+
+  if (!value("GOOGLE_CLIENT_ID") !== !value("GOOGLE_CLIENT_SECRET")) {
+    problems.push(
       "Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither",
     );
   }
-  if (result.data.STORAGE_DRIVER === "s3") {
+  if (storage === "s3") {
     const missing = (
       [
         "S3_ENDPOINT",
@@ -111,45 +113,71 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
         "S3_ACCESS_KEY_ID",
         "S3_SECRET_ACCESS_KEY",
       ] as const
-    ).filter((name) => !result.data[name]);
+    ).filter((name) => !value(name));
     if (missing.length) {
-      throw new Error(`STORAGE_DRIVER=s3 needs ${missing.join(", ")}`);
+      problems.push(`STORAGE_DRIVER=s3 needs ${missing.join(", ")}`);
     }
   }
   if (
-    result.data.STORAGE_DRIVER === "vercel-blob" &&
-    !result.data.BLOB_STORE_ID &&
-    !result.data.BLOB_READ_WRITE_TOKEN
+    storage === "vercel-blob" &&
+    !value("BLOB_STORE_ID") &&
+    !value("BLOB_READ_WRITE_TOKEN")
   ) {
-    throw new Error(
+    problems.push(
       "STORAGE_DRIVER=vercel-blob needs a connected Blob store (BLOB_STORE_ID) or BLOB_READ_WRITE_TOKEN",
     );
   }
-  if (result.data.EMAIL_TRANSPORT === "resend" && !result.data.RESEND_API_KEY) {
-    throw new Error("EMAIL_TRANSPORT=resend needs RESEND_API_KEY");
+  if (email === "resend" && !value("RESEND_API_KEY")) {
+    problems.push("EMAIL_TRANSPORT=resend needs RESEND_API_KEY");
   }
-  if (
-    result.data.PAYMENT_PROVIDER === "paystack" &&
-    !result.data.PAYSTACK_SECRET_KEY
-  ) {
-    throw new Error("PAYMENT_PROVIDER=paystack needs PAYSTACK_SECRET_KEY");
+  if (payments === "paystack" && !value("PAYSTACK_SECRET_KEY")) {
+    problems.push("PAYMENT_PROVIDER=paystack needs PAYSTACK_SECRET_KEY");
   }
-  if (result.data.APP_ENV !== "development") {
-    if (result.data.EMAIL_TRANSPORT === "console") {
-      throw new Error(
-        `EMAIL_TRANSPORT=console is not allowed when APP_ENV=${result.data.APP_ENV}`,
+  if (appEnv !== "development") {
+    if (email === "console") {
+      problems.push(
+        `EMAIL_TRANSPORT=console is not allowed when APP_ENV=${appEnv}`,
       );
     }
-    if (result.data.STORAGE_DRIVER === "local") {
-      throw new Error(
-        `STORAGE_DRIVER=local is not allowed when APP_ENV=${result.data.APP_ENV}`,
+    if (storage === "local") {
+      problems.push(
+        `STORAGE_DRIVER=local is not allowed when APP_ENV=${appEnv}`,
       );
     }
-    if (result.data.PAYMENT_PROVIDER === "fake") {
-      throw new Error(
-        `PAYMENT_PROVIDER=fake is not allowed when APP_ENV=${result.data.APP_ENV}`,
+    if (payments === "fake") {
+      problems.push(
+        `PAYMENT_PROVIDER=fake is not allowed when APP_ENV=${appEnv}`,
       );
     }
+  }
+  return problems;
+}
+
+/**
+ * Validates every setting and reports all problems in one error, so a failed
+ * deploy names everything that needs fixing instead of one thing per build.
+ */
+export function parseEnv(source: Record<string, string | undefined>): Env {
+  const input = withVercelAddress(source);
+  const result = envSchema.safeParse(input);
+  // Each setting on its own (with its default), so the rules between settings
+  // still run when some unrelated setting is missing or invalid.
+  const value: SettingValue = (key) => {
+    const one = envSchema.shape[key].safeParse(input[key]);
+    return one.success ? (one.data as Env[typeof key]) : undefined;
+  };
+  const problems = [
+    ...(result.success
+      ? []
+      : result.error.issues.map(
+          (issue) => `${issue.path.join(".")}: ${issue.message}`,
+        )),
+    ...settingProblems(value),
+  ];
+  if (problems.length || !result.success) {
+    throw new Error(
+      `Invalid environment configuration:\n${problems.map((p) => `  - ${p}`).join("\n")}`,
+    );
   }
   return result.data;
 }
