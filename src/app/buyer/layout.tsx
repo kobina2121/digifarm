@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { AppShell } from "@/components/shell/app-shell";
-import { PageSkeleton } from "@/components/shell/page-skeleton";
+import { BandPageSkeleton } from "@/components/shell/page-skeleton";
 
 import { BUYER_NAV } from "./nav";
 
@@ -14,7 +14,7 @@ export default function BuyerLayout({ children }: LayoutProps<"/buyer">) {
       phoneLogoBar={false}
     >
       {/* Pages read the session, so they stream in behind this boundary. */}
-      <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
+      <Suspense fallback={<BandPageSkeleton />}>{children}</Suspense>
     </AppShell>
   );
 }

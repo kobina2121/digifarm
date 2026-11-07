@@ -6,7 +6,7 @@ import { Logo } from "@/components/brand/logo";
 import { MarketStallIcon } from "@/components/icons/market-stall";
 import { AppShell, BottomTabBar } from "@/components/shell/app-shell";
 import { NavLinkView } from "@/components/shell/nav-link-view";
-import { PageSkeleton } from "@/components/shell/page-skeleton";
+import { BandPageSkeleton } from "@/components/shell/page-skeleton";
 import { buttonVariants } from "@/components/ui/button";
 import { isStaff } from "@/lib/authz";
 import { getActor } from "@/lib/session";
@@ -24,9 +24,13 @@ export default function MarketLayout({ children }: LayoutProps<"/market">) {
   return (
     <Suspense
       fallback={
-        <div className="mx-auto w-full max-w-5xl px-4 pt-safe">
-          <div className="h-16" />
-          <PageSkeleton />
+        <div className="flex min-h-dvh flex-col">
+          <GreenHeader className="max-w-5xl">
+            <Logo tone="on-dark" />
+          </GreenHeader>
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 md:px-8 md:pt-10">
+            <BandPageSkeleton />
+          </main>
         </div>
       }
     >
