@@ -1,4 +1,3 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -12,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { getAccountDeletionInfo } from "@/modules/buyers";
 
 import { DeleteForm } from "./delete-form";
+import { BandButton, GreenHeader } from "@/components/shell/top-band";
 
 export const metadata: Metadata = { title: "Delete account" };
 
@@ -76,15 +76,13 @@ async function DeleteGate() {
 
 export default function DeleteAccountPage() {
   return (
-    <div className="min-h-dvh pt-safe pb-safe">
-      <header className="mx-auto flex h-16 max-w-xl items-center justify-between px-4">
-        <Link href="/home" aria-label="Back to Akuafo" className="-ml-2 p-2">
-          <ArrowLeft className="size-5" aria-hidden />
-        </Link>
-        <Logo />
-        <span className="w-9" />
-      </header>
-      <main className="mx-auto max-w-xl px-4 pt-4 pb-12">
+    <div className="min-h-dvh pb-safe">
+      <GreenHeader className="max-w-xl">
+        <BandButton href="/home" label="Back to Akuafo" />
+        <Logo tone="on-dark" />
+        <span className="size-11" />
+      </GreenHeader>
+      <main className="mx-auto max-w-xl px-4 pt-6 pb-12">
         <h1 className="text-3xl font-bold">Delete your account</h1>
         <div className="mt-6">
           <Suspense

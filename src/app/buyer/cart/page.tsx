@@ -1,10 +1,4 @@
-import {
-  ChevronLeft,
-  ShieldCheck,
-  ShoppingCart,
-  Tractor,
-  Truck,
-} from "lucide-react";
+import { ShieldCheck, ShoppingCart, Tractor, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -12,6 +6,7 @@ import { connection } from "next/server";
 import { BasketArt } from "@/components/illustrations/commerce-art";
 import { ListingImage, VerifiedFarm } from "@/components/market/listing-bits";
 import { buttonVariants } from "@/components/ui/button";
+import { BandTitleBar, TopBand } from "@/components/shell/top-band";
 import { cn } from "@/lib/utils";
 import {
   type CartLine,
@@ -31,27 +26,26 @@ export default async function CartPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-xl gap-6">
-      <header className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center">
-        <Link
-          href="/market"
-          aria-label="Back to the market"
-          className="flex size-11 items-center justify-center rounded-full hover:bg-muted"
-        >
-          <ChevronLeft className="size-6" aria-hidden />
-        </Link>
-        <h1 className="text-center text-xl font-semibold">Cart</h1>
-        <span className="relative flex size-11 items-center justify-center rounded-full bg-sprout-soft text-field-green">
-          <ShoppingCart className="size-5" aria-hidden />
-          {cart.lineCount ? (
-            <span className="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-field-green text-[0.7rem] font-bold text-white">
-              {cart.lineCount}
-              <span className="sr-only">
-                {cart.lineCount === 1 ? " product" : " products"} in your cart
-              </span>
+      <TopBand className="pt-2 pb-4">
+        <BandTitleBar
+          back={{ href: "/market", label: "Back to the market" }}
+          title="Cart"
+          end={
+            <span className="relative flex size-11 items-center justify-center rounded-full bg-white/15 text-white">
+              <ShoppingCart className="size-5" aria-hidden />
+              {cart.lineCount ? (
+                <span className="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-harvest-gold text-[0.7rem] font-bold text-soil">
+                  {cart.lineCount}
+                  <span className="sr-only">
+                    {cart.lineCount === 1 ? " product" : " products"} in your
+                    cart
+                  </span>
+                </span>
+              ) : null}
             </span>
-          ) : null}
-        </span>
-      </header>
+          }
+        />
+      </TopBand>
 
       {cart.lineCount === 0 ? (
         <div className="grid justify-items-center gap-3 overflow-hidden rounded-3xl bg-card px-6 pt-4 pb-8 text-center">

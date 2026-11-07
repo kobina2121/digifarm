@@ -1,16 +1,22 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
+import { BandButton, GreenHeader } from "@/components/shell/top-band";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="flex min-h-dvh flex-col pt-safe pb-safe">
-      <header className="mx-auto flex h-16 w-full max-w-md items-center px-4">
+    <div className="flex min-h-dvh flex-col pb-safe">
+      <GreenHeader className="max-w-md">
         <Link href="/home" aria-label="Akuafo home">
-          <Logo />
+          <Logo tone="on-dark" />
         </Link>
-      </header>
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-10">
+        <BandButton
+          href="/market"
+          label="Close and browse the market"
+          kind="close"
+        />
+      </GreenHeader>
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-6 pb-10">
         {children}
       </main>
     </div>

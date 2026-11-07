@@ -10,6 +10,7 @@ import { getMarketSupplier } from "@/modules/catalog";
 import { SUPPLIER_KINDS } from "@/modules/suppliers";
 
 import { cardAction, cardSave, savedAmong } from "../../card-action";
+import { BandTitleBar, TopBand } from "@/components/shell/top-band";
 
 export const metadata: Metadata = { title: "Farm" };
 
@@ -33,18 +34,24 @@ export default async function MarketSupplierPage({
 
   return (
     <div className="grid gap-6">
-      <div>
-        <p className="eyebrow text-field-green">
-          {supplier.supplierKind
-            ? SUPPLIER_KINDS[supplier.supplierKind]
-            : "Supplier"}
-        </p>
-        <h1 className="mt-1 text-3xl font-bold">{supplier.name}</h1>
-        <p className="mt-2 flex items-center gap-2 text-muted-foreground">
-          <MapPin className="size-4 text-field-green" aria-hidden />
-          {location}
-        </p>
-      </div>
+      <TopBand className="grid gap-4 pt-2">
+        <BandTitleBar
+          back={{ href: "/market", label: "Back to the market" }}
+          title="Farm"
+        />
+        <div>
+          <p className="eyebrow text-sprout">
+            {supplier.supplierKind
+              ? SUPPLIER_KINDS[supplier.supplierKind]
+              : "Supplier"}
+          </p>
+          <h1 className="mt-1 text-3xl font-bold">{supplier.name}</h1>
+          <p className="mt-2 flex items-center gap-2 text-white/80">
+            <MapPin className="size-4 text-sprout" aria-hidden />
+            {location}
+          </p>
+        </div>
+      </TopBand>
 
       <div className="flex items-start gap-3 rounded-2xl bg-sprout-soft p-4 text-field-green-dark">
         <BadgeCheck className="mt-0.5 size-5 shrink-0" aria-hidden />

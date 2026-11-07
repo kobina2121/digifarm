@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { homePathFor, requireActor } from "@/lib/session";
 
 import { OnboardingForm } from "./onboarding-form";
+import { GreenHeader } from "@/components/shell/top-band";
 
 export const metadata: Metadata = { title: "Set up your account" };
 
@@ -21,13 +22,13 @@ async function OnboardingGate() {
 
 export default function OnboardingPage() {
   return (
-    <div className="min-h-dvh pt-safe pb-safe">
-      <header className="mx-auto flex h-16 max-w-xl items-center px-4">
+    <div className="min-h-dvh pb-safe">
+      <GreenHeader className="max-w-xl">
         <Link href="/home" aria-label="Akuafo home">
-          <Logo />
+          <Logo tone="on-dark" />
         </Link>
-      </header>
-      <main className="mx-auto max-w-xl px-4 pt-4 pb-12">
+      </GreenHeader>
+      <main className="mx-auto max-w-xl px-4 pt-6 pb-12">
         <p className="eyebrow text-field-green">Step 2 of 2</p>
         <h1 className="mt-2 text-3xl font-bold">Set up your account</h1>
         <p className="mt-2 text-muted-foreground">

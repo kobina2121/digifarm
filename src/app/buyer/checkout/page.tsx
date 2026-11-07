@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 
@@ -10,6 +9,7 @@ import { paymentsEnabled } from "@/modules/payments";
 
 import { requireBuyer } from "../guard";
 import { CheckoutForm } from "./checkout-form";
+import { BandTitleBar, TopBand } from "@/components/shell/top-band";
 
 export const metadata: Metadata = { title: "Checkout" };
 
@@ -24,15 +24,12 @@ export default async function CheckoutPage() {
 
   return (
     <div className="grid gap-6">
-      <div>
-        <Link
-          href="/buyer/cart"
-          className="text-sm font-medium text-field-green underline-offset-4 hover:underline"
-        >
-          ← Cart
-        </Link>
-        <h1 className="mt-2 text-3xl font-bold">Checkout</h1>
-      </div>
+      <TopBand className="pt-2 pb-4">
+        <BandTitleBar
+          back={{ href: "/buyer/cart", label: "Back to your cart" }}
+          title="Checkout"
+        />
+      </TopBand>
 
       <section className="grid gap-3 rounded-3xl bg-card p-5">
         <h2 className="font-semibold">Your order</h2>

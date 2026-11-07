@@ -27,7 +27,7 @@ export function Gallery({
 
   if (!photos.length) {
     return (
-      <div className="flex aspect-[4/3] items-center justify-center text-field-green-dark">
+      <div className="flex aspect-[4/3] items-center justify-center text-white/70">
         <Sprout className="size-16 opacity-50" aria-hidden />
       </div>
     );
@@ -85,8 +85,8 @@ export function Gallery({
               className={cn(
                 "h-2.5 rounded-full transition-all",
                 i === index
-                  ? "w-6 bg-field-green"
-                  : "w-2.5 bg-field-green/30 hover:bg-field-green/50",
+                  ? "w-6 bg-white"
+                  : "w-2.5 bg-white/40 hover:bg-white/60",
               )}
             />
           ))}

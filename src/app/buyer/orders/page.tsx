@@ -12,6 +12,7 @@ import { listOrdersForBuyer, type OrderSummary } from "@/modules/ordering";
 
 import { requireBuyer } from "../guard";
 import { isActiveOrder, OrderProgress } from "./order-progress";
+import { TopBand } from "@/components/shell/top-band";
 
 export const metadata: Metadata = { title: "Orders" };
 
@@ -36,7 +37,7 @@ export default async function OrdersPage({
 
   return (
     <div className="mx-auto grid w-full max-w-2xl gap-6">
-      <section className="relative overflow-hidden rounded-3xl bg-field-green p-6 pr-40 text-white sm:pr-56">
+      <TopBand className="pr-40 sm:pr-56 md:pr-56">
         <p className="eyebrow text-white/75">Orders</p>
         <h1 className="mt-1 text-2xl leading-tight font-bold sm:text-3xl">
           {items.length ? "Track your orders" : "No orders yet"}
@@ -49,7 +50,7 @@ export default async function OrdersPage({
             : "Your orders will appear here once you check out."}
         </p>
         <DeliveryArt className="pointer-events-none absolute -right-3 bottom-2 h-auto w-40 sm:w-52" />
-      </section>
+      </TopBand>
 
       {items.length === 0 ? (
         <div className="grid justify-items-center gap-3 rounded-3xl bg-card p-8 text-center">

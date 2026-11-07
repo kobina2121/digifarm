@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 import { STAFF_NAV } from "../admin/nav";
 import { BUYER_NAV } from "../buyer/nav";
+import { GreenHeader } from "@/components/shell/top-band";
 
 /**
  * The market is public, so anyone can browse before signing up. Signed-in
@@ -57,33 +58,43 @@ async function MarketFrame({ children }: { children: ReactNode }) {
   }
   return (
     <div className="flex min-h-dvh flex-col pb-safe">
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-paper/95 pt-safe backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4">
-          <Link href="/market" aria-label="Akuafo market">
-            <Logo />
+      <GreenHeader className="max-w-5xl">
+        <Link href="/market" aria-label="Akuafo market">
+          <Logo tone="on-dark" />
+        </Link>
+        {actor ? (
+          <Link
+            href="/home"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white",
+            )}
+          >
+            My account
           </Link>
-          {actor ? (
+        ) : (
+          <nav className="flex items-center gap-1">
             <Link
-              href="/home"
-              className={buttonVariants({ variant: "outline" })}
+              href="/sign-in?next=%2Fmarket"
+              className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "px-3 text-white hover:bg-white/10 hover:text-white",
+              )}
             >
-              My account
+              Sign in
             </Link>
-          ) : (
-            <nav className="flex items-center gap-1">
-              <Link
-                href="/sign-in?next=%2Fmarket"
-                className={cn(buttonVariants({ variant: "ghost" }), "px-3")}
-              >
-                Sign in
-              </Link>
-              <Link href="/sign-up" className={buttonVariants()}>
-                Join
-              </Link>
-            </nav>
-          )}
-        </div>
-      </header>
+            <Link
+              href="/sign-up"
+              className={cn(
+                buttonVariants(),
+                "bg-white text-field-green hover:bg-white/90",
+              )}
+            >
+              Join
+            </Link>
+          </nav>
+        )}
+      </GreenHeader>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-32 md:px-8 md:pt-10 md:pb-12">
         {children}
       </main>

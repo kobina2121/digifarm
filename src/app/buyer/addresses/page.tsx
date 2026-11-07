@@ -8,6 +8,7 @@ import { getBuyerProfile } from "@/modules/buyers";
 import { requireBuyer } from "../guard";
 import { AddAddressForm } from "./add-address-form";
 import { RemoveAddressButton } from "./remove-address-button";
+import { BandTitleBar, TopBand } from "@/components/shell/top-band";
 
 export const metadata: Metadata = { title: "Delivery addresses" };
 
@@ -18,12 +19,15 @@ export default async function AddressesPage() {
 
   return (
     <div className="grid gap-6">
-      <div>
-        <h1 className="text-3xl font-bold">Delivery addresses</h1>
-        <p className="mt-1 text-muted-foreground">
+      <TopBand className="grid gap-4 pt-2">
+        <BandTitleBar
+          back={{ href: "/buyer/profile", label: "Back to your profile" }}
+          title="Addresses"
+        />
+        <p className="text-white/80">
           Where we bring your orders, anywhere in Ghana.
         </p>
-      </div>
+      </TopBand>
 
       <ul className="grid gap-3">
         {addresses.map((address) => (

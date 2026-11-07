@@ -17,6 +17,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Logo } from "@/components/brand/logo";
+import { TopBand } from "@/components/shell/top-band";
 import type { ReactNode } from "react";
 
 import { HarvestArt } from "@/components/home/harvest-art";
@@ -81,37 +82,37 @@ export default async function BuyerHomePage() {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl grid-cols-[minmax(0,1fr)] gap-7">
-      {/* Phones: the logo lives here only; it scrolls away with the page. */}
-      <div className="-mx-4 -mt-6 -mb-2 flex h-14 items-center justify-center border-b border-border md:hidden">
-        <Logo />
-      </div>
-
-      {/* Greeting */}
-      <header className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-muted-foreground">{greeting(now)},</p>
-          <h1 className="truncate text-3xl font-bold">{firstName}</h1>
-          <Link
-            href="/buyer/addresses"
-            className="mt-1 inline-flex max-w-full items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <MapPin className="size-4 shrink-0 text-field-green" aria-hidden />
-            <span className="truncate">
-              {address
-                ? `Delivering to ${[address.town, region].filter(Boolean).join(", ")}`
-                : "Add a delivery address"}
-            </span>
-            <ChevronRight className="size-4 shrink-0" aria-hidden />
-          </Link>
+      <TopBand className="grid gap-4 pt-1 md:pt-6">
+        {/* Phones: the logo lives here only; it scrolls away with the page. */}
+        <div className="flex h-12 items-center justify-center md:hidden">
+          <Logo tone="on-dark" />
         </div>
-        <Link
-          href="/buyer/profile"
-          aria-label={`Profile: ${business}`}
-          className="flex size-12 shrink-0 items-center justify-center rounded-full bg-field-green text-lg font-bold text-white"
-        >
-          {firstName.slice(0, 1).toUpperCase()}
-        </Link>
-      </header>
+        <header className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-white/80">{greeting(now)},</p>
+            <h1 className="truncate text-3xl font-bold">{firstName}</h1>
+            <Link
+              href="/buyer/addresses"
+              className="mt-1 inline-flex max-w-full items-center gap-1.5 text-sm text-white/80 hover:text-white"
+            >
+              <MapPin className="size-4 shrink-0 text-sprout" aria-hidden />
+              <span className="truncate">
+                {address
+                  ? `Delivering to ${[address.town, region].filter(Boolean).join(", ")}`
+                  : "Add a delivery address"}
+              </span>
+              <ChevronRight className="size-4 shrink-0" aria-hidden />
+            </Link>
+          </div>
+          <Link
+            href="/buyer/profile"
+            aria-label={`Profile: ${business}`}
+            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white text-lg font-bold text-[#17663a]"
+          >
+            {firstName.slice(0, 1).toUpperCase()}
+          </Link>
+        </header>
+      </TopBand>
 
       {/* Search */}
       <form method="get" action="/market" role="search">

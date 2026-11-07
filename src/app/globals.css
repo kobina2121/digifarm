@@ -35,6 +35,8 @@
 
 @theme inline {
   --color-background: var(--background);
+  /* The green at the top of phone screens, behind the clock and page headers. */
+  --color-app-bar: var(--app-bar);
   --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -75,6 +77,7 @@
 }
 
 :root {
+  --app-bar: #17663a;
   --background: #f6f6f1;
   --foreground: #13261a;
   --card: #ffffff;
@@ -124,6 +127,7 @@
   --color-sprout-soft: #1c3324;
   --color-harvest-gold-soft: #3a3014;
 
+  --app-bar: #123d27;
   --background: #0f1712;
   --foreground: #e6ede5;
   --card: #18231c;
@@ -187,8 +191,9 @@
 }
 
 /* The installed iPhone app draws under the status bar, whose clock is then
-   always white: fill the area behind it with Field Green (the page colour in
-   dark mode). Above sticky headers, below the photo viewer and launch screen. */
+   always white: fill the area behind it with the app-bar green, the same
+   green as the header at the top of every phone screen, so they read as one.
+   Above sticky headers, below the photo viewer and launch screen. */
 .status-bar-fill {
   display: none;
 }
@@ -200,11 +205,8 @@
     top: 0;
     z-index: 50;
     height: env(safe-area-inset-top);
-    background: var(--color-field-green);
+    background: var(--color-app-bar);
     pointer-events: none;
-  }
-  .dark .status-bar-fill {
-    background: var(--background);
   }
 }
 

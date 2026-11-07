@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   BadgeCheck,
   ChevronRight,
   MapPin,
@@ -32,6 +31,7 @@ import {
   QuantityStepper,
 } from "./purchase";
 import { SeeMore } from "./see-more";
+import { BandButton } from "@/components/shell/top-band";
 
 export const metadata: Metadata = { title: "Produce" };
 
@@ -103,25 +103,22 @@ export default async function MarketListingPage({
     >
       <div className="mx-auto grid w-full max-w-2xl grid-cols-[minmax(0,1fr)] gap-6">
         {/* Photo stage */}
-        <section className="-mx-4 -mt-6 rounded-b-[2.5rem] bg-sprout-soft px-4 pt-4 pb-6 md:mx-0 md:mt-0 md:rounded-[2.5rem]">
+        <section className="-mx-4 -mt-6 rounded-b-[2.5rem] bg-app-bar px-4 pt-4 pb-6 text-white md:mx-0 md:mt-0 md:rounded-[2.5rem]">
           <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center">
-            <Link
+            <BandButton
               href={`/market?category=${listing.category.slug}`}
-              aria-label={`Back to ${listing.category.name}`}
-              className="flex size-11 items-center justify-center rounded-full bg-card/80 shadow-sm backdrop-blur"
-            >
-              <ArrowLeft className="size-5" aria-hidden />
-            </Link>
+              label={`Back to ${listing.category.name}`}
+            />
             <p className="text-center text-lg font-semibold">Details</p>
             {cartLines !== null ? (
               <Link
                 href="/buyer/cart"
                 aria-label={`Cart, ${cartLines} ${cartLines === 1 ? "product" : "products"}`}
-                className="relative flex size-11 items-center justify-center rounded-full bg-card/80 shadow-sm backdrop-blur"
+                className="relative flex size-11 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
               >
                 <ShoppingCart className="size-5" aria-hidden />
                 {cartLines ? (
-                  <span className="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-field-green text-[0.7rem] font-bold text-white">
+                  <span className="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-harvest-gold text-[0.7rem] font-bold text-soil">
                     {cartLines}
                   </span>
                 ) : null}

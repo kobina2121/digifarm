@@ -1,6 +1,5 @@
-import { ChevronLeft, Clock, MapPin, Package } from "lucide-react";
+import { Clock, MapPin, Package } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { formatGhanaPhone } from "@/lib/ghana";
 import { connection } from "next/server";
 
@@ -11,6 +10,7 @@ import {
   StatusBadge,
 } from "@/components/status-badge";
 import { DeliveryArt } from "@/components/illustrations/commerce-art";
+import { BandTitleBar, TopBand } from "@/components/shell/top-band";
 import { orNotFound } from "@/lib/not-found";
 import { getOrderForBuyer } from "@/modules/ordering";
 
@@ -77,19 +77,17 @@ export default async function OrderPage({
 
   return (
     <div className="grid gap-6">
-      <header className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center">
-        <Link
-          href="/buyer/orders"
-          aria-label="Back to your orders"
-          className="flex size-11 items-center justify-center rounded-full hover:bg-muted"
-        >
-          <ChevronLeft className="size-6" aria-hidden />
-        </Link>
-        <h1 className="text-center text-xl font-semibold">Order details</h1>
-        <span className="flex size-11 items-center justify-center rounded-full bg-sprout-soft text-field-green">
-          <Package className="size-5" aria-hidden />
-        </span>
-      </header>
+      <TopBand className="pt-2 pb-4">
+        <BandTitleBar
+          back={{ href: "/buyer/orders", label: "Back to your orders" }}
+          title="Order details"
+          end={
+            <span className="flex size-11 items-center justify-center rounded-full bg-white/15 text-white">
+              <Package className="size-5" aria-hidden />
+            </span>
+          }
+        />
+      </TopBand>
 
       <section className="grid gap-5 overflow-hidden rounded-3xl bg-card p-5">
         <div className="relative pr-28 sm:pr-40">

@@ -76,36 +76,27 @@ export function AppShell({
       <div className="flex min-w-0 flex-1 flex-col">
         {phoneLogoBar ? (
           <>
-            {/* Phones: logo centred. The logo row (3.5rem + border) scrolls away,
-              while the part behind the status bar stays pinned and solid. */}
-            <header
-              className={cn(
-                "sticky top-[calc(-3.5rem-1px)] z-30 border-b pt-safe md:hidden",
-                dark
-                  ? "border-sidebar-border bg-sidebar"
-                  : "border-border bg-paper",
-              )}
-            >
+            {/* Phones: a green header with the logo centred, one block with
+              the green behind the status bar. The logo row (3.5rem) scrolls
+              away, while the part behind the status bar stays pinned. */}
+            <header className="sticky top-[-3.5rem] z-30 bg-app-bar pt-safe md:hidden">
               <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-4">
                 <span />
                 <Link href="/home" aria-label="Akuafo home">
-                  <Logo tone={dark ? "on-dark" : "brand"} />
+                  <Logo tone="on-dark" />
                 </Link>
                 {showSignOut ? (
-                  <SignOutButton
-                    onDark={dark}
-                    className="justify-self-end px-2"
-                  />
+                  <SignOutButton onDark className="justify-self-end px-2" />
                 ) : null}
               </div>
             </header>
           </>
         ) : (
-          // A thin strip in the page's colour pinned to the top: nothing to see,
-          // but iOS then keeps the status bar area solid over scrolled pages.
+          // A thin green strip pinned to the top, the same green as the status
+          // bar and each page's TopBand, so the top of the screen is one block.
           <div
             aria-hidden
-            className="sticky top-0 z-30 -mb-2 box-content h-2 bg-paper pt-safe md:hidden"
+            className="sticky top-0 z-30 -mb-2 box-content h-2 bg-app-bar pt-safe md:hidden"
           />
         )}
 

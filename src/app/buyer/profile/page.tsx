@@ -26,6 +26,7 @@ import { savedListingCount } from "@/modules/catalog";
 import { cartLineCount, countOrdersForBuyer } from "@/modules/ordering";
 
 import { requireBuyer } from "../guard";
+import { TopBand } from "@/components/shell/top-band";
 
 export const metadata: Metadata = { title: "Profile" };
 
@@ -53,7 +54,7 @@ export default async function ProfilePage() {
     <div className="mx-auto grid w-full max-w-xl gap-6">
       {/* Who you are */}
       <div>
-        <section className="relative overflow-hidden rounded-3xl bg-field-green px-5 pt-6 pb-16 text-white">
+        <TopBand className="pb-16 md:pb-16">
           <span
             aria-hidden
             className="absolute -top-10 -right-10 size-40 rounded-full bg-white/10"
@@ -80,7 +81,7 @@ export default async function ProfilePage() {
               </div>
             </div>
           </div>
-        </section>
+        </TopBand>
 
         {/* Counts, overlapping the header */}
         <ul className="relative mx-4 -mt-10 grid grid-cols-3 divide-x divide-border rounded-3xl bg-card py-4 shadow-[0_8px_30px_rgb(31_42_31/0.12)]">

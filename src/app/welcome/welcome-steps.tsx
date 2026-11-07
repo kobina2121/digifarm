@@ -76,13 +76,13 @@ export function WelcomeSteps() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background pt-safe pb-safe">
-      <header className="flex h-16 items-center justify-between px-4">
-        <Logo />
+    <div className="flex min-h-dvh flex-col bg-background pb-safe">
+      <header className="box-content flex h-16 items-center justify-between bg-app-bar px-4 pt-safe text-white">
+        <Logo tone="on-dark" />
         {!last ? (
           <Button
             variant="ghost"
-            className="px-3 text-muted-foreground"
+            className="px-3 text-white hover:bg-white/10 hover:text-white"
             onClick={() => finish("/sign-in")}
           >
             Skip
