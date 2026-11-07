@@ -20,19 +20,26 @@ import {
 
 type Fulfilment = OrderDetail["fulfilments"][number];
 
-const dateTime = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Africa/Accra",
-});
-
 /**
  * One farm's delivery, step by step: who's carrying it, picked up, then
  * delivered with proof or couldn't be delivered.
  */
-export function DeliveryPanel({ fulfilment: f }: { fulfilment: Fulfilment }) {
+/** Each step's date, written once on the server: Node and Safari format dates
+ * differently, which would make the page fail to hydrate on iPhones. */
+export type DeliveryTimes = {
+  pickedUp: string | null;
+  delivered: string | null;
+  failed: string | null;
+  paid: string | null;
+};
+
+export function DeliveryPanel({
+  fulfilment: f,
+  times,
+}: {
+  fulfilment: Fulfilment;
+  times: DeliveryTimes;
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -169,8 +176,7 @@ export function DeliveryPanel({ fulfilment: f }: { fulfilment: Fulfilment }) {
 
       {f.deliveryFailedAt && f.status === "DELIVERY_FAILED" ? (
         <p className="rounded-lg bg-harvest-gold-soft px-3 py-2 text-sm">
-          Couldn’t be delivered on {dateTime.format(f.deliveryFailedAt)}:{" "}
-          {f.deliveryFailReason}
+          Couldn’t be delivered on {times.failed}: {f.deliveryFailReason}
         </p>
       ) : null}
 
@@ -205,7 +211,7 @@ export function DeliveryPanel({ fulfilment: f }: { fulfilment: Fulfilment }) {
           }}
         >
           <p className="text-sm text-muted-foreground">
-            Picked up {f.pickedUpAt ? dateTime.format(f.pickedUpAt) : ""}
+            Picked up {times.pickedUp ?? ""}
           </p>
           <FormField
             id={`receiverName-${f.id}`}
@@ -281,8 +287,7 @@ export function DeliveryPanel({ fulfilment: f }: { fulfilment: Fulfilment }) {
 
       {f.payout ? (
         <p className="rounded-lg bg-sprout-soft px-3 py-2 text-sm">
-          Farm paid {f.payout.amount} on {dateTime.format(f.payout.at)} · ref{" "}
-          {f.payout.reference}
+          Farm paid {f.payout.amount} on {times.paid} · ref {f.payout.reference}
         </p>
       ) : f.status === "DELIVERED" ? (
         <p className="text-sm text-muted-foreground">
@@ -295,7 +300,7 @@ export function DeliveryPanel({ fulfilment: f }: { fulfilment: Fulfilment }) {
 
       {f.status === "DELIVERED" ? (
         <p className="text-sm">
-          Delivered {f.deliveredAt ? dateTime.format(f.deliveredAt) : ""} to{" "}
+          Delivered {times.delivered ?? ""} to{" "}
           <span className="font-medium">{f.receiverName}</span>
           {f.hasProofPhoto ? (
             <>

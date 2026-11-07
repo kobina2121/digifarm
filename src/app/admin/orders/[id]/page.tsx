@@ -122,7 +122,17 @@ export default async function StaffOrderPage({
               </li>
             ))}
           </ul>
-          <DeliveryPanel fulfilment={f} />
+          <DeliveryPanel
+            fulfilment={f}
+            times={{
+              pickedUp: f.pickedUpAt ? dateTime.format(f.pickedUpAt) : null,
+              delivered: f.deliveredAt ? dateTime.format(f.deliveredAt) : null,
+              failed: f.deliveryFailedAt
+                ? dateTime.format(f.deliveryFailedAt)
+                : null,
+              paid: f.payout ? dateTime.format(f.payout.at) : null,
+            }}
+          />
         </section>
       ))}
 
