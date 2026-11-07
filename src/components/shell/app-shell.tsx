@@ -130,7 +130,7 @@ export function BottomTabBar({
   return (
     <nav
       aria-label={label}
-      className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex pin-to-screen justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
     >
       <ul className="flex w-full max-w-md rounded-full border border-border/60 bg-card/95 p-1.5 shadow-[0_10px_30px_rgb(31_42_31/0.16)] backdrop-blur">
         {children}

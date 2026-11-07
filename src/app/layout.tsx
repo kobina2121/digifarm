@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { LaunchSplash } from "@/components/pwa/launch-splash";
+import { ScreenGapScript } from "@/components/pwa/screen-gap";
 import { ThemeScript } from "@/components/theme/theme-script";
 import { ServiceWorker } from "@/components/pwa/service-worker";
 import { splashStartupImages } from "@/components/pwa/splash-screens";
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en-GH" className="h-full antialiased" suppressHydrationWarning>
       <body className="flex min-h-full flex-col">
         <ThemeScript />
+        <ScreenGapScript />
         <LaunchSplash />
         <div aria-hidden className="status-bar-fill" />
         {children}

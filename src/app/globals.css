@@ -190,6 +190,12 @@
   padding-top: env(safe-area-inset-top);
 }
 
+/* Bars pinned to the bottom of a phone screen: moved down by the gap iOS 18
+   can leave under the page in the installed app (components/pwa/screen-gap.tsx). */
+@utility pin-to-screen {
+  translate: 0 var(--screen-gap, 0px);
+}
+
 /* The installed iPhone app draws under the status bar, whose clock is then
    always white: fill the area behind it with the app-bar green, the same
    green as the header at the top of every phone screen, so they read as one.

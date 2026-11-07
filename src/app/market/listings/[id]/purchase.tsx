@@ -200,7 +200,7 @@ export function BuyBar() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+4.75rem)] z-30 px-4 md:static md:z-auto md:px-0">
+    <div className="fixed inset-x-0 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+4.75rem)] z-30 pin-to-screen px-4 md:static md:z-auto md:px-0">
       <div className="mx-auto grid max-w-md gap-2 md:max-w-none">
         {message ? (
           <p

@@ -63,7 +63,7 @@ export function ServiceWorker() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pt-2 pb-safe md:bottom-4 md:pb-0"
+      className="fixed inset-x-0 bottom-0 z-50 flex pin-to-screen justify-center px-4 pt-2 pb-safe md:bottom-4 md:pb-0"
     >
       <div className="flex w-full max-w-md items-center gap-3 rounded-2xl bg-ink p-3 pl-4 text-white shadow-lg">
         <span className="flex-1 text-sm">

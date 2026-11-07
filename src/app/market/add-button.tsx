@@ -72,7 +72,7 @@ export function AddButton({
         // Above the floating tab bar, centred, like a phone snackbar.
         <div
           role="status"
-          className="fixed inset-x-0 bottom-28 z-40 flex justify-center px-4 md:bottom-8"
+          className="fixed inset-x-0 bottom-28 z-40 flex pin-to-screen justify-center px-4 md:bottom-8"
         >
           <p
             className={cn(
