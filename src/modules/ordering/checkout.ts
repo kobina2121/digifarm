@@ -19,10 +19,11 @@ import { deliveryFeeMinor } from "./delivery-fee";
 import { expireUnpaidOrders } from "./expiry";
 import { type CheckoutInput, checkoutSchema } from "./schemas";
 
+/** "AK-2026-000042". Orders placed before the rename to Akuafo keep "DF-". */
 async function nextOrderNumber(tx: Tx, now: Date): Promise<string> {
   const [row] = await tx.$queryRaw<{ n: string }[]>`
     SELECT nextval('order_number_seq')::text AS n`;
-  return `DF-${now.getUTCFullYear()}-${row.n.padStart(6, "0")}`;
+  return `AK-${now.getUTCFullYear()}-${row.n.padStart(6, "0")}`;
 }
 
 /** The order this idempotency key already placed for this buyer, if any. */

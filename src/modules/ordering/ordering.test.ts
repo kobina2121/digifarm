@@ -203,7 +203,7 @@ describe.runIf(hasTestDatabase)("checkout (integration)", () => {
       { addressId: b.addressId, idempotencyKey: randomUUID() },
       now,
     );
-    expect(order.number).toMatch(/^DF-\d{4}-\d{6}$/);
+    expect(order.number).toMatch(/^AK-\d{4}-\d{6}$/);
 
     const detail = await getOrderForBuyer(b.actor, order.id);
     expect(detail.status).toBe("PENDING_PAYMENT");

@@ -76,9 +76,9 @@ test("an order goes from checkout to delivered, with the customer following alon
   await staff.waitForLoadState("networkidle");
 
   const orderNumber = (await staff
-    .getByText(/^DF-\d{4}-\d{6}/)
+    .getByText(/^AK-\d{4}-\d{6}/)
     .first()
-    .textContent())!.match(/DF-\d{4}-\d{6}/)![0];
+    .textContent())!.match(/AK-\d{4}-\d{6}/)![0];
 
   await staff.getByLabel("Rider or driver").fill("Kofi Rider");
   await staff.getByLabel("Their phone").fill("024 111 2222");
