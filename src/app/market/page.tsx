@@ -4,8 +4,10 @@ import Link from "next/link";
 import { connection } from "next/server";
 
 import { ListingCard } from "@/components/market/listing-card";
+import { TopBand } from "@/components/shell/top-band";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { isStaff } from "@/lib/authz";
 import { getActor } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import {
@@ -17,6 +19,7 @@ import {
 import { MarketFilters } from "./market-filters";
 
 import { cardAction, cardSave, savedAmong } from "./card-action";
+import { MarketEmpty } from "./market-empty";
 
 export const metadata: Metadata = {
   title: "Market",
@@ -42,6 +45,17 @@ function filterParams(
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries(values)) if (v) params.set(k, v);
   return params;
+}
+
+/** The empty-market heading for a search or filter that found nothing. */
+function noMatchesTitle(
+  f: BrowseFilters,
+  categories: { slug: string; name: string }[],
+) {
+  if (f.q) return `No results for “${f.q}”`;
+  const category = categories.find((c) => c.slug === f.category);
+  if (category) return `No ${category.name.toLowerCase()} right now`;
+  return "Nothing matches these filters";
 }
 
 function href(params: URLSearchParams) {
@@ -74,12 +88,12 @@ export default async function MarketPage({
 
   return (
     <div className="grid gap-5">
-      <div>
+      <TopBand>
         <h1 className="text-3xl font-bold">Market</h1>
-        <p className="mt-1 text-muted-foreground">
+        <p className="mt-1 text-white/80">
           Produce from farms Akuafo has visited and approved.
         </p>
-      </div>
+      </TopBand>
 
       <div className="flex gap-2">
         <form method="get" action="/market" role="search" className="flex-1">
@@ -147,21 +161,14 @@ export default async function MarketPage({
       </nav>
 
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-          <p className="font-medium">No produce matches</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Try another search or fewer filters. New harvests are added every
-            week.
-          </p>
-          {filterParams(filters).toString() ? (
-            <Link
-              href="/market"
-              className={cn(buttonVariants({ variant: "outline" }), "mt-4")}
-            >
-              Clear filters
-            </Link>
-          ) : null}
-        </div>
+        <MarketEmpty
+          viewer={!actor ? "visitor" : isStaff(actor) ? "staff" : "buyer"}
+          searched={
+            filterParams(filters).toString()
+              ? { title: noMatchesTitle(filters, categories) }
+              : undefined
+          }
+        />
       ) : (
         <section aria-labelledby="results" className="grid gap-4">
           <h2 id="results" className="text-xl font-semibold">
