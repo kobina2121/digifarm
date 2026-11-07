@@ -37,6 +37,13 @@ const consoleTransport: EmailTransport = {
   },
 };
 
+/** EMAIL_TRANSPORT=none: email is off, so nothing is sent. Logs the subject only. */
+const emailOff: EmailTransport = {
+  async send(message) {
+    logger.info({ emailSubject: message.subject }, "Email is off: not sent");
+  },
+};
+
 const RESEND_URL = "https://api.resend.com/emails";
 const SEND_TIMEOUT_MS = 10_000;
 
@@ -87,6 +94,8 @@ export function emailTransport(): EmailTransport {
   switch (config.EMAIL_TRANSPORT) {
     case "console":
       return consoleTransport;
+    case "none":
+      return emailOff;
     case "resend":
       return createResendTransport({
         // parseEnv refuses EMAIL_TRANSPORT=resend without a key.

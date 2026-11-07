@@ -152,6 +152,19 @@ describe("parseEnv", () => {
     ).toBeUndefined();
   });
 
+  it("lets a deployed site run with email off", () => {
+    expect(
+      parseEnv({
+        ...valid,
+        APP_ENV: "staging",
+        EMAIL_TRANSPORT: "none",
+        STORAGE_DRIVER: "vercel-blob",
+        BLOB_STORE_ID: "store_1",
+        PAYMENT_PROVIDER: "none",
+      }).EMAIL_TRANSPORT,
+    ).toBe("none");
+  });
+
   it("lets a deployed site run with payments off", () => {
     expect(
       parseEnv({
