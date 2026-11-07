@@ -160,6 +160,12 @@
   html {
     @apply font-sans;
   }
+  /* A one-column grid's column otherwise grows to fit its widest unwrapped
+     line (a long email, a truncated name), pushing phone pages sideways.
+     Any grid-cols-* utility still overrides this: utilities beat base styles. */
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
   h1,
   h2,
   h3,
