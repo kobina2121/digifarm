@@ -77,7 +77,7 @@ export default async function OrderPage({
 
   return (
     <div className="grid gap-6">
-      <TopBand className="pt-2 pb-4">
+      <TopBand scenery="line" className="pt-2">
         <BandTitleBar
           back={{ href: "/buyer/orders", label: "Back to your orders" }}
           title="Order details"

@@ -24,7 +24,7 @@ export default async function CheckoutPage() {
 
   return (
     <div className="grid gap-6">
-      <TopBand className="pt-2 pb-4">
+      <TopBand scenery="line" className="pt-2">
         <BandTitleBar
           back={{ href: "/buyer/cart", label: "Back to your cart" }}
           title="Checkout"

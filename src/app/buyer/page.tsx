@@ -82,7 +82,7 @@ export default async function BuyerHomePage() {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl grid-cols-[minmax(0,1fr)] gap-7">
-      <TopBand className="grid gap-4 pt-1 md:pt-6">
+      <TopBand scenery="full" className="grid gap-4 pt-1 md:pt-6">
         {/* Phones: the logo lives here only; it scrolls away with the page. */}
         <div className="flex h-12 items-center justify-center md:hidden">
           <Logo tone="on-dark" />

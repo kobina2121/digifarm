@@ -16,7 +16,7 @@ export default async function BusinessDetailsPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-xl gap-6">
-      <TopBand className="grid gap-4 pt-2">
+      <TopBand scenery="line" className="grid gap-4 pt-2">
         <BandTitleBar
           back={{ href: "/buyer/profile", label: "Back to your profile" }}
           title={isBusiness ? "Business details" : "Business"}

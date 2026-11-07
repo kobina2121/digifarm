@@ -4,28 +4,85 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
+export type Scenery = "full" | "hills" | "line";
+
+const SCENERY_PADDING: Record<Scenery, string> = {
+  full: "pb-14 md:pb-16",
+  hills: "pb-10 md:pb-12",
+  line: "pb-7 md:pb-8",
+};
+
 /**
  * The green top of a phone screen. It runs flush to the top of the page, under
  * the status bar the installed app fills with the same green, so the clock,
  * the header and the page title read as one block. On wider screens it's a
  * rounded card. Put it first in a page inside the app shell or market layout.
+ *
+ * Rolling fields along its bottom edge, in the style of the app's farm
+ * pictures: `full` adds a rising sun (Home), `hills` is for section pages and
+ * `line` a faint ridge for pages with a back button, so it never crowds them.
  */
 export function TopBand({
   children,
   className,
+  scenery = "hills",
 }: {
   children: ReactNode;
   className?: string;
+  scenery?: Scenery;
 }) {
   return (
     <section
       className={cn(
-        "relative -mx-4 -mt-6 overflow-hidden bg-app-bar px-4 pt-4 pb-6 text-white md:mx-0 md:mt-0 md:rounded-3xl md:p-6",
+        "relative isolate -mx-4 -mt-6 overflow-hidden bg-app-bar px-4 pt-4 text-white md:mx-0 md:mt-0 md:rounded-3xl md:p-6",
+        SCENERY_PADDING[scenery],
         className,
       )}
     >
+      <Fields scenery={scenery} />
       {children}
     </section>
+  );
+}
+
+/** Hills (and on Home a morning sun) behind the band's content. */
+function Fields({ scenery }: { scenery: Scenery }) {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 bottom-0 -z-10"
+    >
+      {scenery === "full" ? (
+        <span className="absolute right-[6%] bottom-5 size-14 rounded-full bg-harvest-gold dark:bg-harvest-gold/80" />
+      ) : null}
+      <svg
+        viewBox="0 0 400 60"
+        preserveAspectRatio="none"
+        className={cn(
+          "relative block w-full",
+          scenery === "full" ? "h-14" : scenery === "hills" ? "h-10" : "h-5",
+        )}
+      >
+        {scenery === "line" ? (
+          <path
+            d="M0 44 C 120 20, 260 50, 400 26 L400 60 L0 60Z"
+            fill="#8fd16a"
+            fillOpacity=".18"
+          />
+        ) : (
+          <>
+            <path
+              d="M0 38 C 90 14, 190 34, 400 10 L400 60 L0 60Z"
+              className="fill-hill-back"
+            />
+            <path
+              d="M0 52 C 120 30, 250 56, 400 34 L400 60 L0 60Z"
+              className="fill-hill-front"
+            />
+          </>
+        )}
+      </svg>
+    </div>
   );
 }
 

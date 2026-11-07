@@ -26,7 +26,7 @@ export default async function CartPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-xl gap-6">
-      <TopBand className="pt-2 pb-4">
+      <TopBand scenery="line" className="pt-2">
         <BandTitleBar
           back={{ href: "/market", label: "Back to the market" }}
           title="Cart"

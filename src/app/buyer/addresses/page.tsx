@@ -19,7 +19,7 @@ export default async function AddressesPage() {
 
   return (
     <div className="grid gap-6">
-      <TopBand className="grid gap-4 pt-2">
+      <TopBand scenery="line" className="grid gap-4 pt-2">
         <BandTitleBar
           back={{ href: "/buyer/profile", label: "Back to your profile" }}
           title="Addresses"

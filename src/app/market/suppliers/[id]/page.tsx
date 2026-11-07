@@ -34,7 +34,7 @@ export default async function MarketSupplierPage({
 
   return (
     <div className="grid gap-6">
-      <TopBand className="grid gap-4 pt-2">
+      <TopBand scenery="line" className="grid gap-4 pt-2">
         <BandTitleBar
           back={{ href: "/market", label: "Back to the market" }}
           title="Farm"
