@@ -79,7 +79,10 @@ test.describe("signed-out visitors", () => {
     await page.goto("/market");
     const first = page.locator('a[href^="/market/listings/"]').first();
     test.skip((await first.count()) === 0, "no listings in this database");
+    const href = (await first.getAttribute("href"))!;
     await first.click();
+    // The market has a heading too, so wait for the product page itself.
+    await expect(page).toHaveURL(href);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(
       page
