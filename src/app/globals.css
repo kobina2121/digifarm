@@ -220,6 +220,16 @@ html.df-splash .launch-splash {
 html.df-splash-out .launch-splash {
   opacity: 0;
 }
+/* Until the fade starts: paint the page itself Field Green, because iOS 18
+   can leave a strip at the bottom of an installed app that fixed layers don't
+   cover, and keep the app's own bars (tab bar, banners) from showing through. */
+html.df-splash:not(.df-splash-out),
+html.df-splash:not(.df-splash-out) body {
+  background-color: var(--color-field-green);
+}
+html.df-splash:not(.df-splash-out) body > :not(.launch-splash) {
+  visibility: hidden;
+}
 @media (prefers-reduced-motion: reduce) {
   .launch-splash {
     transition: none;
